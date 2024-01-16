@@ -1,20 +1,38 @@
 variable "name" {
   type        = string
   description = "The name of the this resource."
-
-  validation {
-    condition     = can(regex("TODO determine REGEX", var.name))
-    error_message = "The name must be TODO."
-    # TODO remove the example below once complete:
-    #condition     = can(regex("^[a-z0-9]{5,50}$", var.name))
-    #error_message = "The name must be between 5 and 50 characters long and can only contain lowercase letters and numbers."
-  }
 }
 
 # This is required for most resource modules
 variable "resource_group_name" {
   type        = string
   description = "The resource group where the resources will be deployed."
+}
+
+variable "agents_tags" {
+  type        = map(string)
+  default     = {}
+  description = "(Optional) A mapping of tags to assign to the Node Pool."
+}
+
+variable "client_id" {
+  type        = string
+  default     = ""
+  description = "(Optional) The Client ID (appId) for the Service Principal used for the AKS deployment"
+  nullable    = false
+}
+
+variable "client_secret" {
+  type        = string
+  default     = ""
+  description = "(Optional) The Client Secret (password) for the Service Principal used for the AKS deployment"
+  nullable    = false
+}
+
+variable "cluster_name" {
+  type        = string
+  default     = null
+  description = "(Optional) The name for the AKS resources created in the specified Azure Resource Group. This variable overwrites the 'prefix' var (The 'prefix' var will still be applied to the dns_prefix if it is set)"
 }
 
 # required AVM interfaces
@@ -86,6 +104,23 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
+variable "identity_ids" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Kubernetes Cluster."
+}
+
+variable "identity_type" {
+  type        = string
+  default     = "SystemAssigned"
+  description = "(Optional) The type of identity used for the managed cluster. Conflicts with `client_id` and `client_secret`. Possible values are `SystemAssigned` and `UserAssigned`. If `UserAssigned` is set, an `identity_ids` must be set as well."
+
+  validation {
+    condition     = var.identity_type == "SystemAssigned" || var.identity_type == "UserAssigned"
+    error_message = "`identity_type`'s possible values are `SystemAssigned` and `UserAssigned`"
+  }
+}
+
 variable "location" {
   type        = string
   default     = null
@@ -115,6 +150,13 @@ variable "managed_identities" {
   })
   default     = {}
   description = "Managed identities to be created for the resource."
+}
+
+variable "prefix" {
+  type        = string
+  default     = "test"
+  description = "(Optional) The prefix for the resources created in the specified Azure Resource Group. Omitting this variable requires both `var.cluster_log_analytics_workspace_name` and `var.cluster_name` have been set."
+  nullable    = false
 }
 
 variable "private_endpoints" {

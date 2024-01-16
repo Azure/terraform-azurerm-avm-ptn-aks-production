@@ -41,7 +41,7 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
-- [azurerm_TODO_the_resource_for_this_module.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/TODO_the_resource_for_this_module) (resource)
+- [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
@@ -70,6 +70,38 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_agents_tags"></a> [agents\_tags](#input\_agents\_tags)
+
+Description: (Optional) A mapping of tags to assign to the Node Pool.
+
+Type: `map(string)`
+
+Default: `{}`
+
+### <a name="input_client_id"></a> [client\_id](#input\_client\_id)
+
+Description: (Optional) The Client ID (appId) for the Service Principal used for the AKS deployment
+
+Type: `string`
+
+Default: `""`
+
+### <a name="input_client_secret"></a> [client\_secret](#input\_client\_secret)
+
+Description: (Optional) The Client Secret (password) for the Service Principal used for the AKS deployment
+
+Type: `string`
+
+Default: `""`
+
+### <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name)
+
+Description: (Optional) The name for the AKS resources created in the specified Azure Resource Group. This variable overwrites the 'prefix' var (The 'prefix' var will still be applied to the dns\_prefix if it is set)
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
 
@@ -132,6 +164,22 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_identity_ids"></a> [identity\_ids](#input\_identity\_ids)
+
+Description: (Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Kubernetes Cluster.
+
+Type: `list(string)`
+
+Default: `null`
+
+### <a name="input_identity_type"></a> [identity\_type](#input\_identity\_type)
+
+Description: (Optional) The type of identity used for the managed cluster. Conflicts with `client_id` and `client_secret`. Possible values are `SystemAssigned` and `UserAssigned`. If `UserAssigned` is set, an `identity_ids` must be set as well.
+
+Type: `string`
+
+Default: `"SystemAssigned"`
+
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: Azure region where the resource should be deployed.  If null, the location will be inferred from the resource group location.
@@ -169,6 +217,14 @@ object({
 ```
 
 Default: `{}`
+
+### <a name="input_prefix"></a> [prefix](#input\_prefix)
+
+Description: (Optional) The prefix for the resources created in the specified Azure Resource Group. Omitting this variable requires both `var.cluster_log_analytics_workspace_name` and `var.cluster_name` have been set.
+
+Type: `string`
+
+Default: `"test"`
 
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 

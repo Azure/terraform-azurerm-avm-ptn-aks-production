@@ -3,7 +3,7 @@ resource "azurerm_private_endpoint" "this" {
   for_each = var.private_endpoints
 
   location                      = coalesce(each.value.location, var.location, local.resource_group_location)
-  name                          = each.value.name != null ? each.value.name : "pe-${var.name}"
+  name                          = each.value.name != null ? each.value.name : "pe-${var.prefix}"
   resource_group_name           = each.value.resource_group_name != null ? each.value.resource_group_name : var.resource_group_name
   subnet_id                     = each.value.subnet_resource_id
   custom_network_interface_name = each.value.network_interface_name
@@ -12,7 +12,7 @@ resource "azurerm_private_endpoint" "this" {
   private_service_connection {
     is_manual_connection           = false
     name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-    private_connection_resource_id = azurerm_TODO.this.id
+    private_connection_resource_id = azurerm_kubernetes_cluster.this.id
     subresource_names              = ["TODO subresource name, see https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource"]
   }
   dynamic "ip_configuration" {
