@@ -7,18 +7,18 @@ data "azurerm_resource_group" "parent" {
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                  = coalesce(var.location, local.resource_group_location)
-  name                      = coalesce(var.cluster_name, trim("${var.prefix}-aks", "-"))
+  name                      = var.name
   resource_group_name       = var.resource_group_name
   automatic_channel_upgrade = "patch"
   azure_policy_enabled      = true
-  dns_prefix                = var.prefix
+  dns_prefix                = var.name
   # is the image cleaner need it is can be added here and defaulted to false, but it is not required? - update terraform-azurerm-aks docs
   kubernetes_version      = null
   local_account_disabled  = false
   node_os_channel_upgrade = "NodeImage"
   oidc_issuer_enabled     = true
   private_cluster_enabled = true
-  # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster - vnet intergration in preview 
+  # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster - vnet intergration in preview
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
   # should we copy what is in terraform-azurerm-aks?
