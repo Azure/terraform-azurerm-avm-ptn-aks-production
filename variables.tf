@@ -1,6 +1,11 @@
 variable "name" {
   type        = string
-  description = "The name of the this resource."
+  description = "The name for the AKS resources created in the specified Azure Resource Group. This variable overwrites the 'prefix' var (The 'prefix' var will still be applied to the dns_prefix if it is set)"
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9]$|^[a-zA-Z0-9][-_a-zA-Z0-9]{0,61}[a-zA-Z0-9]$", var.name))
+    error_message = "Check naming rules here https://learn.microsoft.com/en-us/rest/api/aks/managed-clusters/create-or-update?view=rest-aks-2023-10-01&tabs=HTTP"
+  }
 }
 
 # This is required for most resource modules
@@ -27,12 +32,6 @@ variable "client_secret" {
   default     = ""
   description = "(Optional) The Client Secret (password) for the Service Principal used for the AKS deployment"
   nullable    = false
-}
-
-variable "cluster_name" {
-  type        = string
-  default     = null
-  description = "(Optional) The name for the AKS resources created in the specified Azure Resource Group. This variable overwrites the 'prefix' var (The 'prefix' var will still be applied to the dns_prefix if it is set)"
 }
 
 # required AVM interfaces
