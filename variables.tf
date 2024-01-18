@@ -106,13 +106,6 @@ variable "managed_identities" {
   description = "Managed identities to be created for the resource."
 }
 
-variable "prefix" {
-  type        = string
-  default     = "test"
-  description = "(Optional) The prefix for the resources created in the specified Azure Resource Group. Omitting this variable requires both `var.cluster_log_analytics_workspace_name` and `var.cluster_name` have been set."
-  nullable    = false
-}
-
 variable "private_endpoints" {
   type = map(object({
     name = optional(string, null)

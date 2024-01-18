@@ -176,14 +176,6 @@ object({
 
 Default: `{}`
 
-### <a name="input_prefix"></a> [prefix](#input\_prefix)
-
-Description: (Optional) The prefix for the resources created in the specified Azure Resource Group. Omitting this variable requires both `var.cluster_log_analytics_workspace_name` and `var.cluster_name` have been set.
-
-Type: `string`
-
-Default: `"test"`
-
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 
 Description: A map of private endpoints to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
