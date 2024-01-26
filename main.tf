@@ -26,7 +26,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster - vnet intergration in preview
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
-  tags                              = merge(var.tags)
+  tags                              = var.tags
   workload_identity_enabled         = true
 
   default_node_pool {
