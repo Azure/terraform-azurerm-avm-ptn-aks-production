@@ -64,17 +64,6 @@ variable "identity_ids" {
   description = "(Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Kubernetes Cluster."
 }
 
-variable "identity_type" {
-  type        = string
-  default     = "SystemAssigned"
-  description = "(Optional) The type of identity used for the managed cluster. Conflicts with `client_id` and `client_secret`. Possible values are `SystemAssigned` and `UserAssigned`. If `UserAssigned` is set, an `identity_ids` must be set as well."
-
-  validation {
-    condition     = var.identity_type == "SystemAssigned" || var.identity_type == "UserAssigned"
-    error_message = "`identity_type`'s possible values are `SystemAssigned` and `UserAssigned`"
-  }
-}
-
 variable "location" {
   type        = string
   default     = null

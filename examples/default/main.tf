@@ -39,7 +39,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "eastus"
   name     = module.naming.resource_group.name_unique
 }
 
@@ -51,7 +51,7 @@ module "test" {
   source = "../../"
   # source             = "Azure/avm-<res/ptn>-<name>/azurerm"
   # ...
-  enable_telemetry    = var.enable_telemetry                         # see variables.tf
-  name                = module.naming.kubernetes_cluster.name_unique # TODO update with module.naming.<RESOURCE_TYPE>.name_unique
+  enable_telemetry    = var.enable_telemetry # see variables.tf
+  name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
 }
