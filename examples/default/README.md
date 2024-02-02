@@ -118,7 +118,7 @@ Default: `true`
 
 ### <a name="input_kubernetes_cluster_name"></a> [kubernetes\_cluster\_name](#input\_kubernetes\_cluster\_name)
 
-Description: n/a
+Description: The name of the Kubernetes cluster.
 
 Type: `string`
 
