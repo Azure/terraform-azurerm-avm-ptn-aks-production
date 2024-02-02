@@ -43,10 +43,10 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-resource "azurerm_user_assigned_identity" "main" {
-  location            = azurerm_resource_group.rg.location
-  name                = "uami-${module.naming.kubernetes_cluster.name}"
-  resource_group_name = azurerm_resource_group.rg.name
+resource "azurerm_user_assigned_identity" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = "uami-${var.kubernetes_cluster_name}"
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 # This is the module call
@@ -60,4 +60,5 @@ module "test" {
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
+  identity_ids        = [azurerm_user_assigned_identity.this.id]
 }
