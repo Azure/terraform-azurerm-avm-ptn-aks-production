@@ -5,11 +5,6 @@ data "azurerm_resource_group" "parent" {
   name = var.resource_group_name
 }
 
-resource "azurerm_user_assigned_identity" "this" {
-  location            = coalesce(var.location, local.resource_group_location)
-  name                = "${var.name}-identity"
-  resource_group_name = var.resource_group_name
-}
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                  = coalesce(var.location, local.resource_group_location)
@@ -43,11 +38,10 @@ resource "azurerm_kubernetes_cluster" "this" {
     tags = merge(var.tags, var.agents_tags)
   }
   dynamic "identity" {
-    for_each = var.client_id == "" || var.client_secret == "" ? ["identity"] : []
-
+    for_each = var.identity_ids != null ? [var.identity_ids] : []
     content {
       type         = "UserAssigned"
-      identity_ids = [azurerm_user_assigned_identity.this.id]
+      identity_ids = var.identity_ids
     }
   }
 }

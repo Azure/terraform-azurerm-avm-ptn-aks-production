@@ -43,6 +43,12 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
+resource "azurerm_user_assigned_identity" "main" {
+  location            = azurerm_resource_group.rg.location
+  name                = "uami-${module.naming.kubernetes_cluster.name}"
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
 # This is the module call
 # Do not specify location here due to the randomization above.
 # Leaving location as `null` will cause the module to use the resource group location
