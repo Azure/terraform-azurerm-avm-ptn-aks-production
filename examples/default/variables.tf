@@ -9,6 +9,7 @@ DESCRIPTION
 }
 
 variable "kubernetes_cluster_name" {
-  default = "myAks"
+  type        = string
+  default     = "myAks"
   description = "The name of the Kubernetes cluster."
 }
