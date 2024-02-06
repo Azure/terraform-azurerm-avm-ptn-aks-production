@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Default example
+# AKS cluster with region having availability zone
 
-This deploys the module in its simplest form.
+This deploys the module with a region that has availability zones.
 
 ```hcl
 terraform {
@@ -45,7 +45,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "East US"
   name     = module.naming.resource_group.name_unique
 }
 
