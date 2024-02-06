@@ -18,6 +18,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   node_os_channel_upgrade   = "NodeImage"
   oidc_issuer_enabled       = true
   private_cluster_enabled   = true
+
   # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster - vnet intergration in preview
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
@@ -31,11 +32,12 @@ resource "azurerm_kubernetes_cluster" "this" {
     max_count           = 5
     max_pods            = 110
     min_count           = 2
-    # node_count although we agreed on 64 - this has to be a number between min_count and max_count
     node_count = 5
     os_sku     = "Ubuntu"
     # os_disk_size_gb - check the GB size of the disk? TODO: research the default size
     tags = merge(var.tags, var.agents_tags)
+    zones= local.agents_availability_zones
+
   }
   dynamic "identity" {
     for_each = var.identity_ids != null ? [var.identity_ids] : []
