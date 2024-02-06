@@ -71,6 +71,13 @@ variable "identity_ids" {
   description = "(Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Kubernetes Cluster."
 }
 
+variable "key_vault_secrets_provider_enabled" {
+  type        = bool
+  default     = false
+  description = "(Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+  nullable    = false
+}
+
 variable "lock" {
   type = object({
     name = optional(string, null)
@@ -86,6 +93,12 @@ variable "lock" {
   }
 }
 
+variable "log_analytics_workspace_id" {
+  type        = string
+  default     = null
+  description = "(Optional) The ID of the Log Analytics Workspace to use for the OMS agent."
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "managed_identities" {
   type = object({
@@ -94,6 +107,21 @@ variable "managed_identities" {
   })
   default     = {}
   description = "Managed identities to be created for the resource."
+}
+
+variable "monitor_metrics" {
+  type = object({
+    annotations_allowed = optional(string)
+    labels_allowed      = optional(string)
+  })
+  default     = null
+  description = <<-EOT
+  (Optional) Specifies a Prometheus add-on profile for the Kubernetes Cluster
+  object({
+    annotations_allowed = "(Optional) Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric."
+    labels_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
+  })
+EOT
 }
 
 variable "node_pools" {
