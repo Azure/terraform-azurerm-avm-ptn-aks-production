@@ -20,49 +20,12 @@ locals {
 
 
 locals {
-  # regions_supporting_availability_zones = [
-  #    "Brazil South", "France Central", "Qatar Central", "South Africa North", "Australia East", 
-  #   "Canada Central", "Italy North", "UAE North", "Central India", "Central US", "Germany West Central" , 
-  #   "Israel Central", "Japan East", "East US", "Norway East", "Korea Central", "East US 2", "North Europe", "Southeast Asia", 
-  #   "South Central US", "UK South", "East Asia", "US Gov Virginia", "West Europe", "China North 3", "West US 2", "Sweden Central", 
-  #   "Switzerland North", "Poland Central"]
-  # https://github.com/claranet/terraform-azurerm-regions/blob/master/REGIONS.md
-  # https://learn.microsoft.com/en-us/azure/reliability/availability-zones-service-support
-
-    regions_map_supporting_availability_zones_azure_cli_names = {
-    "Brazil South" = "brazilsouth",
-    "France Central" = "francecentral",
-    "Qatar Central" = "qatarcentral",
-    "South Africa North" = "southafricanorth",
-    "Australia East" = "australiaeast",
-    "Canada Central" = "canadacentral",
-    "Italy North" = "italynorth",
-    "UAE North" = "uaenorth",
-    "Central India" = "centralindia",
-    "Central US" = "centralus",
-    "Germany West Central" = "germanywestcentral",
-    "Israel Central" = "israelcentral",
-    "Japan East" = "japaneast",
-    "East US" = "eastus",
-    "Norway East" = "norwayeast",
-    "Korea Central" = "koreacentral",
-    "East US 2" = "eastus2",
-    "North Europe" = "northeurope",
-    "Southeast Asia" = "southeastasia",
-    "South Central US" = "southcentralus",
-    "UK South" = "uksouth",
-    "East Asia" = "eastasia",
-    "US Gov Virginia" = "usgovvirginia",
-    "West Europe" = "westeurope",
-    "China North 3" = "chinanorth3",
-    "West US 2" = "westus2",
-    "Sweden Central" = "swedencentral",
-    "Switzerland North" = "switzerlandnorth",
-    "Poland Central" = "polandcentral"
-  }
-
-
- isregions_supporting_availability_zones = lookup(local.regions_map_supporting_availability_zones_azure_cli_names, var.location != null ? var.location : local.resource_group_location, null)
- agents_availability_zones =  local.isregions_supporting_availability_zones != null ? [1, 2, 3] : []
-
+  agents_availability_zones               = local.isregions_supporting_availability_zones ? [1, 2, 3] : []
+  isregions_supporting_availability_zones = contains(local.regions_supporting_availability_zones_azure_cli_names, var.location != null ? var.location : local.resource_group_location)
+  regions_supporting_availability_zones_azure_cli_names = [
+    "brazilsouth", "francecentral", "qatarcentral", "southafricanorth", "australiaeast",
+    "canadacentral", "italynorth", "uaenorth", "centralindia", "centralus", "germanywestcentral",
+    "israelcentral", "japaneast", "eastus", "norwayeast", "koreacentral", "eastus2", "northeurope", "southeastasia",
+    "southcentralus", "uksouth", "eastasia", "usgovvirginia", "westeurope", "chinanorth3", "westus2", "swedencentral",
+  "switzerlandnorth", "polandcentral"]
 } 
