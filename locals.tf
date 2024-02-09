@@ -1,4 +1,3 @@
-# TODO: insert locals here.
 locals {
   resource_group_location            = try(data.azurerm_resource_group.parent[0].location, null)
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
@@ -17,15 +16,3 @@ locals {
     ]
   ]) : "${assoc.pe_key}-${assoc.asg_key}" => assoc }
 }
-
-
-locals {
-  agents_availability_zones               = local.isregions_supporting_availability_zones ? [1, 2, 3] : []
-  isregions_supporting_availability_zones = contains(local.regions_supporting_availability_zones_azure_cli_names, var.location != null ? var.location : local.resource_group_location)
-  regions_supporting_availability_zones_azure_cli_names = [
-    "brazilsouth", "francecentral", "qatarcentral", "southafricanorth", "australiaeast",
-    "canadacentral", "italynorth", "uaenorth", "centralindia", "centralus", "germanywestcentral",
-    "israelcentral", "japaneast", "eastus", "norwayeast", "koreacentral", "eastus2", "northeurope", "southeastasia",
-    "southcentralus", "uksouth", "eastasia", "usgovvirginia", "westeurope", "chinanorth3", "westus2", "swedencentral",
-  "switzerlandnorth", "polandcentral"]
-} 
