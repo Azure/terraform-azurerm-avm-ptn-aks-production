@@ -39,7 +39,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     node_count             = 5
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
-    zones                  = module.regions.regions_by_name[coalesce(var.location, local.resource_group_location)].zones == null ? null : module.regions.regions_by_name[coalesce(var.location, local.resource_group_location)].zones
+    zones                  = try(module.regions.regions_by_name[coalesce(var.location, local.resource_group_location)].zones, null)
   }
   dynamic "identity" {
     for_each = var.identity_ids != null ? [var.identity_ids] : []
@@ -103,7 +103,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   node_count            = each.value.node_count
   os_sku                = each.value.os_sku
   tags                  = var.tags
-  zones                 = module.regions.regions_by_name[coalesce(var.location, local.resource_group_location)].zones == null ? null : formatlist("%s", module.regions.regions_by_name[var.location == null ? local.resource_group_location : var.location].zones[(tonumber(each.key) - 1)])
+  zones                 = try(formatlist("%s", module.regions.regions_by_name[var.location == null ? local.resource_group_location : var.location].zones[(tonumber(each.key) - 1)]), null)
 }
 resource "azurerm_role_assignment" "this" {
   for_each = var.role_assignments
