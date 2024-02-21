@@ -10,6 +10,7 @@ module "regions" {
   version = ">= 0.3.0"
 }
 
+
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = coalesce(var.location, local.resource_group_location)
   name                              = var.name
@@ -118,3 +119,23 @@ resource "azurerm_role_assignment" "this" {
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 }
 
+resource "random_string" "acr_suffix" {
+  length  = 8
+  numeric = true
+  special = false
+  upper   = false
+}
+resource "azurerm_container_registry" "this" {
+  location            = local.resource_group.location
+  name                = "aksacr${random_string.acr_suffix.result}"
+  resource_group_name = local.resource_group.name
+  sku                 = "Premium"
+  tags                = var.tags
+}
+
+resource "azurerm_role_assignment" "acr" {
+  principal_id                     = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
+  scope                            = azurerm_container_registry.this.id
+  role_definition_name             = "AcrPull"
+  skip_service_principal_aad_check = true
+}
