@@ -126,9 +126,9 @@ resource "random_string" "acr_suffix" {
   upper   = false
 }
 resource "azurerm_container_registry" "this" {
-  location            = local.resource_group.location
+  location            = coalesce(var.location, local.resource_group_location)
   name                = "aksacr${random_string.acr_suffix.result}"
-  resource_group_name = local.resource_group.name
+  resource_group_name = var.resource_group_name
   sku                 = "Premium"
   tags                = var.tags
 }
