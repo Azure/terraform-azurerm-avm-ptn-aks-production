@@ -69,7 +69,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     load_balancer_sku   = "standard"
     network_plugin_mode = "overlay"
     network_policy      = "calico"
-    outbound_type       = "userAssignedNATGateway"
+    outbound_type       = "managedNATGateway"
   }
   dynamic "oms_agent" {
     for_each = var.log_analytics_workspace_enabled ? ["oms_agent"] : []
