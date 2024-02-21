@@ -140,7 +140,7 @@ variable "node_pools" {
   description = "The node pools to create on the Kubernetes Cluster."
 
   validation {
-    condition     = length(keys(var.node_pools)) >= 3
+    condition     = var.node_pools != null && length((var.node_pools)) >= 3
     error_message = "The minimum number of user node pools recommended to users to create is 3"
   }
 }

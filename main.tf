@@ -39,7 +39,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     node_count             = 5
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
-    zones                  = module.regions.regions_by_name[var.location == null ? local.resource_group_location : var.location].zones
+    zones                  = module.regions.regions_by_name[coalesce(var.location, local.resource_group_location)].zones
   }
   dynamic "identity" {
     for_each = var.identity_ids != null ? [var.identity_ids] : []
