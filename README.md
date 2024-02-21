@@ -154,6 +154,14 @@ object({
 
 Default: `{}`
 
+### <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id)
+
+Description: (Optional) The ID of the Log Analytics Workspace to use for the OMS agent.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
 Description: Managed identities to be created for the resource.
@@ -168,6 +176,33 @@ object({
 ```
 
 Default: `{}`
+
+### <a name="input_monitor_metrics"></a> [monitor\_metrics](#input\_monitor\_metrics)
+
+Description: (Optional) Specifies a Prometheus add-on profile for the Kubernetes Cluster  
+object({  
+  annotations\_allowed = "(Optional) Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric."  
+  labels\_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
+})
+
+Type:
+
+```hcl
+object({
+    annotations_allowed = optional(string)
+    labels_allowed      = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_msi_auth_for_monitoring_enabled"></a> [msi\_auth\_for\_monitoring\_enabled](#input\_msi\_auth\_for\_monitoring\_enabled)
+
+Description: (Optional) Is managed identity authentication for monitoring enabled?
+
+Type: `bool`
+
+Default: `null`
 
 ### <a name="input_node_pools"></a> [node\_pools](#input\_node\_pools)
 

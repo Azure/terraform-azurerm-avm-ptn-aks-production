@@ -85,6 +85,12 @@ variable "lock" {
   }
 }
 
+variable "log_analytics_workspace_id" {
+  type        = string
+  default     = null
+  description = "(Optional) The ID of the Log Analytics Workspace to use for the OMS agent."
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "managed_identities" {
   type = object({
@@ -93,6 +99,40 @@ variable "managed_identities" {
   })
   default     = {}
   description = "Managed identities to be created for the resource."
+}
+variable "key_vault_secrets_provider_enabled" {
+  type        = bool
+  default     = false
+  description = "(Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+  nullable    = false
+}
+
+variable "log_analytics_workspace_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable the integration of azurerm_log_analytics_workspace and azurerm_log_analytics_solution: https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-onboard"
+  nullable    = false
+}
+
+variable "monitor_metrics" {
+  type = object({
+    annotations_allowed = optional(string)
+    labels_allowed      = optional(string)
+  })
+  default     = null
+  description = <<-EOT
+  (Optional) Specifies a Prometheus add-on profile for the Kubernetes Cluster
+  object({
+    annotations_allowed = "(Optional) Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric."
+    labels_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
+  })
+EOT
+}
+
+variable "msi_auth_for_monitoring_enabled" {
+  type        = bool
+  default     = null
+  description = "(Optional) Is managed identity authentication for monitoring enabled?"
 }
 
 variable "node_pools" {
@@ -140,7 +180,7 @@ variable "node_pools" {
   description = "The node pools to create on the Kubernetes Cluster."
 
   validation {
-    condition     = length(keys(var.node_pools)) >= 3
+    condition     = var.node_pools != null && length(var.node_pools) >= 3
     error_message = "The minimum number of user node pools recommended to users to create is 3"
   }
 }

@@ -39,7 +39,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     node_count             = 5
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
-    zones                  = module.regions.regions_by_name[var.location == null ? local.resource_group_location : var.location].zones
+    zones                  =  module.regions.regions_by_name[coalesce(var.location, local.resource_group_location)].zones
   }
   dynamic "identity" {
     for_each = var.identity_ids != null ? [var.identity_ids] : []
@@ -48,9 +48,37 @@ resource "azurerm_kubernetes_cluster" "this" {
       identity_ids = var.identity_ids
     }
   }
-  # Say you have a region and documentation supportts availability zone how do i know how many zones exitist
-  key_vault_secrets_provider {
-    secret_rotation_enabled = true
+  dynamic "key_vault_secrets_provider" {
+    for_each = var.key_vault_secrets_provider_enabled ? ["key_vault_secrets_provider"] : []
+
+    content {
+      secret_rotation_enabled  =true
+    }
+  }
+
+    dynamic "monitor_metrics" {
+  
+    for_each = var.monitor_metrics != null ? [var.monitor_metrics] : []
+
+    content {
+      annotations_allowed = var.monitor_metrics.annotations_allowed
+      labels_allowed      = var.monitor_metrics.labels_allowed
+    }
+  }
+  network_profile {
+    network_plugin      = "azure"
+    load_balancer_sku   = "standard"
+    network_plugin_mode = "overlay"
+    network_policy      = "calico"
+    outbound_type       = "userAssignedNATGateway"
+  }
+ dynamic "oms_agent" {
+    for_each = var.log_analytics_workspace_enabled ? ["oms_agent"] : []
+
+    content {
+      log_analytics_workspace_id      = local.log_analytics_workspace.id
+      msi_auth_for_monitoring_enabled = var.msi_auth_for_monitoring_enabled
+    }
   }
 }
 
