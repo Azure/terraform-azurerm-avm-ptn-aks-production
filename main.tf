@@ -39,7 +39,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     node_count             = 5
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
-    zones                  =  module.regions.regions_by_name[coalesce(var.location, local.resource_group_location)].zones
+    zones                  = module.regions.regions_by_name[coalesce(var.location, local.resource_group_location)].zones
   }
   dynamic "identity" {
     for_each = var.identity_ids != null ? [var.identity_ids] : []
@@ -52,12 +52,11 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.key_vault_secrets_provider_enabled ? ["key_vault_secrets_provider"] : []
 
     content {
-      secret_rotation_enabled  =true
+      secret_rotation_enabled = true
     }
   }
+  dynamic "monitor_metrics" {
 
-    dynamic "monitor_metrics" {
-  
     for_each = var.monitor_metrics != null ? [var.monitor_metrics] : []
 
     content {
@@ -72,7 +71,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     network_policy      = "calico"
     outbound_type       = "userAssignedNATGateway"
   }
- dynamic "oms_agent" {
+  dynamic "oms_agent" {
     for_each = var.log_analytics_workspace_enabled ? ["oms_agent"] : []
 
     content {

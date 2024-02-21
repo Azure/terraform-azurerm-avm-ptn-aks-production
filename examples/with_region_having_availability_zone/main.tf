@@ -5,10 +5,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.7.0, < 4.0.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.5.0, < 4.0.0"
-    }
   }
 }
 
@@ -23,7 +19,6 @@ module "regions" {
   source  = "Azure/regions/azurerm"
   version = ">= 0.3.0"
 }
-
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {

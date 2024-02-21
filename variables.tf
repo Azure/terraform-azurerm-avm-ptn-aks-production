@@ -64,6 +64,13 @@ variable "identity_ids" {
   description = "(Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Kubernetes Cluster."
 }
 
+variable "key_vault_secrets_provider_enabled" {
+  type        = bool
+  default     = false
+  description = "(Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
+  nullable    = false
+}
+
 variable "location" {
   type        = string
   default     = null
@@ -85,6 +92,13 @@ variable "lock" {
   }
 }
 
+variable "log_analytics_workspace_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable the integration of azurerm_log_analytics_workspace and azurerm_log_analytics_solution: https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-onboard"
+  nullable    = false
+}
+
 variable "log_analytics_workspace_id" {
   type        = string
   default     = null
@@ -99,19 +113,6 @@ variable "managed_identities" {
   })
   default     = {}
   description = "Managed identities to be created for the resource."
-}
-variable "key_vault_secrets_provider_enabled" {
-  type        = bool
-  default     = false
-  description = "(Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
-  nullable    = false
-}
-
-variable "log_analytics_workspace_enabled" {
-  type        = bool
-  default     = false
-  description = "Enable the integration of azurerm_log_analytics_workspace and azurerm_log_analytics_solution: https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-onboard"
-  nullable    = false
 }
 
 variable "monitor_metrics" {
@@ -180,7 +181,7 @@ variable "node_pools" {
   description = "The node pools to create on the Kubernetes Cluster."
 
   validation {
-    condition     = var.node_pools != null && length(var.node_pools) >= 3
+    condition     = var.node_pools != null && length((var.node_pools)) >= 3
     error_message = "The minimum number of user node pools recommended to users to create is 3"
   }
 }
