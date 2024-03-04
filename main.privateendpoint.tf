@@ -2,7 +2,7 @@
 resource "azurerm_private_endpoint" "this" {
   for_each = var.private_endpoints
 
-  location                      = coalesce(each.value.location, var.location, local.resource_group_location)
+  location                      = coalesce(each.value.location, var.location)
   name                          = each.value.name != null ? each.value.name : "pe-${var.name}"
   resource_group_name           = each.value.resource_group_name != null ? each.value.resource_group_name : var.resource_group_name
   subnet_id                     = each.value.subnet_resource_id
