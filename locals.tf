@@ -1,4 +1,3 @@
-# TODO: insert locals here.
 locals {
   resource_group_location            = try(data.azurerm_resource_group.parent[0].location, null)
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
@@ -17,3 +16,13 @@ locals {
     ]
   ]) : "${assoc.pe_key}-${assoc.asg_key}" => assoc }
 }
+
+
+# check if zone is available and return the zone if it is available
+locals {
+  # zones = try(formatlist("%s", module.regions.regions_by_name[var.location == null ? local.resource_group_location : var.location].zones), null)
+  zones = {
+    for zones in module.regions.regions_by_name_or_display_name[var.location == null ? local.resource_group_location : var.location].zones : zones => zones
+  }
+}
+

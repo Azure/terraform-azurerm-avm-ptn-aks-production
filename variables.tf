@@ -95,6 +95,47 @@ variable "managed_identities" {
   description = "Managed identities to be created for the resource."
 }
 
+variable "node_pools" {
+  type = list(object({
+    vm_size             = string
+    enable_auto_scaling = bool
+    max_count           = number
+    min_count           = number
+    node_count          = optional(number, null)
+    os_sku              = string
+    mode                = optional(string)
+    os_disk_size_gb     = optional(number, null)
+    tags                = optional(map(string), {})
+    zones               = optional(string)
+  }))
+  default = [{
+    vm_size             = "Standard_D4d_v5"
+    enable_auto_scaling = true
+    max_count           = 110
+    min_count           = 2
+    os_sku              = "Ubuntu"
+    mode                = "User"
+    },
+    {
+      vm_size             = "Standard_D4d_v5"
+      enable_auto_scaling = true
+      max_count           = 110
+      min_count           = 2
+      os_sku              = "Ubuntu"
+      mode                = "User"
+    },
+    {
+      vm_size             = "Standard_D4d_v5"
+      enable_auto_scaling = true
+      max_count           = 110
+      min_count           = 2
+      os_sku              = "Ubuntu"
+      mode                = "User"
+    }
+  ]
+  description = "The node pools to create on the Kubernetes Cluster."
+}
+
 variable "private_endpoints" {
   type = map(object({
     name = optional(string, null)

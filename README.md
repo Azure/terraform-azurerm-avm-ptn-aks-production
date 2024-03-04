@@ -42,6 +42,7 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
+- [azurerm_kubernetes_cluster_node_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
@@ -168,6 +169,58 @@ object({
 
 Default: `{}`
 
+### <a name="input_node_pools"></a> [node\_pools](#input\_node\_pools)
+
+Description: The node pools to create on the Kubernetes Cluster.
+
+Type:
+
+```hcl
+list(object({
+    vm_size             = string
+    enable_auto_scaling = bool
+    max_count           = number
+    min_count           = number
+    node_count          = optional(number, null)
+    os_sku              = string
+    mode                = optional(string)
+    os_disk_size_gb     = optional(number, null)
+    tags                = optional(map(string), {})
+    zones               = optional(string)
+  }))
+```
+
+Default:
+
+```json
+[
+  {
+    "enable_auto_scaling": true,
+    "max_count": 110,
+    "min_count": 2,
+    "mode": "User",
+    "os_sku": "Ubuntu",
+    "vm_size": "Standard_D4d_v5"
+  },
+  {
+    "enable_auto_scaling": true,
+    "max_count": 110,
+    "min_count": 2,
+    "mode": "User",
+    "os_sku": "Ubuntu",
+    "vm_size": "Standard_D4d_v5"
+  },
+  {
+    "enable_auto_scaling": true,
+    "max_count": 110,
+    "min_count": 2,
+    "mode": "User",
+    "os_sku": "Ubuntu",
+    "vm_size": "Standard_D4d_v5"
+  }
+]
+```
+
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 
 Description: A map of private endpoints to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -275,7 +328,13 @@ Description: This is the full output for the resource.
 
 ## Modules
 
-No modules.
+The following Modules are called:
+
+### <a name="module_regions"></a> [regions](#module\_regions)
+
+Source: Azure/regions/azurerm
+
+Version: >= 0.3.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

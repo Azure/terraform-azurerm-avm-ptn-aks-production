@@ -5,20 +5,23 @@ data "azurerm_resource_group" "parent" {
   name = var.resource_group_name
 }
 
+module "regions" {
+  source  = "Azure/regions/azurerm"
+  version = ">= 0.3.0"
+}
 
 resource "azurerm_kubernetes_cluster" "this" {
-  location                  = coalesce(var.location, local.resource_group_location)
-  name                      = var.name
-  resource_group_name       = var.resource_group_name
-  automatic_channel_upgrade = "patch"
-  azure_policy_enabled      = true
-  dns_prefix                = var.name
-  kubernetes_version        = null
-  local_account_disabled    = false
-  node_os_channel_upgrade   = "NodeImage"
-  oidc_issuer_enabled       = true
-  private_cluster_enabled   = true
-  # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster - vnet intergration in preview
+  location                          = coalesce(var.location, local.resource_group_location)
+  name                              = var.name
+  resource_group_name               = var.resource_group_name
+  automatic_channel_upgrade         = "patch"
+  azure_policy_enabled              = true
+  dns_prefix                        = var.name
+  kubernetes_version                = null
+  local_account_disabled            = false
+  node_os_channel_upgrade           = "NodeImage"
+  oidc_issuer_enabled               = true
+  private_cluster_enabled           = true
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
   tags                              = var.tags
@@ -28,14 +31,16 @@ resource "azurerm_kubernetes_cluster" "this" {
     name                = "agentpool"
     vm_size             = "Standard_D4d_v5"
     enable_auto_scaling = true
-    max_count           = 5
-    max_pods            = 110
-    min_count           = 2
-    # node_count although we agreed on 64 - this has to be a number between min_count and max_count
-    node_count = 5
-    os_sku     = "Ubuntu"
-    # os_disk_size_gb - check the GB size of the disk? TODO: research the default size
-    tags = merge(var.tags, var.agents_tags)
+    # autoscaler profile setting on the old module use the configuration
+    enable_host_encryption = true
+    max_count              = 5
+    max_pods               = 110
+    min_count              = 2
+    node_count             = 5
+    os_sku                 = "Ubuntu"
+    tags                   = merge(var.tags, var.agents_tags)
+    # convert to string the zones
+    zones = [for zone in local.zones : zone]
   }
   dynamic "identity" {
     for_each = var.identity_ids != null ? [var.identity_ids] : []
@@ -43,6 +48,10 @@ resource "azurerm_kubernetes_cluster" "this" {
       type         = "UserAssigned"
       identity_ids = var.identity_ids
     }
+  }
+  # Say you have a region and documentation supportts availability zone how do i know how many zones exitist
+  key_vault_secrets_provider {
+    secret_rotation_enabled = true
   }
 }
 
@@ -53,6 +62,23 @@ resource "azurerm_management_lock" "this" {
   lock_level = var.lock.kind
   name       = coalesce(var.lock.name, "lock-${var.name}")
   scope      = azurerm_kubernetes_cluster.this.id
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "this" {
+  # if the region has zone create a node pool per zone
+  # if the region does not have zone create a single node pool with the zone as null
+  # if node pools are not emplty check if the node has a zone if yes then create a node pool per zone otherwise create a single node pool
+  count = var.node_pools != null ? length(var.node_pools) : local.zones != null ? 3 : 1
+
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
+  name                  = "workload${count.index + 1}"
+  vm_size               = var.node_pools[count.index] == null ? var.node_pools[0].vm_size : var.node_pools[count.index].vm_size
+  enable_auto_scaling   = true
+  max_count             = var.node_pools[count.index] == null ? var.node_pools[0].vm_size : var.node_pools[count.index].max_count
+  min_count             = var.node_pools[count.index] == null ? var.node_pools[0].vm_size : var.node_pools[count.index].min_count
+  os_sku                = var.node_pools[count.index] == null ? var.node_pools[0].vm_size : var.node_pools[count.index].os_sku
+  tags                  = var.tags
+  zones                 = try(formatlist("%s", local.zones[(tonumber(count.index) + 1)]), null)
 }
 
 resource "azurerm_role_assignment" "this" {
