@@ -39,8 +39,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     node_count             = 5
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
-    # convert to string the zones
-    zones = [for zone in local.zones : zone]
+    zones                  = [for zone in local.zones : zone]
   }
   dynamic "identity" {
     for_each = var.identity_ids != null ? [var.identity_ids] : []
@@ -49,7 +48,6 @@ resource "azurerm_kubernetes_cluster" "this" {
       identity_ids = var.identity_ids
     }
   }
-  # Say you have a region and documentation supportts availability zone how do i know how many zones exitist
   key_vault_secrets_provider {
     secret_rotation_enabled = true
   }
@@ -68,15 +66,16 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   # if the region has zone create a node pool per zone
   # if the region does not have zone create a single node pool with the zone as null
   # if node pools are not emplty check if the node has a zone if yes then create a node pool per zone otherwise create a single node pool
-  count = var.node_pools != null ? length(var.node_pools) : local.zones != null ? 3 : 1
+  # count = var.node_pools != null ? var.zones ? 3 : 1 : length(local.zones)
+  count = var.node_pools != null ? try(var.zones, local.zones) != null ? 3 : 1 : length(var.zones)
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
   name                  = "workload${count.index + 1}"
-  vm_size               = var.node_pools[count.index] == null ? var.node_pools[0].vm_size : var.node_pools[count.index].vm_size
+  vm_size               = try(var.node_pools[count.index].vm_size, var.node_pools[0].vm_size)
   enable_auto_scaling   = true
-  max_count             = var.node_pools[count.index] == null ? var.node_pools[0].vm_size : var.node_pools[count.index].max_count
-  min_count             = var.node_pools[count.index] == null ? var.node_pools[0].vm_size : var.node_pools[count.index].min_count
-  os_sku                = var.node_pools[count.index] == null ? var.node_pools[0].vm_size : var.node_pools[count.index].os_sku
+  max_count             = try(var.node_pools[count.index].max_count, var.node_pools[0].max_count)
+  min_count             = try(var.node_pools[count.index].min_count, var.node_pools[0].min_count)
+  os_sku                = try(var.node_pools[count.index].os_sku, var.node_pools[0].os_sku)
   tags                  = var.tags
   zones                 = try(formatlist("%s", local.zones[(tonumber(count.index) + 1)]), null)
 }

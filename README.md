@@ -201,22 +201,6 @@ Default:
     "mode": "User",
     "os_sku": "Ubuntu",
     "vm_size": "Standard_D4d_v5"
-  },
-  {
-    "enable_auto_scaling": true,
-    "max_count": 110,
-    "min_count": 2,
-    "mode": "User",
-    "os_sku": "Ubuntu",
-    "vm_size": "Standard_D4d_v5"
-  },
-  {
-    "enable_auto_scaling": true,
-    "max_count": 110,
-    "min_count": 2,
-    "mode": "User",
-    "os_sku": "Ubuntu",
-    "vm_size": "Standard_D4d_v5"
   }
 ]
 ```
@@ -313,6 +297,14 @@ Description: The map of tags to be applied to the resource
 Type: `map(any)`
 
 Default: `{}`
+
+### <a name="input_zones"></a> [zones](#input\_zones)
+
+Description: The zones to use for the Kubernetes Cluster. This is used for testing purposes and is automatically set when using the `azurerm_regions` module via local.zones.
+
+Type: `list(string)`
+
+Default: `null`
 
 ## Outputs
 

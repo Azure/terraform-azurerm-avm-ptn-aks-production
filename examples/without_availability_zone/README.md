@@ -48,6 +48,7 @@ module "test" {
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   identity_ids        = [azurerm_user_assigned_identity.this.id]
+  zones               = null
 }
 ```
 

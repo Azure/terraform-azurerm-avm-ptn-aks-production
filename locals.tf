@@ -18,11 +18,8 @@ locals {
 }
 
 
-# check if zone is available and return the zone if it is available
 locals {
-  # zones = try(formatlist("%s", module.regions.regions_by_name[var.location == null ? local.resource_group_location : var.location].zones), null)
   zones = {
-    for zones in module.regions.regions_by_name_or_display_name[var.location == null ? local.resource_group_location : var.location].zones : zones => zones
+    for zones in try(module.regions.regions_by_name_or_display_name[var.location == null ? local.resource_group_location : var.location].zones) : zones => zones
   }
 }
-
