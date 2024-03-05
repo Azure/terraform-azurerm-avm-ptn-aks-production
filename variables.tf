@@ -107,7 +107,7 @@ variable "node_pools" {
     mode                = optional(string)
     os_disk_size_gb     = optional(number, null)
     tags                = optional(map(string), {})
-    zones               = optional(string)
+    zones               = optional(set(string))
   }))
   default = [{
     name               = "workload"
