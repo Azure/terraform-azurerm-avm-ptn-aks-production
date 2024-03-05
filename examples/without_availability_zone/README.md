@@ -26,7 +26,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = "West Central US"
+  location = "West US"
   name     = module.naming.resource_group.name_unique
 }
 

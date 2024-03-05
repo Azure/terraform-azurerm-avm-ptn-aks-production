@@ -97,7 +97,7 @@ variable "managed_identities" {
 
 variable "node_pools" {
   type = list(object({
-    name               = string
+    name                = string
     vm_size             = string
     enable_auto_scaling = bool
     max_count           = number
@@ -110,7 +110,7 @@ variable "node_pools" {
     zones               = optional(set(string))
   }))
   default = [{
-    name               = "workload"
+    name                = "workload"
     vm_size             = "Standard_D4d_v5"
     enable_auto_scaling = true
     max_count           = 110

@@ -177,6 +177,7 @@ Type:
 
 ```hcl
 list(object({
+    name                = string
     vm_size             = string
     enable_auto_scaling = bool
     max_count           = number
@@ -186,7 +187,7 @@ list(object({
     mode                = optional(string)
     os_disk_size_gb     = optional(number, null)
     tags                = optional(map(string), {})
-    zones               = optional(string)
+    zones               = optional(set(string))
   }))
 ```
 
@@ -199,6 +200,7 @@ Default:
     "max_count": 110,
     "min_count": 2,
     "mode": "User",
+    "name": "workload",
     "os_sku": "Ubuntu",
     "vm_size": "Standard_D4d_v5"
   }
