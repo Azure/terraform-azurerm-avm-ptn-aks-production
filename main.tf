@@ -67,7 +67,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   # if the region does not have zone create a single node pool with the zone as null
   # if node pools are not emplty check if the node has a zone if yes then create a node pool per zone otherwise create a single node pool
   # count = var.node_pools != null ? var.zones ? 3 : 1 : length(local.zones)
-  count = var.node_pools != null ? try(var.zones, local.zones) != null ? 3 : 1 : length(var.zones)
+  count = var.node_pools != null ? (var.zones != null ? length(var.node_pools) * 3 : length(var.node_pools)) : length(var.zones)
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
   name                  = "workload${count.index + 1}"
