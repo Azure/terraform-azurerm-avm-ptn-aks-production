@@ -62,22 +62,39 @@ resource "azurerm_management_lock" "this" {
   scope      = azurerm_kubernetes_cluster.this.id
 }
 
+# resource "azurerm_kubernetes_cluster_node_pool" "this" {
+#   # if the region has zone create a node pool per zone
+#   # if the region does not have zone create a single node pool with the zone as null
+#   # if node pools are not emplty check if the node has a zone if yes then create a node pool per zone otherwise create a single node pool
+#   # count = var.node_pools != null ? var.zones ? 3 : 1 : length(local.zones)
+#   count = var.node_pools != null ? (var.zones != null ? length(var.node_pools) * 3 : length(var.node_pools)) : 0
+
+#   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
+#   name                  = "workload${count.index + 1}"
+#   vm_size               = try(var.node_pools[count.index].vm_size, var.node_pools[0].vm_size)
+#   enable_auto_scaling   = true
+#   max_count             = try(var.node_pools[count.index].max_count, var.node_pools[0].max_count)
+#   min_count             = try(var.node_pools[count.index].min_count, var.node_pools[0].min_count)
+#   os_sku                = try(var.node_pools[count.index].os_sku, var.node_pools[0].os_sku)
+#   tags                  = var.tags
+#   zones                 = try(formatlist("%s", local.zones[(tonumber(count.index) + 1)]), null)
+# }
+
+
 resource "azurerm_kubernetes_cluster_node_pool" "this" {
-  # if the region has zone create a node pool per zone
-  # if the region does not have zone create a single node pool with the zone as null
-  # if node pools are not emplty check if the node has a zone if yes then create a node pool per zone otherwise create a single node pool
-  # count = var.node_pools != null ? var.zones ? 3 : 1 : length(local.zones)
-  count = var.node_pools != null ? (var.zones != null ? length(var.node_pools) * 3 : length(var.node_pools)) : 0
+  for_each = tomap({
+    for pool in local.node_pools : pool.name => pool
+  })
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
-  name                  = "workload${count.index + 1}"
-  vm_size               = try(var.node_pools[count.index].vm_size, var.node_pools[0].vm_size)
+  name                  = each.value.name
+  vm_size               = each.value.vm_size
   enable_auto_scaling   = true
-  max_count             = try(var.node_pools[count.index].max_count, var.node_pools[0].max_count)
-  min_count             = try(var.node_pools[count.index].min_count, var.node_pools[0].min_count)
-  os_sku                = try(var.node_pools[count.index].os_sku, var.node_pools[0].os_sku)
+  max_count             = each.value.max_count
+  min_count             = each.value.min_count
+  os_sku                = each.value.os_sku
+  zones                 = [each.value.zone]
   tags                  = var.tags
-  zones                 = try(formatlist("%s", local.zones[(tonumber(count.index) + 1)]), null)
 }
 
 resource "azurerm_role_assignment" "this" {

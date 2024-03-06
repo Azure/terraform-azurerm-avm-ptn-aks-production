@@ -19,7 +19,20 @@ locals {
 
 
 locals {
-  zones = {
-    for zones in try(module.regions.regions_by_name_or_display_name[var.location == null ? local.resource_group_location : var.location].zones, []) : zones => zones
-  }
+  # Flatten a list of var.node_pools and zones
+  node_pools = flatten([
+    for pool in var.node_pools : [
+      for zone in local.zones : {
+        # concatenate name and zone trim to 12 characters
+        name      = "${substr(pool.name, 0, 11)}${zone}"
+        vm_size   = pool.vm_size
+        max_count = pool.max_count
+        min_count = pool.min_count
+        os_sku    = pool.os_sku
+        zone      = zone
+      }
+    ]
+  ])
+  # set of strings 1 2 3
+  zones = toset(["1", "2", "3"])
 }
