@@ -24,12 +24,6 @@ module "naming" {
   version = ">= 0.3.0"
 }
 
-# This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = "East US 2"
-  name     = module.naming.resource_group.name_unique
-}
-
 resource "azurerm_user_assigned_identity" "this" {
   location            = azurerm_resource_group.this.location
   name                = "uami-${var.kubernetes_cluster_name}"
@@ -48,7 +42,7 @@ module "test" {
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   identity_ids        = [azurerm_user_assigned_identity.this.id]
-  zones               = ["1", "2", "3"]
+  location            = "East US 2"
 }
 ```
 
@@ -71,7 +65,6 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 
 <!-- markdownlint-disable MD013 -->

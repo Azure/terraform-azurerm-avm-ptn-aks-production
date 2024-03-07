@@ -12,16 +12,12 @@ provider "azurerm" {
   features {}
 }
 
+
+
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = ">= 0.3.0"
-}
-
-# This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = "East US 2"
-  name     = module.naming.resource_group.name_unique
 }
 
 resource "azurerm_user_assigned_identity" "this" {
@@ -42,5 +38,5 @@ module "test" {
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   identity_ids        = [azurerm_user_assigned_identity.this.id]
-  zones               = ["1", "2", "3"]
+  location            = "East US 2"
 }

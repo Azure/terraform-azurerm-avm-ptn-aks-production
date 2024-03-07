@@ -96,7 +96,7 @@ variable "managed_identities" {
 }
 
 variable "node_pools" {
-  type = list(object({
+  type = map(object({
     name                = string
     vm_size             = string
     enable_auto_scaling = bool
@@ -109,16 +109,17 @@ variable "node_pools" {
     tags                = optional(map(string), {})
     zones               = optional(set(string))
   }))
-  default = [{
-    name                = "workload"
-    vm_size             = "Standard_D4d_v5"
-    enable_auto_scaling = true
-    max_count           = 110
-    min_count           = 2
-    os_sku              = "Ubuntu"
-    mode                = "User"
+  default = {
+    workload = {
+      name                = "workload"
+      vm_size             = "Standard_D4d_v5"
+      enable_auto_scaling = true
+      max_count           = 110
+      min_count           = 2
+      os_sku              = "Ubuntu"
+      mode                = "User"
     }
-  ]
+  }
   description = "The node pools to create on the Kubernetes Cluster."
 }
 

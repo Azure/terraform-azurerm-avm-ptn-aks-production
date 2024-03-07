@@ -35,6 +35,8 @@ The following providers are used by this module:
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.71.0)
 
+- <a name="provider_local"></a> [local](#provider\_local)
+
 - <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0)
 
 ## Resources
@@ -50,6 +52,8 @@ The following resources are used by this module:
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 - [azurerm_resource_group.parent](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) (data source)
+- [local_file.compute_provider](https://registry.terraform.io/providers/hashicorp/local/latest/docs/data-sources/file) (data source)
+- [local_file.locations](https://registry.terraform.io/providers/hashicorp/local/latest/docs/data-sources/file) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -176,7 +180,7 @@ Description: The node pools to create on the Kubernetes Cluster.
 Type:
 
 ```hcl
-list(object({
+map(object({
     name                = string
     vm_size             = string
     enable_auto_scaling = bool
@@ -194,8 +198,8 @@ list(object({
 Default:
 
 ```json
-[
-  {
+{
+  "workload": {
     "enable_auto_scaling": true,
     "max_count": 110,
     "min_count": 2,
@@ -204,7 +208,7 @@ Default:
     "os_sku": "Ubuntu",
     "vm_size": "Standard_D4d_v5"
   }
-]
+}
 ```
 
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
