@@ -110,7 +110,7 @@ variable "node_pools" {
     zones               = optional(set(string))
   }))
   default = {
-    "workload1" = {
+    workload = {
       name                = "workload"
       vm_size             = "Standard_D4d_v5"
       enable_auto_scaling = true
@@ -118,25 +118,6 @@ variable "node_pools" {
       min_count           = 2
       os_sku              = "Ubuntu"
       mode                = "User"
-
-      }, "workload1" = {
-      name                = "workload"
-      vm_size             = "Standard_D4d_v5"
-      enable_auto_scaling = true
-      max_count           = 110
-      min_count           = 2
-      os_sku              = "Ubuntu"
-      mode                = "User"
-
-      }, "workload1" = {
-      name                = "workload"
-      vm_size             = "Standard_D4d_v5"
-      enable_auto_scaling = true
-      max_count           = 110
-      min_count           = 2
-      os_sku              = "Ubuntu"
-      mode                = "User"
-
     }
   }
   description = "The node pools to create on the Kubernetes Cluster."

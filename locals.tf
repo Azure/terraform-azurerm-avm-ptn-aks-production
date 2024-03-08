@@ -48,16 +48,14 @@ locals {
 locals {
   # Flatten a list of var.node_pools and zones
   node_pools = flatten([
-    for pool in var.node_pools : try([
-      for zone in local.regions_by_name_or_display_name[var.location == null ? local.resource_group_location : var.location].zones : {
+    for pool in var.node_pools : [
+      for zone in try(local.regions_by_name_or_display_name[var.location == null ? local.resource_group_location : var.location].zones, ["1"]) : {
         # concatenate name and zone trim to 12 characters
-        name      = "${substr(pool.name, 0, 11)}${zone}"
-        vm_size   = pool.vm_size
-        max_count = pool.max_count
-        min_count = pool.min_count
-        os_sku    = pool.os_sku
-        zone      = zone
+        name    = "${substr(pool.name, 0, 11)}${zone}"
+        vm_size = pool.vm_size
+        os_sku  = pool.os_sku
+        zone    = zone
       }
-    ], [])
+    ]
   ])
 }

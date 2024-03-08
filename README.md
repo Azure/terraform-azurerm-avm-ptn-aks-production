@@ -199,7 +199,7 @@ Default:
 
 ```json
 {
-  "workload1": {
+  "workload": {
     "enable_auto_scaling": true,
     "max_count": 110,
     "min_count": 2,

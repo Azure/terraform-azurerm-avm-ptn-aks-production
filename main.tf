@@ -73,11 +73,11 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   name                  = "${each.value.name}-${var.name}"
   vm_size               = each.value.vm_size
   enable_auto_scaling   = true
-  max_count             = each.value.max_count
-  min_count             = each.value.min_count
-  os_sku                = each.value.os_sku
-  tags                  = var.tags
-  zones                 = [each.value.zone]
+  # max_count             = each.value.max_count
+  # min_count             = each.value.min_count
+  os_sku = each.value.os_sku
+  tags   = var.tags
+  zones  = [each.value.zone]
 }
 
 

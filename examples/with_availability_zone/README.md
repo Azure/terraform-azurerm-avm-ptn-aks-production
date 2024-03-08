@@ -49,6 +49,24 @@ module "test" {
   resource_group_name = azurerm_resource_group.this.name
   identity_ids        = [azurerm_user_assigned_identity.this.id]
   location            = "East US 2"
+  node_pools = {
+    workload = {
+      name      = "workload"
+      vm_size   = "Standard_D4d_v5"
+      max_count = 110
+      min_count = 2
+      os_sku    = "Ubuntu"
+      mode      = "User"
+    },
+    ingress = {
+      name      = "ingress"
+      vm_size   = "Standard_D4d_v5"
+      max_count = 4
+      min_count = 2
+      os_sku    = "Ubuntu"
+      mode      = "User"
+    }
+  }
 }
 ```
 
