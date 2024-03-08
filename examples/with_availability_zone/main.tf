@@ -12,12 +12,16 @@ provider "azurerm" {
   features {}
 }
 
-
-
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = ">= 0.3.0"
+}
+
+# This is required for resource modules
+resource "azurerm_resource_group" "this" {
+  location = "East US 2"
+  name     = module.naming.resource_group.name_unique
 }
 
 resource "azurerm_user_assigned_identity" "this" {

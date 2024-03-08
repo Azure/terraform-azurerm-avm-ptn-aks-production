@@ -183,12 +183,12 @@ Type:
 map(object({
     name                = string
     vm_size             = string
-    enable_auto_scaling = bool
-    max_count           = number
-    min_count           = number
+    enable_auto_scaling = optional(bool)
+    max_count           = optional(number)
+    min_count           = optional(number)
     node_count          = optional(number, null)
-    os_sku              = string
-    mode                = optional(string)
+    os_sku              = optional(string)
+    mode                = optional(string, "User")
     os_disk_size_gb     = optional(number, null)
     tags                = optional(map(string), {})
     zones               = optional(set(string))
@@ -199,7 +199,7 @@ Default:
 
 ```json
 {
-  "workload": {
+  "workload1": {
     "enable_auto_scaling": true,
     "max_count": 110,
     "min_count": 2,

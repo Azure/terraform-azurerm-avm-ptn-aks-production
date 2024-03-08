@@ -70,7 +70,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   })
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
-  name                  = each.value.name
+  name                  = "${each.value.name}-${var.name}"
   vm_size               = each.value.vm_size
   enable_auto_scaling   = true
   max_count             = each.value.max_count
