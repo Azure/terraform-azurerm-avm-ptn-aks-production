@@ -43,15 +43,13 @@ resource "azurerm_kubernetes_cluster" "this" {
   workload_identity_enabled         = true
 
   default_node_pool {
-    name                = "agentpool"
-    vm_size             = "Standard_D4d_v5"
-    enable_auto_scaling = true
-    # autoscaler profile setting on the old module use the configuration
+    name                   = "agentpool"
+    vm_size                = "Standard_D4d_v5"
+    enable_auto_scaling    = true
     enable_host_encryption = true
-    max_count              = 5
+    max_count              = 9
     max_pods               = 110
-    min_count              = 2
-    node_count             = 5
+    min_count              = 3
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
     zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
@@ -68,6 +66,101 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
   key_vault_secrets_provider {
     secret_rotation_enabled = true
+  }
+  dynamic "monitor_metrics" {
+
+    for_each = var.monitor_metrics != null ? [var.monitor_metrics] : []
+
+    content {
+      annotations_allowed = var.monitor_metrics.annotations_allowed
+      labels_allowed      = var.monitor_metrics.labels_allowed
+    }
+  }
+  network_profile {
+    network_plugin      = "azure"
+    load_balancer_sku   = "standard"
+    network_plugin_mode = "overlay"
+    network_policy      = "calico"
+    outbound_type       = "managedNATGateway"
+  }
+  oms_agent {
+    log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
+    msi_auth_for_monitoring_enabled = true
+  }
+}
+
+data "azurerm_monitor_diagnostic_categories" "aks" {
+  resource_id = azurerm_kubernetes_cluster.this.id
+}
+
+resource "azurerm_log_analytics_workspace" "this" {
+  location            = var.location
+  name                = "${var.name}-aks"
+  resource_group_name = var.resource_group_name
+  sku                 = "PerGB2018"
+  tags                = var.tags
+}
+
+resource "azurerm_log_analytics_workspace_table" "this" {
+  for_each = toset(local.log_analytics_tables)
+
+  name         = each.value
+  workspace_id = azurerm_log_analytics_workspace.this.id
+  plan         = "Basic"
+}
+
+resource "azurerm_monitor_diagnostic_setting" "aks" {
+  name                           = "${var.name}-aks"
+  target_resource_id             = azurerm_kubernetes_cluster.this.id
+  log_analytics_destination_type = "Dedicated"
+  log_analytics_workspace_id     = azurerm_log_analytics_workspace.this.id
+
+  # Kubernetes API Server
+  enabled_log {
+    category = "kube-apiserver"
+  }
+  # Kubernetes Audit
+  enabled_log {
+    category = "kube-audit"
+  }
+  # Kubernetes Audit Admin Logs
+  enabled_log {
+    category = "kube-audit-admin"
+  }
+  # Kubernetes Controller Manager
+  enabled_log {
+    category = "kube-controller-manager"
+  }
+  # Kubernetes Scheduler
+  enabled_log {
+    category = "kube-scheduler"
+  }
+  #Kubernetes Cluster Autoscaler
+  enabled_log {
+    category = "cluster-autoscaler"
+  }
+  #Kubernetes Cloud Controller Manager
+  enabled_log {
+    category = "cloud-controller-manager"
+  }
+  #guard
+  enabled_log {
+    category = "guard"
+  }
+  #csi-azuredisk-controller
+  enabled_log {
+    category = "csi-azuredisk-controller"
+  }
+  #csi-azurefile-controller
+  enabled_log {
+    category = "csi-azurefile-controller"
+  }
+  #csi-snapshot-controller
+  enabled_log {
+    category = "csi-snapshot-controller"
+  }
+  metric {
+    category = "AllMetrics"
   }
 }
 

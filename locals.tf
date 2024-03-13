@@ -60,3 +60,6 @@ locals {
     ]
   ])
 }
+locals {
+  log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane"]
+}
