@@ -1,3 +1,9 @@
+variable "location" {
+  type        = string
+  description = "The Azure region where the resources should be deployed."
+  nullable    = false
+}
+
 variable "name" {
   type        = string
   description = "The name for the AKS resources created in the specified Azure Resource Group. This variable overwrites the 'prefix' var (The 'prefix' var will still be applied to the dns_prefix if it is set)"
@@ -12,6 +18,7 @@ variable "name" {
 variable "resource_group_name" {
   type        = string
   description = "The resource group where the resources will be deployed."
+  nullable    = false
 }
 
 variable "agents_tags" {
@@ -64,12 +71,6 @@ variable "identity_ids" {
   description = "(Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Kubernetes Cluster."
 }
 
-variable "location" {
-  type        = string
-  default     = null
-  description = "Azure region where the resource should be deployed.  If null, the location will be inferred from the resource group location."
-}
-
 variable "lock" {
   type = object({
     name = optional(string, null)
@@ -93,6 +94,46 @@ variable "managed_identities" {
   })
   default     = {}
   description = "Managed identities to be created for the resource."
+}
+
+variable "node_pools" {
+  type = map(object({
+    name    = string
+    vm_size = string
+    # do not add nodecount because we enforce the use of auto-scaling
+    max_count       = optional(number)
+    min_count       = optional(number)
+    os_sku          = optional(string)
+    mode            = optional(string)
+    os_disk_size_gb = optional(number, null)
+    tags            = optional(map(string), {})
+    zones           = optional(set(string))
+  }))
+  default = {
+    workload = {
+      name      = "workload"
+      vm_size   = "Standard_D4d_v5"
+      max_count = 110
+      min_count = 2
+      os_sku    = "Ubuntu"
+      mode      = "User"
+    }
+  }
+  description = <<-EOT
+A map of node pools that need to be created and attached on the Kubernetes cluster. The key of the map can be the name of the node pool, and the key must be static string. The value of the map is a `node_pool` block as defined below:
+map(object({
+  name            = (Required) The name of the Node Pool which should be created within the Kubernetes Cluster. Changing this forces a new resource to be created. A Windows Node Pool cannot have a `name` longer than 6 characters. A random suffix of 4 characters is always added to the name to avoid clashes during recreates.
+  vm_size         = (Required) The SKU which should be used for the Virtual Machines used in this Node Pool. Changing this forces a new resource to be created.
+  max_count       = (Optional) The maximum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be greater than or equal to `min_count`.
+  min_count       = (Optional) The minimum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be less than or equal to `max_count`.
+  os_sku          = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`, `CBLMariner`, `Mariner`, `Windows2019`, `Windows2022`. If not specified, the default is `Ubuntu` if OSType=Linux or `Windows2019` if OSType=Windows. And the default Windows OSSKU will be changed to `Windows2022` after Windows2019 is deprecated. Changing this forces a new resource to be created.
+  mode            = (Optional) Should this Node Pool be used for System or User resources? Possible values are `System` and `User`. Defaults to `User`.
+  os_disk_size_gb = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.
+  tags            = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
+  zones           = (Optional) Specifies a list of Availability Zones in which this Kubernetes Cluster Node Pool should be located. Changing this forces a new Kubernetes Cluster Node Pool to be created.
+}))
+EOT
+  nullable    = false
 }
 
 variable "private_endpoints" {

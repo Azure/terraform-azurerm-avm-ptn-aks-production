@@ -1,24 +1,20 @@
-
-data "azurerm_resource_group" "parent" {
-  count = var.location == null ? 1 : 0
-
-  name = var.resource_group_name
+module "regions" {
+  source  = "Azure/regions/azurerm"
+  version = ">= 0.3.0"
 }
 
-
 resource "azurerm_kubernetes_cluster" "this" {
-  location                  = coalesce(var.location, local.resource_group_location)
-  name                      = var.name
-  resource_group_name       = var.resource_group_name
-  automatic_channel_upgrade = "patch"
-  azure_policy_enabled      = true
-  dns_prefix                = var.name
-  kubernetes_version        = null
-  local_account_disabled    = false
-  node_os_channel_upgrade   = "NodeImage"
-  oidc_issuer_enabled       = true
-  private_cluster_enabled   = true
-  # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster - vnet intergration in preview
+  location                          = var.location
+  name                              = var.name
+  resource_group_name               = var.resource_group_name
+  automatic_channel_upgrade         = "patch"
+  azure_policy_enabled              = true
+  dns_prefix                        = var.name
+  kubernetes_version                = null
+  local_account_disabled            = false
+  node_os_channel_upgrade           = "NodeImage"
+  oidc_issuer_enabled               = true
+  private_cluster_enabled           = true
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
   tags                              = var.tags
@@ -28,14 +24,18 @@ resource "azurerm_kubernetes_cluster" "this" {
     name                = "agentpool"
     vm_size             = "Standard_D4d_v5"
     enable_auto_scaling = true
-    max_count           = 5
-    max_pods            = 110
-    min_count           = 2
-    # node_count although we agreed on 64 - this has to be a number between min_count and max_count
-    node_count = 5
-    os_sku     = "Ubuntu"
-    # os_disk_size_gb - check the GB size of the disk? TODO: research the default size
-    tags = merge(var.tags, var.agents_tags)
+    # autoscaler profile setting on the old module use the configuration
+    enable_host_encryption = true
+    max_count              = 5
+    max_pods               = 110
+    min_count              = 2
+    node_count             = 5
+    os_sku                 = "Ubuntu"
+    tags                   = merge(var.tags, var.agents_tags)
+    zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
+  }
+  auto_scaler_profile {
+    balance_similar_node_groups = true
   }
   dynamic "identity" {
     for_each = var.identity_ids != null ? [var.identity_ids] : []
@@ -43,6 +43,9 @@ resource "azurerm_kubernetes_cluster" "this" {
       type         = "UserAssigned"
       identity_ids = var.identity_ids
     }
+  }
+  key_vault_secrets_provider {
+    secret_rotation_enabled = true
   }
 }
 
@@ -54,6 +57,24 @@ resource "azurerm_management_lock" "this" {
   name       = coalesce(var.lock.name, "lock-${var.name}")
   scope      = azurerm_kubernetes_cluster.this.id
 }
+
+
+resource "azurerm_kubernetes_cluster_node_pool" "this" {
+  for_each = tomap({
+    for pool in local.node_pools : pool.name => pool
+  })
+
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
+  name                  = each.value.name
+  vm_size               = each.value.vm_size
+  enable_auto_scaling   = true
+  max_count             = each.value.max_count
+  min_count             = each.value.min_count
+  os_sku                = each.value.os_sku
+  tags                  = var.tags
+  zones                 = each.value.zone == "" ? null : [each.value.zone]
+}
+
 
 resource "azurerm_role_assignment" "this" {
   for_each = var.role_assignments
@@ -68,3 +89,11 @@ resource "azurerm_role_assignment" "this" {
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 }
 
+# These resources allow the use of consistent local data files, and semver versioning
+data "local_file" "compute_provider" {
+  filename = "${path.module}/data/microsoft.compute_resourceTypes.json"
+}
+
+data "local_file" "locations" {
+  filename = "${path.module}/data/locations.json"
+}
