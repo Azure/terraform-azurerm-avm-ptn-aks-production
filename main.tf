@@ -3,6 +3,28 @@ module "regions" {
   version = ">= 0.3.0"
 }
 
+resource "random_string" "acr_suffix" {
+  length  = 8
+  numeric = true
+  special = false
+  upper   = false
+}
+
+resource "azurerm_container_registry" "this" {
+  location            = var.location
+  name                = "aksacr${random_string.acr_suffix.result}"
+  resource_group_name = var.resource_group_name
+  sku                 = "Premium"
+  tags                = var.tags
+}
+
+resource "azurerm_role_assignment" "acr" {
+  principal_id                     = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
+  scope                            = azurerm_container_registry.this.id
+  role_definition_name             = "AcrPull"
+  skip_service_principal_aad_check = true
+}
+
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
   name                              = var.name
