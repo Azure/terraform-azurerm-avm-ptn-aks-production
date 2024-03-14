@@ -225,6 +225,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   tags                  = var.tags
   vnet_subnet_id        = module.vnet.vnet_subnets_name_id["nodecidr"]
   zones                 = each.value.zone == "" ? null : [each.value.zone]
+
+  depends_on = [azapi_update_resource.aks_cluster_post_create]
 }
 
 
