@@ -125,10 +125,6 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
   }
 }
 
-data "azurerm_monitor_diagnostic_categories" "aks" {
-  resource_id = azurerm_kubernetes_cluster.this.id
-}
-
 resource "azurerm_log_analytics_workspace" "this" {
   location            = var.location
   name                = "${var.name}-aks"
