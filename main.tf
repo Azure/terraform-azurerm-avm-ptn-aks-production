@@ -59,6 +59,12 @@ resource "azurerm_kubernetes_cluster" "this" {
   auto_scaler_profile {
     balance_similar_node_groups = true
   }
+  azure_active_directory_role_based_access_control {
+    admin_group_object_ids = var.rbac_aad_admin_group_object_ids
+    azure_rbac_enabled     = var.rbac_aad_azure_rbac_enabled
+    managed                = true
+    tenant_id              = var.rbac_aad_tenant_id
+  }
   dynamic "identity" {
     for_each = var.identity_ids != null ? [var.identity_ids] : []
     content {
