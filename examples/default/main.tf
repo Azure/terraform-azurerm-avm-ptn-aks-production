@@ -74,10 +74,40 @@ module "vnet" {
   resource_group_name = azurerm_resource_group.this.name
   subnets = {
     subnet0 = {
-      address_prefixes  = ["10.52.0.0/16"]
+      address_prefixes  = ["10.31.0.0/24"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example.id
+      }
+    }
+    subnet1 = {
+      address_prefixes = ["10.31.1.0/24"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example.id
+      }
     }
   }
-  virtual_network_address_space = ["10.52.0.0/16"]
+  virtual_network_address_space = ["10.31.0.0/16"]
   virtual_network_location      = local.location
   virtual_network_name          = "vnet"
+}
+
+resource "azurerm_nat_gateway" "example" {
+  location            =local.location
+  name                = "natgateway"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+
+
+resource "azurerm_nat_gateway_public_ip_association" "example" {
+  nat_gateway_id       = azurerm_nat_gateway.example.id
+  public_ip_address_id = azurerm_public_ip.example.id
+}
+
+resource "azurerm_public_ip" "example" {
+  name                = "example-PIP"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.this.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }
