@@ -53,7 +53,9 @@ resource "azurerm_kubernetes_cluster" "this" {
     orchestrator_version   = var.orchestrator_version
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
-    zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
+    # configure enhanced subnet support to allow for sufficient subnet support https://learn.microsoft.com/en-us/azure/aks/configure-azure-cni-dynamic-ip-allocation 
+    vnet_subnet_id = data.azurerm_subnet.system.id
+    zones          = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
   }
   auto_scaler_profile {
     balance_similar_node_groups = true
@@ -222,7 +224,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   orchestrator_version  = each.value.orchestrator_version
   os_sku                = each.value.os_sku
   tags                  = var.tags
-  zones                 = each.value.zone == "" ? null : [each.value.zone]
+  # configure enhanced subnet support to allow for sufficient subnet support https://learn.microsoft.com/en-us/azure/aks/configure-azure-cni-dynamic-ip-allocation 
+  vnet_subnet_id = data.azurerm_subnet.system.id
+  zones          = each.value.zone == "" ? null : [each.value.zone]
 }
 
 

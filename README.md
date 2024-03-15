@@ -70,6 +70,8 @@ The following resources are used by this module:
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 - [random_string.acr_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [azurerm_monitor_diagnostic_categories.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/monitor_diagnostic_categories) (data source)
+- [azurerm_subnet.subnet_alb](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) (data source)
+- [azurerm_subnet.system](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) (data source)
 - [local_file.compute_provider](https://registry.terraform.io/providers/hashicorp/local/2.4.1/docs/data-sources/file) (data source)
 - [local_file.locations](https://registry.terraform.io/providers/hashicorp/local/2.4.1/docs/data-sources/file) (data source)
 
@@ -384,6 +386,12 @@ Description: This is the full output for the resource.
 ## Modules
 
 The following Modules are called:
+
+### <a name="module_network"></a> [network](#module\_network)
+
+Source: Azure/network/azurerm
+
+Version: 5.3.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
