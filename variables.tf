@@ -135,6 +135,7 @@ variable "node_pools" {
     name                 = string
     vm_size              = string
     orchestrator_version = string
+    vnet_subnet_id       = string
     # do not add nodecount because we enforce the use of auto-scaling
     max_count       = optional(number)
     min_count       = optional(number)
@@ -151,6 +152,7 @@ map(object({
   name                 = (Required) The name of the Node Pool which should be created within the Kubernetes Cluster. Changing this forces a new resource to be created. A Windows Node Pool cannot have a `name` longer than 6 characters. A random suffix of 4 characters is always added to the name to avoid clashes during recreates.
   vm_size              = (Required) The SKU which should be used for the Virtual Machines used in this Node Pool. Changing this forces a new resource to be created.
   orchestrator_version = (Required) The version of Kubernetes which should be used for this Node Pool. Changing this forces a new resource to be created.
+  vnet_subnet_id       = (Required) The ID of the Subnet where this Node Pool should exist. Changing this forces a new resource to be created. A route table must be configured on this Subnet.
   max_count            = (Optional) The maximum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be greater than or equal to `min_count`.
   min_count            = (Optional) The minimum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be less than or equal to `max_count`.
   os_sku               = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`, `CBLMariner`, `Mariner`, `Windows2019`, `Windows2022`. If not specified, the default is `Ubuntu` if OSType=Linux or `Windows2019` if OSType=Windows. And the default Windows OSSKU will be changed to `Windows2022` after Windows2019 is deprecated. Changing this forces a new resource to be created.
@@ -251,4 +253,10 @@ variable "tags" {
   type        = map(any)
   default     = {}
   description = "The map of tags to be applied to the resource"
+}
+
+variable "vnet_subnet_id" {
+  type        = string
+  nullable  = false
+  description = "(Required) The ID of a Subnet where the Kubernetes default Node Pool should exist. Changing this forces a new resource to be created."
 }

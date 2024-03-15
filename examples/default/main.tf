@@ -49,16 +49,35 @@ resource "azurerm_user_assigned_identity" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
+locals {
+  # Hardcoded instead of using module.regions because the "for_each" map includes keys derived
+  # from resource attributes that cannot be determined until apply, and so Terraform cannot determine
+  # the full set of keys that will identify the instances of this resource.
+  location = "East US"
+}
+
 module "test" {
   source              = "../../"
   kubernetes_version  = "1.28"
+  vnet_subnet_id = lookup(module.vnet.vnet_subnets_name_id, "subnet0")
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = "East US" # Hardcoded instead of using module.regions because The "for_each" map includes keys derived from resource attributes that cannot be determined until apply, and so Terraform cannot determine the full set of keys that will identify the instances of this resource.
+  location            = local.location
   identity_ids        = [azurerm_user_assigned_identity.this.id]
+}
+
+module "vnet" {
+  source  = "Azure/subnets/azurerm"
+  version = "1.0.0"
+
+  resource_group_name = azurerm_resource_group.this.name
+  subnets = {
+    subnet0 = {
+      address_prefixes  = ["10.52.0.0/16"]
+    }
+  }
+  virtual_network_address_space = ["10.52.0.0/16"]
+  virtual_network_location      = local.location
+  virtual_network_name          = "vnet"
 }

@@ -53,6 +53,7 @@ locals {
         name                 = "${substr(pool.name, 0, 11)}${zone}"
         vm_size              = pool.vm_size
         orchestrator_version = pool.orchestrator_version
+        vnet_subnet_id       = pool.vnet_subnet_id
         max_count            = pool.max_count
         min_count            = pool.min_count
         os_sku               = pool.os_sku
