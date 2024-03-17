@@ -21,6 +21,12 @@ variable "resource_group_name" {
   nullable    = false
 }
 
+variable "vnet_subnet_id" {
+  type        = string
+  description = "(Required) The ID of a Subnet where the Kubernetes default Node Pool should exist. Changing this forces a new resource to be created."
+  nullable    = false
+}
+
 variable "agents_tags" {
   type        = map(string)
   default     = {}
@@ -253,10 +259,4 @@ variable "tags" {
   type        = map(any)
   default     = {}
   description = "The map of tags to be applied to the resource"
-}
-
-variable "vnet_subnet_id" {
-  type        = string
-  nullable  = false
-  description = "(Required) The ID of a Subnet where the Kubernetes default Node Pool should exist. Changing this forces a new resource to be created."
 }

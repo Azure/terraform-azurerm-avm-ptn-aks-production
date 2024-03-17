@@ -59,7 +59,7 @@ locals {
 module "test" {
   source              = "../../"
   kubernetes_version  = "1.28"
-  vnet_subnet_id = lookup(module.vnet.vnet_subnets_name_id, "subnet0")
+  vnet_subnet_id      = lookup(module.vnet.vnet_subnets_name_id, "subnet0")
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
@@ -74,7 +74,7 @@ module "vnet" {
   resource_group_name = azurerm_resource_group.this.name
   subnets = {
     subnet0 = {
-      address_prefixes  = ["10.31.0.0/24"]
+      address_prefixes = ["10.31.0.0/24"]
       nat_gateway = {
         id = azurerm_nat_gateway.example.id
       }
@@ -92,7 +92,7 @@ module "vnet" {
 }
 
 resource "azurerm_nat_gateway" "example" {
-  location            =local.location
+  location            = local.location
   name                = "natgateway"
   resource_group_name = azurerm_resource_group.this.name
 }
@@ -105,9 +105,9 @@ resource "azurerm_nat_gateway_public_ip_association" "example" {
 }
 
 resource "azurerm_public_ip" "example" {
-  name                = "example-PIP"
-  location            = local.location
-  resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
+  location            = local.location
+  name                = "example-PIP"
+  resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard"
 }

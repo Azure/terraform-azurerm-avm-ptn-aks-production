@@ -70,8 +70,6 @@ The following resources are used by this module:
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 - [random_string.acr_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [azurerm_monitor_diagnostic_categories.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/monitor_diagnostic_categories) (data source)
-- [azurerm_subnet.subnet_alb](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) (data source)
-- [azurerm_subnet.system](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) (data source)
 - [local_file.compute_provider](https://registry.terraform.io/providers/hashicorp/local/2.4.1/docs/data-sources/file) (data source)
 - [local_file.locations](https://registry.terraform.io/providers/hashicorp/local/2.4.1/docs/data-sources/file) (data source)
 
@@ -95,6 +93,12 @@ Type: `string`
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
 Description: The resource group where the resources will be deployed.
+
+Type: `string`
+
+### <a name="input_vnet_subnet_id"></a> [vnet\_subnet\_id](#input\_vnet\_subnet\_id)
+
+Description: (Required) The ID of a Subnet where the Kubernetes default Node Pool should exist. Changing this forces a new resource to be created.
 
 Type: `string`
 
@@ -241,6 +245,7 @@ map(object({
   name                 = (Required) The name of the Node Pool which should be created within the Kubernetes Cluster. Changing this forces a new resource to be created. A Windows Node Pool cannot have a `name` longer than 6 characters. A random suffix of 4 characters is always added to the name to avoid clashes during recreates.  
   vm\_size              = (Required) The SKU which should be used for the Virtual Machines used in this Node Pool. Changing this forces a new resource to be created.  
   orchestrator\_version = (Required) The version of Kubernetes which should be used for this Node Pool. Changing this forces a new resource to be created.  
+  vnet\_subnet\_id       = (Required) The ID of the Subnet where this Node Pool should exist. Changing this forces a new resource to be created. A route table must be configured on this Subnet.  
   max\_count            = (Optional) The maximum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be greater than or equal to `min_count`.  
   min\_count            = (Optional) The minimum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be less than or equal to `max_count`.  
   os\_sku               = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`, `CBLMariner`, `Mariner`, `Windows2019`, `Windows2022`. If not specified, the default is `Ubuntu` if OSType=Linux or `Windows2019` if OSType=Windows. And the default Windows OSSKU will be changed to `Windows2022` after Windows2019 is deprecated. Changing this forces a new resource to be created.  
@@ -257,6 +262,7 @@ map(object({
     name                 = string
     vm_size              = string
     orchestrator_version = string
+    vnet_subnet_id       = string
     # do not add nodecount because we enforce the use of auto-scaling
     max_count       = optional(number)
     min_count       = optional(number)
@@ -386,12 +392,6 @@ Description: This is the full output for the resource.
 ## Modules
 
 The following Modules are called:
-
-### <a name="module_network"></a> [network](#module\_network)
-
-Source: Azure/network/azurerm
-
-Version: 5.3.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
