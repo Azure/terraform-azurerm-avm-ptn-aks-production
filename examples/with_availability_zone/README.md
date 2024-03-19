@@ -46,7 +46,7 @@ locals {
 module "test" {
   source              = "../../"
   kubernetes_version  = "1.28"
-  vnet_subnet_id      = lookup(module.vnet.vnet_subnets_name_id, "subnet0")
+  vnet_subnet_id      = module.vnet.vnet_subnets_name_id["subnet0"]
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
@@ -57,7 +57,7 @@ module "test" {
       name                 = "workload"
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
-      vnet_subnet_id       = lookup(module.vnet.vnet_subnets_name_id, "workload")
+      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["workload"]
       max_count            = 110
       min_count            = 2
       os_sku               = "Ubuntu"
@@ -67,7 +67,7 @@ module "test" {
       name                 = "ingress"
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
-      vnet_subnet_id       = lookup(module.vnet.vnet_subnets_name_id, "ingress")
+      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["ingress"]
       max_count            = 4
       min_count            = 2
       os_sku               = "Ubuntu"

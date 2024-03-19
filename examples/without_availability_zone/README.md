@@ -35,7 +35,12 @@ resource "azurerm_user_assigned_identity" "this" {
   name                = "uami-${var.kubernetes_cluster_name}"
   resource_group_name = azurerm_resource_group.this.name
 }
-
+locals {
+  # Hardcoded instead of using module.regions because the "for_each" map includes keys derived
+  # from resource attributes that cannot be determined until apply, and so Terraform cannot determine
+  # the full set of keys that will identify the instances of this resource.
+  location = "West US"
+}
 # This is the module call
 # Do not specify location here due to the randomization above.
 # Leaving location as `null` will cause the module to use the resource group location
@@ -43,18 +48,18 @@ resource "azurerm_user_assigned_identity" "this" {
 module "test" {
   source              = "../../"
   kubernetes_version  = "1.28"
-  vnet_subnet_id      = lookup(module.vnet.vnet_subnets_name_id, "subnet0")
+  vnet_subnet_id      = module.vnet.vnet_subnets_name_id["subnet0"]
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   identity_ids        = [azurerm_user_assigned_identity.this.id]
-  location            = "West US" # Hardcoded because we have to test in a region without availability zones
+  location            = local.location
   node_pools = {
     workload = {
       name                 = "workload"
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
-      vnet_subnet_id       = lookup(module.vnet.vnet_subnets_name_id, "workload")
+      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["workload"]
       max_count            = 110
       min_count            = 2
       os_sku               = "Ubuntu"
@@ -64,7 +69,7 @@ module "test" {
       name                 = "ingress"
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
-      vnet_subnet_id       = lookup(module.vnet.vnet_subnets_name_id, "ingress")
+      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["ingress"]
       max_count            = 4
       min_count            = 2
       os_sku               = "Ubuntu"
@@ -81,18 +86,48 @@ module "vnet" {
   resource_group_name = azurerm_resource_group.this.name
   subnets = {
     subnet0 = {
-      address_prefixes = ["10.52.0.0/16"]
+      address_prefixes = ["10.31.0.0/24"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example.id
+      }
     }
     workload = {
-      address_prefixes = ["10.53.0.0/16"]
+      address_prefixes = ["10.31.1.0/24"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example.id
+      }
     }
     ingress = {
-      address_prefixes = ["10.54.0.0/16"]
+      address_prefixes = ["10.31.2.0/24"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example.id
+      }
     }
   }
-  virtual_network_address_space = ["10.0.0.0/8"]
+  virtual_network_address_space = ["10.31.0.0/16"]
   virtual_network_location      = local.location
   virtual_network_name          = "vnet"
+}
+
+resource "azurerm_nat_gateway" "example" {
+  location            = local.location
+  name                = "natgateway"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+
+
+resource "azurerm_nat_gateway_public_ip_association" "example" {
+  nat_gateway_id       = azurerm_nat_gateway.example.id
+  public_ip_address_id = azurerm_public_ip.example.id
+}
+
+resource "azurerm_public_ip" "example" {
+  allocation_method   = "Static"
+  location            = local.location
+  name                = "example-PIP"
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "Standard"
 }
 ```
 
@@ -115,6 +150,9 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azurerm_nat_gateway.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
+- [azurerm_nat_gateway_public_ip_association.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_association) (resource)
+- [azurerm_public_ip.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 

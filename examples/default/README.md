@@ -65,7 +65,7 @@ locals {
 module "test" {
   source              = "../../"
   kubernetes_version  = "1.28"
-  vnet_subnet_id      = lookup(module.vnet.vnet_subnets_name_id, "subnet0")
+  vnet_subnet_id      = module.vnet.vnet_subnets_name_id["subnet0"]
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
