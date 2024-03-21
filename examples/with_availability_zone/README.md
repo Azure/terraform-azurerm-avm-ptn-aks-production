@@ -121,7 +121,7 @@ resource "azurerm_nat_gateway_public_ip_prefix_association" "example" {
   for_each = toset(["1", "2", "3"])
 
   nat_gateway_id      = azurerm_nat_gateway.example[each.key].id
-  public_ip_prefix_id = azurerm_public_ip_prefix.example.id
+  public_ip_prefix_id = azurerm_public_ip_prefix.example[each.key].id
 }
 
 resource "azurerm_public_ip_prefix" "example" {

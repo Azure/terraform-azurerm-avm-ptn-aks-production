@@ -120,6 +120,7 @@ resource "azurerm_nat_gateway_public_ip_prefix_association" "example" {
 
 resource "azurerm_public_ip_prefix" "example" {
   for_each = toset(["1", "2", "3"])
+
   location            = local.location
   name                = "example-PublicIPprefix${each.key}"
   resource_group_name = azurerm_resource_group.this.name
