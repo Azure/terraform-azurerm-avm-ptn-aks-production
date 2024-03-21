@@ -117,9 +117,9 @@ resource "azurerm_nat_gateway" "example" {
 
 
 
-resource "azurerm_nat_gateway_public_ip_association" "example" {
-  nat_gateway_id       = azurerm_nat_gateway.example.id
-  public_ip_address_id = azurerm_public_ip_prefix.example.id
+resource "azurerm_nat_gateway_public_ip_prefix_association" "example" {
+  nat_gateway_id      = azurerm_nat_gateway.example.id
+  public_ip_prefix_id = azurerm_public_ip_prefix.example.id
 }
 
 resource "azurerm_public_ip_prefix" "example" {
@@ -150,7 +150,7 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_nat_gateway.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
-- [azurerm_nat_gateway_public_ip_association.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_association) (resource)
+- [azurerm_nat_gateway_public_ip_prefix_association.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_prefix_association) (resource)
 - [azurerm_public_ip_prefix.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip_prefix) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
