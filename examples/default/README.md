@@ -107,15 +107,14 @@ resource "azurerm_nat_gateway" "example" {
 
 resource "azurerm_nat_gateway_public_ip_association" "example" {
   nat_gateway_id       = azurerm_nat_gateway.example.id
-  public_ip_address_id = azurerm_public_ip.example.id
+  public_ip_address_id = azurerm_public_ip_prefix.example.id
 }
 
-resource "azurerm_public_ip" "example" {
-  allocation_method   = "Static"
+resource "azurerm_public_ip_prefix" "example" {
   location            = local.location
-  name                = "example-PIP"
+  name                = "example-PublicIPprefix${each.key}"
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard"
+  prefix_length       = 30
 }
 ```
 
@@ -144,7 +143,7 @@ The following resources are used by this module:
 
 - [azurerm_nat_gateway.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
 - [azurerm_nat_gateway_public_ip_association.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_association) (resource)
-- [azurerm_public_ip.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
+- [azurerm_public_ip_prefix.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip_prefix) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)

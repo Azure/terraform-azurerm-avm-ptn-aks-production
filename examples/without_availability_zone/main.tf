@@ -113,13 +113,12 @@ resource "azurerm_nat_gateway" "example" {
 
 resource "azurerm_nat_gateway_public_ip_association" "example" {
   nat_gateway_id       = azurerm_nat_gateway.example.id
-  public_ip_address_id = azurerm_public_ip.example.id
+  public_ip_address_id = azurerm_public_ip_prefix.example.id
 }
 
-resource "azurerm_public_ip" "example" {
-  allocation_method   = "Static"
+resource "azurerm_public_ip_prefix" "example" {
   location            = local.location
-  name                = "example-PIP"
+  name                = "example-PublicIPprefix${each.key}"
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard"
+  prefix_length       = 30
 }
