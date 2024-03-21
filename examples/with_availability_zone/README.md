@@ -46,7 +46,7 @@ locals {
 module "test" {
   source              = "../../"
   kubernetes_version  = "1.28"
-  vnet_subnet_id      = module.vnet.vnet_subnets_name_id["subnet0"]
+  vnet_subnet_id      = module.vnet.vnet_subnets_name_id["subnet1"]
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
@@ -57,7 +57,7 @@ module "test" {
       name                 = "workload"
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
-      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["workload"]
+      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["subnet2"]
       max_count            = 110
       min_count            = 2
       os_sku               = "Ubuntu"
@@ -67,7 +67,7 @@ module "test" {
       name                 = "ingress"
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
-      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["ingress"]
+      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["subnet3"]
       max_count            = 4
       min_count            = 2
       os_sku               = "Ubuntu"
@@ -82,19 +82,56 @@ module "vnet" {
 
   resource_group_name = azurerm_resource_group.this.name
   subnets = {
-    subnet0 = {
-      address_prefixes = ["10.52.0.0/16"]
+    subnet1 = {
+      address_prefixes = ["10.31.0.0/24"]
     }
-    workload = {
-      address_prefixes = ["10.53.0.0/16"]
+    subnet2 = {
+      address_prefixes = ["10.31.1.0/24"]
     }
-    ingress = {
-      address_prefixes = ["10.54.0.0/16"]
+    subnet3 = {
+      address_prefixes = ["10.31.2.0/24"]
     }
   }
-  virtual_network_address_space = ["10.0.0.0/8"]
+  virtual_network_address_space = ["10.31.0.0/16"]
   virtual_network_location      = local.location
   virtual_network_name          = "vnet"
+}
+
+
+resource "azurerm_nat_gateway" "example" {
+  for_each = toset(["1", "2", "3"])
+
+  location            = local.location
+  name                = "natgateway${each.key}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "Standard"
+  zones               = [each.key]
+}
+
+resource "azurerm_subnet_nat_gateway_association" "example" {
+  for_each = toset(["1", "2", "3"])
+
+  nat_gateway_id = azurerm_nat_gateway.example[each.key].id
+  subnet_id      = module.vnet.vnet_subnets_name_id["subnet${(each.key)}"]
+}
+
+# use 
+
+resource "azurerm_nat_gateway_public_ip_prefix_association" "example" {
+  for_each = toset(["1", "2", "3"])
+
+  nat_gateway_id      = azurerm_nat_gateway.example[each.key].id
+  public_ip_prefix_id = azurerm_public_ip_prefix.example.id
+}
+
+resource "azurerm_public_ip_prefix" "example" {
+  for_each = toset(["1", "2", "3"])
+
+  location            = local.location
+  name                = "example-PublicIPprefix${each.key}"
+  resource_group_name = azurerm_resource_group.this.name
+  prefix_length       = 30
+  zones               = [each.key]
 }
 ```
 
@@ -117,7 +154,11 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azurerm_nat_gateway.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
+- [azurerm_nat_gateway_public_ip_prefix_association.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_prefix_association) (resource)
+- [azurerm_public_ip_prefix.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip_prefix) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_subnet_nat_gateway_association.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_nat_gateway_association) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 
 <!-- markdownlint-disable MD013 -->
