@@ -118,7 +118,7 @@ resource "azurerm_nat_gateway_public_ip_association" "example" {
 
 resource "azurerm_public_ip_prefix" "example" {
   location            = local.location
-  name                = "example-PublicIPprefix${each.key}"
+  name                = "example-PublicIPprefix"
   resource_group_name = azurerm_resource_group.this.name
   prefix_length       = 30
 }
