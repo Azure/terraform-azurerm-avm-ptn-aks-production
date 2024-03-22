@@ -85,12 +85,6 @@ module "vnet" {
         id = azurerm_nat_gateway.example.id
       }
     }
-    subnet1 = {
-      address_prefixes = ["10.31.1.0/24"]
-      nat_gateway = {
-        id = azurerm_nat_gateway.example.id
-      }
-    }
   }
   virtual_network_address_space = ["10.31.0.0/16"]
   virtual_network_location      = local.location
@@ -102,7 +96,6 @@ resource "azurerm_nat_gateway" "example" {
   name                = "natgateway"
   resource_group_name = azurerm_resource_group.this.name
 }
-
 
 
 resource "azurerm_nat_gateway_public_ip_prefix_association" "example" {
