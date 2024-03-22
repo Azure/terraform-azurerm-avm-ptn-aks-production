@@ -130,7 +130,7 @@ resource "azurerm_public_ip_prefix" "example" {
   location            = local.location
   name                = "example-PublicIPprefix${each.key}"
   resource_group_name = azurerm_resource_group.this.name
-  prefix_length       = 30
+  prefix_length       = 31
   zones               = [each.key]
 }
 ```
