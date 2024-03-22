@@ -104,6 +104,7 @@ resource "azurerm_nat_gateway" "example" {
 
 resource "azurerm_subnet_nat_gateway_association" "example" {
   for_each = toset(["1", "2", "3"])
+
   nat_gateway_id = azurerm_nat_gateway.example[each.key].id
   subnet_id      = module.vnet.vnet_subnets_name_id["subnet${each.key}"]
 }
