@@ -56,16 +56,6 @@ module "test" {
       min_count            = 2
       os_sku               = "Ubuntu"
       mode                 = "User"
-    },
-    ingress = {
-      name                 = "ingress"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
-      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["subnet3"]
-      max_count            = 4
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      mode                 = "User"
     }
   }
 }
@@ -81,9 +71,6 @@ module "vnet" {
     }
     subnet2 = {
       address_prefixes = ["10.31.1.0/24"]
-    }
-    subnet3 = {
-      address_prefixes = ["10.31.2.0/24"]
     }
   }
   virtual_network_address_space = ["10.31.0.0/16"]
@@ -124,6 +111,7 @@ resource "azurerm_public_ip_prefix" "example" {
   location            = local.location
   name                = "example-PublicIPprefix${each.key}"
   resource_group_name = azurerm_resource_group.this.name
-  prefix_length       = 31
+  prefix_length       = 30
+  sku                 = "Standard"
   zones               = [each.key]
 }

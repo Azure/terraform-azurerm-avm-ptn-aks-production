@@ -107,6 +107,8 @@ module "vnet" {
   virtual_network_address_space = ["10.31.0.0/16"]
   virtual_network_location      = local.location
   virtual_network_name          = "vnet"
+
+  depends_on = [azurerm_nat_gateway.example]
 }
 
 resource "azurerm_nat_gateway" "example" {
@@ -127,6 +129,7 @@ resource "azurerm_public_ip_prefix" "example" {
   name                = "example-PublicIPprefix"
   resource_group_name = azurerm_resource_group.this.name
   prefix_length       = 30
+  sku                 = "Standard"
 }
 ```
 
