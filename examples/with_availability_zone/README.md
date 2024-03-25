@@ -96,7 +96,7 @@ resource "azurerm_nat_gateway" "example" {
 }
 
 resource "azurerm_subnet_nat_gateway_association" "example" {
-  for_each = toset(["1", "2", "3"])
+  for_each = toset(["1", "2"])
 
   nat_gateway_id = azurerm_nat_gateway.example[each.key].id
   subnet_id      = module.vnet.vnet_subnets_name_id["subnet${each.key}"]
@@ -117,7 +117,7 @@ resource "azurerm_public_ip_prefix" "example" {
   location            = local.location
   name                = "example-PublicIPprefix${each.key}"
   resource_group_name = azurerm_resource_group.this.name
-  prefix_length       = 30
+  prefix_length       = 31
   sku                 = "Standard"
   zones               = [each.key]
 }
