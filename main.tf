@@ -144,7 +144,7 @@ resource "azurerm_log_analytics_workspace_table" "this" {
   plan         = "Basic"
 }
 
-resource "azurerm_monitor_diagnostic_setting" "aks" {
+resource "azurerm_monitor_diagnostic_setting" "this" {
   name                           = "${var.name}-aks"
   target_resource_id             = azurerm_kubernetes_cluster.this.id
   log_analytics_destination_type = "Dedicated"
@@ -225,6 +225,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   tags                  = var.tags
   vnet_subnet_id        = each.value.zone == "" ? tostring(each.value.vnet_subnet_id) : each.value.vnet_subnet_id[var.subnets[(tonumber(each.value.zone) - 1)]]
   zones                 = each.value.zone == "" ? null : [each.value.zone]
+
+  depends_on = [azapi_update_resource.aks_cluster_post_create]
 }
 
 
