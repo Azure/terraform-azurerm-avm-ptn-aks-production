@@ -262,7 +262,7 @@ map(object({
     name                 = string
     vm_size              = string
     orchestrator_version = string
-    vnet_subnet_id       = string
+    vnet_subnet_id       = any
     # do not add nodecount because we enforce the use of auto-scaling
     max_count       = optional(number)
     min_count       = optional(number)
@@ -368,6 +368,14 @@ map(object({
 ```
 
 Default: `{}`
+
+### <a name="input_subnets"></a> [subnets](#input\_subnets)
+
+Description: (Optional) A list of Subnet IDs to associate with the Kubernetes Cluster.
+
+Type: `list(string)`
+
+Default: `[]`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

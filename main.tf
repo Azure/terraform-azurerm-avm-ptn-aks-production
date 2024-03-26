@@ -223,7 +223,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   orchestrator_version  = each.value.orchestrator_version
   os_sku                = each.value.os_sku
   tags                  = var.tags
-  vnet_subnet_id        = each.value.vnet_subnet_id
+  vnet_subnet_id        = each.value.zone == "" ? tostring(each.value.vnet_subnet_id) : each.value.vnet_subnet_id[var.subnets[(tonumber(each.value.zone) - 1)]]
   zones                 = each.value.zone == "" ? null : [each.value.zone]
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]

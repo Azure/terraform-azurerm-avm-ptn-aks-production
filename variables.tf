@@ -141,7 +141,7 @@ variable "node_pools" {
     name                 = string
     vm_size              = string
     orchestrator_version = string
-    vnet_subnet_id       = string
+    vnet_subnet_id       = any
     # do not add nodecount because we enforce the use of auto-scaling
     max_count       = optional(number)
     min_count       = optional(number)
@@ -252,6 +252,12 @@ A map of role assignments to create on this resource. The map key is deliberatel
 
 > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
 DESCRIPTION
+}
+
+variable "subnets" {
+  type        = list(string)
+  default     = []
+  description = "(Optional) A list of Subnet IDs to associate with the Kubernetes Cluster."
 }
 
 # tflint-ignore: terraform_unused_declarations

@@ -44,6 +44,7 @@ locals {
   location = "East US 2"
 }
 module "test" {
+  for_each            = toset(["1", "2", "3"])
   source              = "../../"
   kubernetes_version  = "1.28"
   vnet_subnet_id      = module.vnet.vnet_subnets_name_id["subnet1"]
@@ -51,13 +52,14 @@ module "test" {
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   identity_ids        = [azurerm_user_assigned_identity.this.id]
+  subnets             = ["subnet2", "subnet3", "subnet4"]
   location            = local.location # Hardcoded because we have to test in a region with availability zones
   node_pools = {
     workload = {
       name                 = "workload"
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
-      vnet_subnet_id       = module.vnet.vnet_subnets_name_id["subnet2"]
+      vnet_subnet_id       = module.vnet.vnet_subnets_name_id
       max_count            = 110
       min_count            = 2
       os_sku               = "Ubuntu"
@@ -73,15 +75,35 @@ module "vnet" {
   resource_group_name = azurerm_resource_group.this.name
   subnets = {
     subnet1 = {
-      address_prefixes = ["10.31.0.0/24"]
+      address_prefixes = ["10.31.0.0/17"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example["3"].id
+      }
     }
     subnet2 = {
-      address_prefixes = ["10.31.1.0/24"]
+      address_prefixes = ["10.31.128.0/18"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example["1"].id
+      }
+    }
+    subnet3 = {
+      address_prefixes = ["10.31.192.0/19"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example["2"].id
+      }
+
+    }
+    subnet4 = {
+      address_prefixes = ["10.31.224.0/20"]
+      nat_gateway = {
+        id = azurerm_nat_gateway.example["3"].id
+      }
     }
   }
   virtual_network_address_space = ["10.31.0.0/16"]
   virtual_network_location      = local.location
   virtual_network_name          = "vnet"
+  depends_on                    = [azurerm_nat_gateway.example]
 }
 
 
@@ -95,14 +117,6 @@ resource "azurerm_nat_gateway" "example" {
   zones               = [each.key]
 }
 
-resource "azurerm_subnet_nat_gateway_association" "example" {
-  for_each = toset(["1", "2"])
-
-  nat_gateway_id = azurerm_nat_gateway.example[each.key].id
-  subnet_id      = module.vnet.vnet_subnets_name_id["subnet${each.key}"]
-}
-
-# use 
 
 resource "azurerm_nat_gateway_public_ip_prefix_association" "example" {
   for_each = toset(["1", "2", "3"])
@@ -146,7 +160,6 @@ The following resources are used by this module:
 - [azurerm_nat_gateway_public_ip_prefix_association.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_prefix_association) (resource)
 - [azurerm_public_ip_prefix.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip_prefix) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_subnet_nat_gateway_association.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_nat_gateway_association) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 
 <!-- markdownlint-disable MD013 -->
