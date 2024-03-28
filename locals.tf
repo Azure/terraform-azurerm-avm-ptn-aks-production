@@ -64,3 +64,7 @@ locals {
 locals {
   log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane"]
 }
+
+locals {
+  identity_ids = var.identity_ids != null ? var.identity_ids : azurerm_user_assigned_identity.aks[*].id
+}

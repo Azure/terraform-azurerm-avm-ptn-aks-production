@@ -25,6 +25,15 @@ resource "azurerm_role_assignment" "acr" {
   skip_service_principal_aad_check = true
 }
 
+resource "azurerm_user_assigned_identity" "aks" {
+  count = var.identity_ids != null ? 0 : 1
+
+  location            = var.location
+  name                = "uami-aks"
+  resource_group_name = var.resource_group_name
+  tags                = var.tags
+}
+
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
   name                              = var.name
@@ -59,24 +68,16 @@ resource "azurerm_kubernetes_cluster" "this" {
   auto_scaler_profile {
     balance_similar_node_groups = true
   }
-  dynamic "identity" {
-    for_each = var.identity_ids != null ? [var.identity_ids] : []
-    content {
-      type         = "UserAssigned"
-      identity_ids = var.identity_ids
-    }
+  identity {
+    type         = "UserAssigned"
+    identity_ids = local.identity_ids
   }
   key_vault_secrets_provider {
     secret_rotation_enabled = true
   }
-  dynamic "monitor_metrics" {
-
-    for_each = var.monitor_metrics != null ? [var.monitor_metrics] : []
-
-    content {
-      annotations_allowed = var.monitor_metrics.annotations_allowed
-      labels_allowed      = var.monitor_metrics.labels_allowed
-    }
+  monitor_metrics {
+    annotations_allowed = try(var.monitor_metrics.annotations_allowed, null)
+    labels_allowed      = try(var.monitor_metrics.labels_allowed, null)
   }
   network_profile {
     network_plugin      = "azure"
