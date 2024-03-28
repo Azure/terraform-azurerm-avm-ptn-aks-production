@@ -7,9 +7,3 @@ For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
-
-variable "kubernetes_cluster_name" {
-  type        = string
-  default     = "myAks"
-  description = "The name of the Kubernetes cluster."
-}
