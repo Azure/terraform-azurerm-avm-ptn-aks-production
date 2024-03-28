@@ -82,7 +82,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     load_balancer_sku   = "standard"
     network_plugin_mode = "overlay"
     network_policy      = "calico"
-    outbound_type       = "managedNATGateway"
+    pod_cidr            = var.pod_cidr
   }
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
@@ -222,6 +222,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   orchestrator_version  = each.value.orchestrator_version
   os_sku                = each.value.os_sku
   tags                  = var.tags
+  vnet_subnet_id        = module.vnet.vnet_subnets_name_id["subnet"]
   zones                 = each.value.zone == "" ? null : [each.value.zone]
 }
 
@@ -246,4 +247,20 @@ data "local_file" "compute_provider" {
 
 data "local_file" "locations" {
   filename = "${path.module}/data/locations.json"
+}
+
+
+module "vnet" {
+  source  = "Azure/subnets/azurerm"
+  version = "1.0.0"
+
+  resource_group_name = var.resource_group_name
+  subnets = {
+    subnet = {
+      address_prefixes = var.node_cidr != null ? [cidrsubnet(var.node_cidr, 4, 2)] : ["10.31.0.0/24"]
+    }
+  }
+  virtual_network_address_space = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
+  virtual_network_location      = var.location
+  virtual_network_name          = "vnet"
 }
