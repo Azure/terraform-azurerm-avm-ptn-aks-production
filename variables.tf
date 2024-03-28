@@ -233,6 +233,24 @@ A map of private endpoints to create on this resource. The map key is deliberate
 DESCRIPTION
 }
 
+variable "rbac_aad_admin_group_object_ids" {
+  type        = list(string)
+  default     = null
+  description = "Object ID of groups with admin access."
+}
+
+variable "rbac_aad_azure_rbac_enabled" {
+  type        = bool
+  default     = null
+  description = "(Optional) Is Role Based Access Control based on Azure AD enabled?"
+}
+
+variable "rbac_aad_tenant_id" {
+  type        = string
+  default     = null
+  description = "(Optional) The Tenant ID used for Azure Active Directory Application. If this isn't specified the Tenant ID of the current Subscription is used."
+}
+
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string
