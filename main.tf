@@ -257,7 +257,7 @@ module "vnet" {
   resource_group_name = var.resource_group_name
   subnets = {
     subnet = {
-      address_prefixes = var.node_cidr != null ? [cidrsubnet(var.node_cidr, 4, 2)] : ["10.31.0.0/24"]
+      address_prefixes = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
     }
   }
   virtual_network_address_space = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
