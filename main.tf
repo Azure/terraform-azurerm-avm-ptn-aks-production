@@ -53,6 +53,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     orchestrator_version   = var.orchestrator_version
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
+    vnet_subnet_id         = lookup(module.vnet.vnet_subnets_name_id, "nodecidr")
     zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
   }
   auto_scaler_profile {
@@ -222,7 +223,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   orchestrator_version  = each.value.orchestrator_version
   os_sku                = each.value.os_sku
   tags                  = var.tags
-  vnet_subnet_id        = module.vnet.vnet_subnets_name_id["subnet"]
+  vnet_subnet_id        = lookup(module.vnet.vnet_subnets_name_id, "nodecidr")
   zones                 = each.value.zone == "" ? null : [each.value.zone]
 }
 
@@ -256,7 +257,7 @@ module "vnet" {
 
   resource_group_name = var.resource_group_name
   subnets = {
-    subnet = {
+    nodecidr = {
       address_prefixes = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
     }
   }
