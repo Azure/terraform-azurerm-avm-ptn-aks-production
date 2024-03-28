@@ -70,7 +70,6 @@ The following resources are used by this module:
 - [null_resource.kubernetes_version_keeper](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 - [random_string.acr_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
-- [azurerm_monitor_diagnostic_categories.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/monitor_diagnostic_categories) (data source)
 - [local_file.compute_provider](https://registry.terraform.io/providers/hashicorp/local/2.4.1/docs/data-sources/file) (data source)
 - [local_file.locations](https://registry.terraform.io/providers/hashicorp/local/2.4.1/docs/data-sources/file) (data source)
 
