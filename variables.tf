@@ -130,6 +130,12 @@ variable "monitor_metrics" {
 EOT
 }
 
+variable "node_cidr" {
+  type        = string
+  default     = null
+  description = "(Optional) The CIDR to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
+}
+
 variable "node_pools" {
   type = map(object({
     name                 = string
@@ -167,6 +173,12 @@ variable "orchestrator_version" {
   type        = string
   default     = null
   description = "Specify which Kubernetes release to use. Specify only minor version, such as '1.28'."
+}
+
+variable "pod_cidr" {
+  type        = string
+  default     = null
+  description = "(Optional) The CIDR to use for pod IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
 }
 
 variable "private_endpoints" {

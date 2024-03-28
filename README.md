@@ -232,6 +232,14 @@ object({
 
 Default: `null`
 
+### <a name="input_node_cidr"></a> [node\_cidr](#input\_node\_cidr)
+
+Description: (Optional) The CIDR to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_node_pools"></a> [node\_pools](#input\_node\_pools)
 
 Description: A map of node pools that need to be created and attached on the Kubernetes cluster. The key of the map can be the name of the node pool, and the key must be static string. The value of the map is a `node_pool` block as defined below:  
@@ -271,6 +279,14 @@ Default: `{}`
 ### <a name="input_orchestrator_version"></a> [orchestrator\_version](#input\_orchestrator\_version)
 
 Description: Specify which Kubernetes release to use. Specify only minor version, such as '1.28'.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_pod_cidr"></a> [pod\_cidr](#input\_pod\_cidr)
+
+Description: (Optional) The CIDR to use for pod IPs in the Kubernetes cluster. Changing this forces a new resource to be created.
 
 Type: `string`
 
@@ -390,6 +406,12 @@ The following Modules are called:
 Source: Azure/regions/azurerm
 
 Version: >= 0.3.0
+
+### <a name="module_vnet"></a> [vnet](#module\_vnet)
+
+Source: Azure/subnets/azurerm
+
+Version: 1.0.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
