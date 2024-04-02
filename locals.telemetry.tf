@@ -1,5 +1,5 @@
 locals {
-  module_name = "avm-ptn-aks-production"
+  module_name = "terraform-azurerm-avm-ptn-aks-production"
   module_type = "res"
   # This constructs the ARM deployment name that is used for the telemetry.
   # We shouldn't ever hit the 64 character limit but use substr just in case.
