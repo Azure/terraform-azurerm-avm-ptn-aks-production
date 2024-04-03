@@ -47,7 +47,7 @@ locals {
   ])
 }
 locals {
-  log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane"]
+  log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
 }
 
 locals {
