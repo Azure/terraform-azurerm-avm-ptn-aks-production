@@ -126,6 +126,12 @@ variable "node_cidr" {
   description = "(Optional) The CIDR to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
 }
 
+variable "node_labels" {
+  type        = map(string)
+  default     = {}
+  description = "(Optional) A map of Kubernetes labels which should be applied to nodes in the Default Node Pool. Changing this forces a new resource to be created."
+}
+
 variable "node_pools" {
   type = map(object({
     name                 = string
@@ -139,6 +145,7 @@ variable "node_pools" {
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     zones           = optional(set(string))
+    node_taints     = optional(list(string))
   }))
   default     = {}
   description = <<-EOT
@@ -154,6 +161,7 @@ map(object({
   os_disk_size_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
   zones                = (Optional) Specifies a list of Availability Zones in which this Kubernetes Cluster Node Pool should be located. Changing this forces a new Kubernetes Cluster Node Pool to be created.
+  node_taints          = (Optional) A list of Kubernetes taints which should be applied to nodes in the Node Pool. Changing this forces a new resource to be created.
 }))
 
 Example input:
@@ -181,6 +189,12 @@ Example input:
   ```
 EOT
   nullable    = false
+}
+
+variable "node_taints" {
+  type        = list(string)
+  default     = []
+  description = "(Optional) A list of Kubernetes taints which should be applied to nodes in the Default Node Pool. Changing this forces a new resource to be created."
 }
 
 variable "orchestrator_version" {
