@@ -46,8 +46,13 @@ module "test" {
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  identity_ids        = [azurerm_user_assigned_identity.this.id]
-  location            = "West US" # Hardcoded because we have to test in a region without availability zones
+  managed_identities = {
+    user_assigned_resource_ids = [
+      azurerm_user_assigned_identity.this.id
+    ]
+  }
+
+  location = "West US" # Hardcoded because we have to test in a region without availability zones
   node_pools = {
     workload = {
       name                 = "workload"

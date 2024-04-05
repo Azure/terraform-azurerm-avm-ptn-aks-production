@@ -26,7 +26,7 @@ resource "azurerm_role_assignment" "acr" {
 }
 
 resource "azurerm_user_assigned_identity" "aks" {
-  count = var.identity_ids != null ? 0 : 1
+  count = var.managed_identities != null ? 0 : 1
 
   location            = var.location
   name                = "uami-aks"
@@ -74,9 +74,13 @@ resource "azurerm_kubernetes_cluster" "this" {
     managed                = true
     tenant_id              = var.rbac_aad_tenant_id
   }
-  identity {
-    type         = "UserAssigned"
-    identity_ids = local.identity_ids
+  ## Resources that only support UserAssigned
+  dynamic "identity" {
+    for_each = local.managed_identities.user_assigned
+    content {
+      type         = identity.value.type
+      identity_ids = identity.value.user_assigned_resource_ids
+    }
   }
   key_vault_secrets_provider {
     secret_rotation_enabled = true
@@ -204,11 +208,12 @@ resource "azurerm_monitor_diagnostic_setting" "aks" {
 
 # required AVM resources interfaces
 resource "azurerm_management_lock" "this" {
-  count = var.lock.kind != "None" ? 1 : 0
+  count = var.lock != null ? 1 : 0
 
   lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.name}")
+  name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
   scope      = azurerm_kubernetes_cluster.this.id
+  notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 }
 
 
