@@ -17,7 +17,6 @@ resource "azurerm_container_registry" "this" {
   sku                 = "Premium"
   tags                = var.tags
 }
-
 resource "azurerm_role_assignment" "acr" {
   principal_id                     = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
   scope                            = azurerm_container_registry.this.id
@@ -59,13 +58,11 @@ resource "azurerm_kubernetes_cluster" "this" {
     max_count              = 9
     max_pods               = 110
     min_count              = 3
-    node_labels            = var.node_labels
-    node_taints            = var.node_taints
     orchestrator_version   = var.orchestrator_version
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
     vnet_subnet_id         = module.vnet.vnet_subnets_name_id["nodecidr"]
-    zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)  
+    zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
   }
   auto_scaler_profile {
     balance_similar_node_groups = true
@@ -225,13 +222,11 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   })
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
-  name                  = "np-${each.value.name}"
+  name                  = "np${each.value.name}"
   vm_size               = each.value.vm_size
   enable_auto_scaling   = true
   max_count             = each.value.max_count
   min_count             = each.value.min_count
-  node_labels           = each.value.node_labels
-  node_taints           = each.value.node_taints
   orchestrator_version  = each.value.orchestrator_version
   os_sku                = each.value.os_sku
   tags                  = var.tags
