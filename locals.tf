@@ -60,6 +60,12 @@ locals {
         type                       = "UserAssigned"
         user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
       }
-    } : {}
+      } : {
+      this = {
+        type                       = "UserAssigned"
+        user_assigned_resource_ids = azurerm_user_assigned_identity.aks[*].id
+
+      }
+    }
   }
 }
