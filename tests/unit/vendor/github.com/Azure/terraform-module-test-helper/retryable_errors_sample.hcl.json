@@ -1,0 +1,6 @@
+{
+  "retryable_errors": [
+    "GatewayTimeout"
+  ],
+  "som_other_property": 1
+}

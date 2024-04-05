@@ -12,7 +12,7 @@ resource "random_string" "acr_suffix" {
 
 resource "azurerm_container_registry" "this" {
   location            = var.location
-  name                = "aksacr${random_string.acr_suffix.result}"
+  name                = "cr${random_string.acr_suffix.result}"
   resource_group_name = var.resource_group_name
   sku                 = "Premium"
   tags                = var.tags
@@ -36,7 +36,7 @@ resource "azurerm_user_assigned_identity" "aks" {
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
-  name                              = var.name
+  name                              = "aks-${var.name}"
   resource_group_name               = var.resource_group_name
   automatic_channel_upgrade         = "patch"
   azure_policy_enabled              = true
@@ -65,7 +65,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
     vnet_subnet_id         = module.vnet.vnet_subnets_name_id["nodecidr"]
-    zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
+    zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)  
   }
   auto_scaler_profile {
     balance_similar_node_groups = true
@@ -139,7 +139,7 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
 
 resource "azurerm_log_analytics_workspace" "this" {
   location            = var.location
-  name                = "${var.name}-aks"
+  name                = "log-${var.name}-aks"
   resource_group_name = var.resource_group_name
   sku                 = "PerGB2018"
   tags                = var.tags
@@ -154,7 +154,7 @@ resource "azurerm_log_analytics_workspace_table" "this" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
-  name                           = "${var.name}-aks"
+  name                           = "amds-${var.name}-aks"
   target_resource_id             = azurerm_kubernetes_cluster.this.id
   log_analytics_destination_type = "Dedicated"
   log_analytics_workspace_id     = azurerm_log_analytics_workspace.this.id
@@ -225,7 +225,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   })
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
-  name                  = each.value.name
+  name                  = "np-${each.value.name}"
   vm_size               = each.value.vm_size
   enable_auto_scaling   = true
   max_count             = each.value.max_count
