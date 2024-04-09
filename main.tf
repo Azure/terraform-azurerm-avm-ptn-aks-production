@@ -26,7 +26,7 @@ resource "azurerm_role_assignment" "acr" {
 }
 
 resource "azurerm_user_assigned_identity" "aks" {
-  count = var.managed_identities.user_assigned_resource_ids > 0 ? 0 : 1
+  count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 0 : 1
 
   location            = var.location
   name                = "uami-aks"
