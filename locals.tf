@@ -50,6 +50,22 @@ locals {
   log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
 }
 
+# Helper locals to make the dynamic block more readable
+# There are three attributes here to cater for resources that
+# support both user and system MIs, only system MIs, and only user MIs
 locals {
-  identity_ids = var.identity_ids != null ? var.identity_ids : azurerm_user_assigned_identity.aks[*].id
+  managed_identities = {
+    user_assigned = length(var.managed_identities.user_assigned_resource_ids) > 0 ? {
+      this = {
+        type                       = "UserAssigned"
+        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
+      }
+      } : {
+      this = {
+        type                       = "UserAssigned"
+        user_assigned_resource_ids = azurerm_user_assigned_identity.aks[*].id
+
+      }
+    }
+  }
 }
