@@ -112,7 +112,19 @@ Default: `true`
 
 ## Outputs
 
-No outputs.
+The following outputs are exported:
+
+### <a name="output_test_aks_id"></a> [test\_aks\_id](#output\_test\_aks\_id)
+
+Description: n/a
+
+### <a name="output_test_cluster_portal_fqdn"></a> [test\_cluster\_portal\_fqdn](#output\_test\_cluster\_portal\_fqdn)
+
+Description: n/a
+
+### <a name="output_test_cluster_private_fqdn"></a> [test\_cluster\_private\_fqdn](#output\_test\_cluster\_private\_fqdn)
+
+Description: n/a
 
 ## Modules
 
