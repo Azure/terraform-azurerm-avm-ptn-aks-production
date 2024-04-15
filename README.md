@@ -334,6 +334,10 @@ The following outputs are exported:
 
 Description: This is the full output for the resource.
 
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The `azurerm_kubernetes_cluster`'s resource id.
+
 ## Modules
 
 The following Modules are called:

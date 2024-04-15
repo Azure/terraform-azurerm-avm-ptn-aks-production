@@ -4,3 +4,8 @@ output "resource" {
   description = "This is the full output for the resource."
   value       = azurerm_kubernetes_cluster.this
 }
+
+output "resource_id" {
+  description = "The `azurerm_kubernetes_cluster`'s resource id."
+  value       = azurerm_kubernetes_cluster.this.id
+}
