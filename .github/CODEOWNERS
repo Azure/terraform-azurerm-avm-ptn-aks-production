@@ -1,5 +1,3 @@
 # AVM core team owns key files
 .github/policies/ @Azure/avm-core-team-technical
 .github/CODEOWNERS @Azure/avm-core-team-technical
-* @Azure/terraform-azurerm-avm-ptn-aks-production-module-owners-tf
-* @Azure/avm-core-team-technical-terraform
