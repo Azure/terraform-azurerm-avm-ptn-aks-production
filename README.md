@@ -320,6 +320,16 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_sku_tier"></a> [sku\_tier](#sku\_tier)
+
+(Optional) The SKU Tier that should be used for this Kubernetes Cluster. 
+Possible values are Free, Standard (which includes the Uptime SLA) and Premium.
+Default is Standard.
+
+Type: `string`
+
+Default: `Standard`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: (Optional) Tags of the resource.

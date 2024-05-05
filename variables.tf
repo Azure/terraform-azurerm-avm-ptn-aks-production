@@ -219,3 +219,13 @@ variable "tags" {
   default     = null
   description = "(Optional) Tags of the resource."
 }
+
+variable "sku_tier" {
+  type        = string
+  default     = "Standard"
+  description = <<-EOT
+(Optional) The SKU Tier that should be used for this Kubernetes Cluster. 
+Possible values are Free, Standard (which includes the Uptime SLA) and Premium.
+Default is Standard.
+EOT
+}
