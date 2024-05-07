@@ -167,14 +167,6 @@ object({
 
 Default: `null`
 
-### <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id)
-
-Description: (Optional) The ID of the Log Analytics Workspace to use for the OMS agent.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
 Description:   Controls the Managed Identity configuration on this resource. The following properties can be specified:
