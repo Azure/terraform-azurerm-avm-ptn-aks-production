@@ -83,12 +83,6 @@ variable "lock" {
   }
 }
 
-variable "log_analytics_workspace_id" {
-  type        = string
-  default     = null
-  description = "(Optional) The ID of the Log Analytics Workspace to use for the OMS agent."
-}
-
 # tflint-ignore: terraform_unused_declarations
 variable "managed_identities" {
   type = object({
