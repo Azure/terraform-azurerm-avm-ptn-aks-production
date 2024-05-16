@@ -226,7 +226,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   })
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
-  name                  = "np${each.value.name}"
+  name                  = each.value.name
   vm_size               = each.value.vm_size
   enable_auto_scaling   = true
   max_count             = each.value.max_count
@@ -238,6 +238,13 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   zones                 = each.value.zone == "" ? null : [each.value.zone]
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
+
+  lifecycle {
+    precondition {
+      condition     = can(regex("^[a-z][a-z0-9]{0,11}$", each.value.name))
+      error_message = "The name must begin with a lowercase letter, contain only lowercase letters and numbers, and be between 1 and 12 characters in length."
+    }
+  }
 }
 
 
