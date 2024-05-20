@@ -51,7 +51,7 @@ module "test" {
     ]
   }
 
-  location = "East US 2" # Hardcoded because we have to test in a region with availability zones
+  location = "UK West" # Hardcoded because we have to test in a region with availability zones
   node_pools = {
     workload = {
       name                 = "workload"
