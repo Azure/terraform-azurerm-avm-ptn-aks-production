@@ -18,7 +18,7 @@ provider "azurerm" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = "West US 2" # Hardcoded because we have to test in a region with availability zones
+  location = "UK West" # Hardcoded because we have to test in a region with availability zones
   name     = module.naming.resource_group.name_unique
 }
 
