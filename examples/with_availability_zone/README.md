@@ -60,7 +60,7 @@ module "test" {
   location = "East US 2" # Hardcoded because we have to test in a region with availability zones
   node_pools = {
     workload = {
-      name                 = "workload"
+      name                 = "workloadworkload" #Long name to test the truncate to 12 characters
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
       max_count            = 10
