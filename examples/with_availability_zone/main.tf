@@ -57,7 +57,7 @@ module "test" {
       name                 = "workloadworkload" #Long name to test the truncate to 12 characters
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
-      max_count            = 110
+      max_count            = 10
       min_count            = 2
       os_sku               = "Ubuntu"
       mode                 = "User"
