@@ -63,7 +63,7 @@ module "test" {
       name                 = "workload"
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.28"
-      max_count            = 110
+      max_count            = 10
       min_count            = 2
       os_sku               = "Ubuntu"
       mode                 = "User"
