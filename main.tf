@@ -108,6 +108,15 @@ resource "azurerm_kubernetes_cluster" "this" {
     ignore_changes = [
       kubernetes_version
     ]
+
+    precondition {
+      condition     = var.kubernetes_version == null || try(can(regex("^[0-9]+\\.[0-9]+$", var.kubernetes_version)), false)
+      error_message = "Ensure that kubernetes_version does not specify a patch version"
+    }
+    precondition {
+      condition     = var.orchestrator_version == null || try(can(regex("^[0-9]+\\.[0-9]+$", var.orchestrator_version)), false)
+      error_message = "Ensure that orchestrator_version does not specify a patch version"
+    }
   }
 }
 
