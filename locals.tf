@@ -35,7 +35,7 @@ locals {
     for pool in var.node_pools : [
       for zone in try(local.regions_by_name_or_display_name[var.location].zones, [""]) : {
         # concatenate name and zone trim to 12 characters
-        name                 = "${substr(pool.name, 0, 11)}${zone}"
+        name                 = "${substr(pool.name, 0, 10)}${zone}"
         vm_size              = pool.vm_size
         orchestrator_version = pool.orchestrator_version
         max_count            = pool.max_count
