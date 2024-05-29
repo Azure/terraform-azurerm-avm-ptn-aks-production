@@ -109,22 +109,6 @@ Type: `map(string)`
 
 Default: `{}`
 
-### <a name="input_client_id"></a> [client\_id](#input\_client\_id)
-
-Description: (Optional) The Client ID (appId) for the Service Principal used for the AKS deployment
-
-Type: `string`
-
-Default: `""`
-
-### <a name="input_client_secret"></a> [client\_secret](#input\_client\_secret)
-
-Description: (Optional) The Client Secret (password) for the Service Principal used for the AKS deployment
-
-Type: `string`
-
-Default: `""`
-
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
@@ -134,14 +118,6 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
-
-### <a name="input_key_vault_secrets_provider_enabled"></a> [key\_vault\_secrets\_provider\_enabled](#input\_key\_vault\_secrets\_provider\_enabled)
-
-Description: (Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver
-
-Type: `bool`
-
-Default: `false`
 
 ### <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version)
 
@@ -337,12 +313,6 @@ Description: The `azurerm_kubernetes_cluster`'s resource id.
 ## Modules
 
 The following Modules are called:
-
-### <a name="module_regions"></a> [regions](#module\_regions)
-
-Source: Azure/regions/azurerm
-
-Version: >= 0.3.0
 
 ### <a name="module_vnet"></a> [vnet](#module\_vnet)
 

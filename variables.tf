@@ -27,20 +27,6 @@ variable "agents_tags" {
   description = "(Optional) A mapping of tags to assign to the Node Pool."
 }
 
-variable "client_id" {
-  type        = string
-  default     = ""
-  description = "(Optional) The Client ID (appId) for the Service Principal used for the AKS deployment"
-  nullable    = false
-}
-
-variable "client_secret" {
-  type        = string
-  default     = ""
-  description = "(Optional) The Client Secret (password) for the Service Principal used for the AKS deployment"
-  nullable    = false
-}
-
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -49,13 +35,6 @@ This variable controls whether or not telemetry is enabled for the module.
 For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
-}
-
-variable "key_vault_secrets_provider_enabled" {
-  type        = bool
-  default     = false
-  description = "(Optional) Whether to use the Azure Key Vault Provider for Secrets Store CSI Driver in an AKS cluster. For more details: https://docs.microsoft.com/en-us/azure/aks/csi-secrets-store-driver"
-  nullable    = false
 }
 
 variable "kubernetes_version" {

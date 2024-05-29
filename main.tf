@@ -1,7 +1,3 @@
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = ">= 0.3.0"
-}
 
 resource "random_string" "acr_suffix" {
   length  = 8

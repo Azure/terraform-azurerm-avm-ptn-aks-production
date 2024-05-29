@@ -1,6 +1,4 @@
-locals {
-  role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
-}
+
 
 locals {
   locations_cached_or_live        = data.local_file.locations.content
