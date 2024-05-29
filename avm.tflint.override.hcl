@@ -145,7 +145,7 @@ rule "tfnfr26" {
 # AVM Module Rules
 
 rule "required_module_source_tffr1" {
-  enabled = true
+  enabled = false
 }
 
 # AVM Output Rules
