@@ -57,7 +57,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     orchestrator_version   = var.orchestrator_version
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
-    vnet_subnet_id         = module.avm-res-network-virtualnetwork.subnets["subnet"].id
+    vnet_subnet_id         = module.avm-res-network-virtualnetwork.subnets["subnet"].resource_id
     zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
 
     upgrade_settings {
@@ -239,7 +239,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   orchestrator_version  = each.value.orchestrator_version
   os_sku                = each.value.os_sku
   tags                  = var.tags
-  vnet_subnet_id        = module.avm-res-network-virtualnetwork.subnets["subnet"].id
+  vnet_subnet_id        = module.avm-res-network-virtualnetwork.subnets["subnet"].resource_id
   zones                 = each.value.zone == "" ? null : [each.value.zone]
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
