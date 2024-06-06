@@ -314,7 +314,7 @@ Description: The `azurerm_kubernetes_cluster`'s resource id.
 
 The following Modules are called:
 
-### <a name="module_avm-res-network-virtualnetwork"></a> [avm-res-network-virtualnetwork](#module\_avm-res-network-virtualnetwork)
+### <a name="module_avm_res_network_virtualnetwork"></a> [avm\_res\_network\_virtualnetwork](#module\_avm\_res\_network\_virtualnetwork)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
