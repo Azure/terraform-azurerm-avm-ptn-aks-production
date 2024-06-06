@@ -267,7 +267,7 @@ moved {
   to   = module.avm-res-network-virtualnetwork
 }
 
-module "avm-res-network-virtualnetwork" {
+module "avm_res_network_virtualnetwork" {
   source = "Azure/avm-res-network-virtualnetwork/azurerm"
 
   address_space       = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
@@ -281,17 +281,3 @@ module "avm-res-network-virtualnetwork" {
     }
   }
 }
-# module "vnet" {
-#   source  = "Azure/subnets/azurerm"
-#   version = "1.0.0"
-
-#   resource_group_name = var.resource_group_name
-#   subnets = {
-#     nodecidr = {
-#       address_prefixes = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
-#     }
-#   }
-#   virtual_network_address_space = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
-#   virtual_network_location      = var.location
-#   virtual_network_name          = "vnet"
-# }
