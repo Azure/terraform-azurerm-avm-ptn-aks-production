@@ -268,7 +268,8 @@ moved {
 }
 
 module "avm_res_network_virtualnetwork" {
-  source = "Azure/avm-res-network-virtualnetwork/azurerm"
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "0.2.3"
 
   address_space       = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
   location            = var.location

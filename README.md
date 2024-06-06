@@ -318,7 +318,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version:
+Version: 0.2.3
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
