@@ -314,11 +314,11 @@ Description: The `azurerm_kubernetes_cluster`'s resource id.
 
 The following Modules are called:
 
-### <a name="module_vnet"></a> [vnet](#module\_vnet)
+### <a name="module_avm-res-network-virtualnetwork"></a> [avm-res-network-virtualnetwork](#module\_avm-res-network-virtualnetwork)
 
-Source: Azure/subnets/azurerm
+Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 1.0.0
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

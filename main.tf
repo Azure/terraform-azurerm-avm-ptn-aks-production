@@ -57,7 +57,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     orchestrator_version   = var.orchestrator_version
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
-    vnet_subnet_id         = module.vnet.vnet_subnets_name_id["nodecidr"]
+    vnet_subnet_id         = module.avm-res-network-virtualnetwork.subnets["subnet"].id
     zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
 
     upgrade_settings {
@@ -239,7 +239,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   orchestrator_version  = each.value.orchestrator_version
   os_sku                = each.value.os_sku
   tags                  = var.tags
-  vnet_subnet_id        = module.vnet.vnet_subnets_name_id["nodecidr"]
+  vnet_subnet_id        = module.avm-res-network-virtualnetwork.subnets["subnet"].id
   zones                 = each.value.zone == "" ? null : [each.value.zone]
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
@@ -262,18 +262,36 @@ data "local_file" "locations" {
   filename = "${path.module}/data/locations.json"
 }
 
+moved {
+  from = module.vnet
+  to   = module.avm-res-network-virtualnetwork
+}
 
-module "vnet" {
-  source  = "Azure/subnets/azurerm"
-  version = "1.0.0"
+module "avm-res-network-virtualnetwork" {
+  source = "Azure/avm-res-network-virtualnetwork/azurerm"
 
+  address_space       = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
+  location            = var.location
+  name                = "vnet"
   resource_group_name = var.resource_group_name
   subnets = {
-    nodecidr = {
+    "subnet" = {
+      name             = "nodecidr"
       address_prefixes = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
     }
   }
-  virtual_network_address_space = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
-  virtual_network_location      = var.location
-  virtual_network_name          = "vnet"
 }
+# module "vnet" {
+#   source  = "Azure/subnets/azurerm"
+#   version = "1.0.0"
+
+#   resource_group_name = var.resource_group_name
+#   subnets = {
+#     nodecidr = {
+#       address_prefixes = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
+#     }
+#   }
+#   virtual_network_address_space = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
+#   virtual_network_location      = var.location
+#   virtual_network_name          = "vnet"
+# }
