@@ -273,7 +273,7 @@ module "avm_res_network_virtualnetwork" {
 
   address_space       = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
   location            = var.location
-  name                = "vnet"
+  name                = var.virtual_network_name
   resource_group_name = var.resource_group_name
   subnets = {
     "subnet" = {
