@@ -298,6 +298,14 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name)
+
+Description: (Optional) The Virtual Network for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `"vnet"`
+
 ## Outputs
 
 The following outputs are exported:
