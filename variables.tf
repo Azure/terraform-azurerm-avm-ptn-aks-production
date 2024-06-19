@@ -93,12 +93,6 @@ variable "monitor_metrics" {
 EOT
 }
 
-variable "virtual_network_name" {
-  type        = string
-  default     = "vnet"
-  description = "(Optional) The Virtual Network for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
-}
-
 variable "node_cidr" {
   type        = string
   default     = null
@@ -197,4 +191,10 @@ variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) Tags of the resource."
+}
+
+variable "virtual_network_name" {
+  type        = string
+  default     = "vnet"
+  description = "(Optional) The Virtual Network for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
 }
