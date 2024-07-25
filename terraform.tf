@@ -13,6 +13,10 @@ terraform {
       source  = "hashicorp/local"
       version = "2.4.1"
     }
+    modtm = {
+      source  = "Azure/modtm"
+      version = "0.3.2"
+    }
     null = {
       source  = "hashicorp/null"
       version = ">= 3.0"
