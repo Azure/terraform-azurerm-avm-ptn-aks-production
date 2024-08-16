@@ -67,3 +67,13 @@ locals {
     }
   }
 }
+
+# Helper locals to DRY'up conditionals
+locals {
+  vnet_subnet_id = (var.node_subnet != null
+    ? var.node_subnet
+    : module.avm_res_network_virtualnetwork[0].subnets["subnet"].resource_id
+  )
+
+
+}

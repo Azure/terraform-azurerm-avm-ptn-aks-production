@@ -99,6 +99,12 @@ variable "node_cidr" {
   description = "(Optional) The CIDR to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
 }
 
+variable "node_subnet" {
+  type        = string
+  default     = null
+  description = "(Optional) The resource id of the existing subnet to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
+}
+
 variable "node_pools" {
   type = map(object({
     name                 = string
