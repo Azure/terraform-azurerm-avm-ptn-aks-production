@@ -13,9 +13,6 @@ stages:
   - test
   - deploy
 
-fmt:
-  extends: .terraform-module:fmt
-
 # See the included job template at `Terraform/Module-Base.gitlab-ci.yml` to learn about supported variables.
 deploy:
   extends: .terraform-module:deploy
