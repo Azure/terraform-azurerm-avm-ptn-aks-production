@@ -58,7 +58,11 @@ resource "azurerm_kubernetes_cluster" "this" {
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
     vnet_subnet_id         = local.vnet_subnet_id
-    zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
+    zones = (
+      var.zones != null
+      ? var.zones
+      : try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
+    )
 
     upgrade_settings {
       max_surge = "10%"

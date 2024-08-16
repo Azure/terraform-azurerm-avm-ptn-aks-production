@@ -105,6 +105,12 @@ variable "node_subnet" {
   description = "(Optional) The resource id of the existing subnet to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
 }
 
+variable "zones" {
+  type        = list(number)
+  default     = null
+  description = "(Optional) Specifies a list of Availability Zones in which this Kubernetes Cluster Node Pool should be located. Changing this forces a new Kubernetes Cluster Node Pool to be created. Can be overwritten per node pool."
+}
+
 variable "node_pools" {
   type = map(object({
     name                 = string
