@@ -29,6 +29,14 @@ resource "azurerm_user_assigned_identity" "aks" {
   tags                = var.tags
 }
 
+resource "azurerm_role_assignment" "network_contributor_on_subnet" {
+  for_each = local.managed_identities.user_assigned
+
+  principal_id         = each.value.user_assigned_resource_ids
+  scope                = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
+  role_definition_name = "Network Contributor"
+}
+
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
   name                              = "aks-${var.name}"
