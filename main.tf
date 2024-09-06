@@ -39,9 +39,9 @@ data "azurerm_user_assigned_identity" "cluster_user_defined_identity" {
 }
 
 resource "azurerm_role_assignment" "network_contributor_on_subnet" {
-  for_each = { for index, principal_ids in local.managed_identities.user_assigned : index => principal_ids }
+  for_each = toset(local.managed_identities.user_assigned.this.principal_ids)
 
-  principal_id         = each.key
+  principal_id         = each.value
   scope                = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
   role_definition_name = "Network Contributor"
 }
