@@ -57,13 +57,13 @@ locals {
       this = {
         type                       = "UserAssigned"
         user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
-        principal_id               = data.azurerm_user_assigned_identity.cluster_user_defined_identity[0].principal_id
+        principal_ids              = data.azurerm_user_assigned_identity.cluster_user_defined_identity[*].principal_id
       }
       } : {
       this = {
         type                       = "UserAssigned"
         user_assigned_resource_ids = azurerm_user_assigned_identity.aks[*].id
-        principal_id               = azurerm_user_assigned_identity.aks[*].principal_id
+        principal_ids              = azurerm_user_assigned_identity.aks[*].principal_id
 
       }
     }
