@@ -39,8 +39,8 @@ data "azurerm_user_assigned_identity" "cluster_user_defined_identity" {
 }
 
 resource "azurerm_role_assignment" "network_contributor_on_subnet" {
-  // Use the principal_id from the user assigned identity if it exists, otherwise use the principal_id from the AKS cluster
-  // reference https://github.com/Azure/terraform-azurerm-aks/blob/decb533e2785f965673698b0ac9949faca963f68/role_assignments.tf#L27
+  #  Use the principal_id from the user assigned identity if it exists, otherwise use the principal_id from the AKS cluster
+  #  reference https://github.com/Azure/terraform-azurerm-aks/blob/decb533e2785f965673698b0ac9949faca963f68/role_assignments.tf#L27
   principal_id         = coalesce(try(data.azurerm_user_assigned_identity.cluster_user_defined_identity[0].principal_id, azurerm_kubernetes_cluster.this.identity[0].principal_id))
   scope                = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
   role_definition_name = "Network Contributor"
