@@ -38,6 +38,7 @@ locals {
         orchestrator_version = pool.orchestrator_version
         max_count            = pool.max_count
         min_count            = pool.min_count
+        labels               = pool.labels
         os_sku               = pool.os_sku
         zone                 = zone
       }

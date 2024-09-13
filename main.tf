@@ -54,6 +54,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     max_count              = 9
     max_pods               = 110
     min_count              = 3
+    node_labels            = var.node_labels
     orchestrator_version   = var.orchestrator_version
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
@@ -76,6 +77,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   ## Resources that only support UserAssigned
   dynamic "identity" {
     for_each = local.managed_identities.user_assigned
+
     content {
       type         = identity.value.type
       identity_ids = identity.value.user_assigned_resource_ids
@@ -236,6 +238,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   enable_auto_scaling   = true
   max_count             = each.value.max_count
   min_count             = each.value.min_count
+  node_labels           = each.value.labels
   orchestrator_version  = each.value.orchestrator_version
   os_sku                = each.value.os_sku
   tags                  = var.tags
