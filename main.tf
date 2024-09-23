@@ -35,10 +35,15 @@ data "azurerm_resource_group" "this" {
   name = var.resource_group_name
 }
 
+data "azurerm_user_assigned_identity" "cluster_identity" {
+  name                = split("/", one(azurerm_kubernetes_cluster.this.identity[0].identity_ids))[8]
+  resource_group_name = data.azurerm_resource_group.this.name
+}
+
 resource "azurerm_role_assignment" "network_contributor_on_resource_group" {
   #  Use the principal_id from the user assigned identity if it exists, otherwise use the principal_id from the AKS cluster
   #  reference https://github.com/Azure/terraform-azurerm-aks/blob/decb533e2785f965673698b0ac9949faca963f68/role_assignments.tf#L27
-  principal_id         = azurerm_kubernetes_cluster.this.identity[0].principal_id
+  principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
   scope                = data.azurerm_resource_group.this.id
   role_definition_name = "Network Contributor"
 }
