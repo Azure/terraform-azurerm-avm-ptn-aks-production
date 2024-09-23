@@ -30,7 +30,7 @@ resource "azurerm_user_assigned_identity" "aks" {
 }
 
 data "azurerm_user_assigned_identity" "cluster_user_defined_identity" {
-  count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? length(var.managed_identities.user_assigned_resource_ids) : 0
+  count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 1 : 0
 
   # /subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/acceptanceTestResourceGroup1/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity
   # name is obtained from the above string which is the user assigned resource id - reference https://github.com/Azure/terraform-azurerm-aks/blob/decb533e2785f965673698b0ac9949faca963f68/role_assignments.tf#L11
