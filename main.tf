@@ -29,6 +29,21 @@ resource "azurerm_user_assigned_identity" "aks" {
   tags                = var.tags
 }
 
+data "azurerm_resource_group" "this" {
+  name = var.resource_group_name
+}
+
+data "azurerm_user_assigned_identity" "cluster_identity" {
+  name                = split("/", one(azurerm_kubernetes_cluster.this.identity[0].identity_ids))[8]
+  resource_group_name = data.azurerm_resource_group.this.name
+}
+
+resource "azurerm_role_assignment" "network_contributor_on_resource_group" {
+  principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
+  scope                = data.azurerm_resource_group.this.id
+  role_definition_name = "Network Contributor"
+}
+
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
   name                              = "aks-${var.name}"

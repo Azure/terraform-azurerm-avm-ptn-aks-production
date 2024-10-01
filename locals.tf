@@ -63,7 +63,6 @@ locals {
       this = {
         type                       = "UserAssigned"
         user_assigned_resource_ids = azurerm_user_assigned_identity.aks[*].id
-
       }
     }
   }
