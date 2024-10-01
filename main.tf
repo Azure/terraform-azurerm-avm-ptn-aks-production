@@ -52,7 +52,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   azure_policy_enabled              = true
   dns_prefix                        = var.name
   kubernetes_version                = var.kubernetes_version
-  local_account_disabled            = false
+  local_account_disabled            = true
   node_os_channel_upgrade           = "NodeImage"
   oidc_issuer_enabled               = true
   private_cluster_enabled           = true
