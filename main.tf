@@ -29,6 +29,23 @@ resource "azurerm_user_assigned_identity" "aks" {
   tags                = var.tags
 }
 
+data "azurerm_user_assigned_identity" "cluster_user_defined_identity" {
+  count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? length(var.managed_identities.user_assigned_resource_ids) : 0
+
+  # /subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/acceptanceTestResourceGroup1/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity
+  # name is obtained from the above string which is the user assigned resource id - reference https://github.com/Azure/terraform-azurerm-aks/blob/decb533e2785f965673698b0ac9949faca963f68/role_assignments.tf#L11
+  name                = split("/", tolist(var.managed_identities.user_assigned_resource_ids)[count.index])[8]
+  resource_group_name = split("/", tolist(var.managed_identities.user_assigned_resource_ids)[count.index])[4]
+}
+
+resource "azurerm_role_assignment" "network_contributor_on_subnet" {
+  #  Use the principal_id from the user assigned identity if it exists, otherwise use the principal_id from the AKS cluster
+  #  reference https://github.com/Azure/terraform-azurerm-aks/blob/decb533e2785f965673698b0ac9949faca963f68/role_assignments.tf#L27
+  principal_id         = azurerm_kubernetes_cluster.this.identity.principal_id
+  scope                = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
+  role_definition_name = "Network Contributor"
+}
+
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
   name                              = "aks-${var.name}"
@@ -54,6 +71,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     max_count              = 9
     max_pods               = 110
     min_count              = 3
+    node_labels            = var.node_labels
     orchestrator_version   = var.orchestrator_version
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
@@ -237,7 +255,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   enable_auto_scaling   = true
   max_count             = each.value.max_count
   min_count             = each.value.min_count
-  mode                  = each.value.mode
   orchestrator_version  = each.value.orchestrator_version
   os_disk_size_gb       = each.value.os_disk_size_gb
   os_sku                = each.value.os_sku
