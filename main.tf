@@ -76,6 +76,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   ## Resources that only support UserAssigned
   dynamic "identity" {
     for_each = local.managed_identities.user_assigned
+
     content {
       type         = identity.value.type
       identity_ids = identity.value.user_assigned_resource_ids
@@ -236,7 +237,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   enable_auto_scaling   = true
   max_count             = each.value.max_count
   min_count             = each.value.min_count
+  mode                  = each.value.mode
   orchestrator_version  = each.value.orchestrator_version
+  os_disk_size_gb       = each.value.os_disk_size_gb
   os_sku                = each.value.os_sku
   tags                  = var.tags
   vnet_subnet_id        = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id

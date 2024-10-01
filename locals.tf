@@ -39,6 +39,8 @@ locals {
         max_count            = pool.max_count
         min_count            = pool.min_count
         os_sku               = pool.os_sku
+        mode                 = pool.mode
+        os_disk_size_gb      = pool.os_disk_size_gb
         zone                 = zone
       }
     ]

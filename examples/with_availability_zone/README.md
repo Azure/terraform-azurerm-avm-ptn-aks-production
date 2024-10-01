@@ -67,6 +67,7 @@ module "test" {
       min_count            = 2
       os_sku               = "Ubuntu"
       mode                 = "User"
+      os_disk_size_gb      = 128
     },
     ingress = {
       name                 = "ingress"
@@ -76,6 +77,8 @@ module "test" {
       min_count            = 2
       os_sku               = "Ubuntu"
       mode                 = "User"
+      os_disk_size_gb      = 128
+
     }
   }
 }
