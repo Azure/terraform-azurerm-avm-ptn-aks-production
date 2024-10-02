@@ -40,6 +40,8 @@ locals {
         min_count            = pool.min_count
         labels               = pool.labels
         os_sku               = pool.os_sku
+        mode                 = pool.mode
+        os_disk_size_gb      = pool.os_disk_size_gb
         zone                 = zone
       }
     ]
