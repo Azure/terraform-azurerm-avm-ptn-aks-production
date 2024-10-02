@@ -43,7 +43,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "East US 2" # Hardcoded instead of using module.regions because The "for_each" map includes keys derived from resource attributes that cannot be determined until apply, and so Terraform cannot determine the full set of keys that will identify the instances of this resource.
   name     = module.naming.resource_group.name_unique
 }
 
@@ -57,8 +57,41 @@ module "test" {
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = "East US 2" # Hardcoded instead of using module.regions because The "for_each" map includes keys derived from resource attributes that cannot be determined until apply, and so Terraform cannot determine the full set of keys that will identify the instances of this resource.
-  pod_cidr            = "192.168.0.0/16"
-  node_cidr           = "10.31.0.0/17"
-  acr_name            = module.naming.container_registry.name_unique
+  location            = azurerm_resource_group.this.location
+  network = {
+    name                = module.avm_res_network_virtualnetwork.name
+    resource_group_name = azurerm_resource_group.this.name
+    node_subnet_id      = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
+    pod_cidr            = "192.168.0.0/16"
+    acr = {
+      name                          = module.naming.container_registry.name_unique
+      subnet_resource_id            = module.avm_res_network_virtualnetwork.subnets["private_link_subnet"].resource_id
+      private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
+    }
+  }
+}
+
+resource "azurerm_private_dns_zone" "this" {
+  name                = "privatelink.azurecr.io"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+module "avm_res_network_virtualnetwork" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "0.2.3"
+
+  address_space       = ["10.31.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  name                = "myvnet"
+  resource_group_name = azurerm_resource_group.this.name
+  subnets = {
+    "subnet" = {
+      name             = "nodecidr"
+      address_prefixes = ["10.31.0.0/17"]
+    }
+    "private_link_subnet" = {
+      name             = "private_link_subnet"
+      address_prefixes = ["10.31.129.0/24"]
+    }
+  }
 }
