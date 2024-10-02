@@ -59,5 +59,6 @@ module "test" {
   resource_group_name = azurerm_resource_group.this.name
   location            = "East US 2" # Hardcoded instead of using module.regions because The "for_each" map includes keys derived from resource attributes that cannot be determined until apply, and so Terraform cannot determine the full set of keys that will identify the instances of this resource.
   pod_cidr            = "192.168.0.0/16"
-  node_cidr           = "10.31.0.0/16"
+  node_cidr           = "10.31.0.0/17"
+  acr_name            = module.naming.container_registry.name_unique
 }

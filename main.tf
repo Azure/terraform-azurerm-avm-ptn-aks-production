@@ -1,21 +1,33 @@
+resource "azurerm_private_dns_zone" "this" {
+  for_each = toset(var.acr_name == null ? [] : ["acr"])
 
-resource "random_string" "acr_suffix" {
-  length  = 8
-  numeric = true
-  special = false
-  upper   = false
-}
-
-resource "azurerm_container_registry" "this" {
-  location            = var.location
-  name                = "cr${random_string.acr_suffix.result}"
+  name                = "privatelink.azurecr.io"
   resource_group_name = var.resource_group_name
-  sku                 = "Premium"
   tags                = var.tags
 }
+
+module "avm_res_containerregistry_registry" {
+  for_each                      = toset(var.acr_name == null ? [] : ["acr"])
+  source                        = "Azure/avm-res-containerregistry-registry/azurerm"
+  version                       = "0.3.1"
+  name                          = var.acr_name
+  location                      = var.location
+  resource_group_name           = var.resource_group_name
+  sku                           = "Premium"
+  public_network_access_enabled = false
+  private_endpoints = {
+    primary = {
+      private_dns_zone_resource_ids = [azurerm_private_dns_zone.this["acr"].id]
+      subnet_resource_id            = module.avm_res_network_virtualnetwork.subnets["private_link_subnet"].resource_id
+    }
+  }
+}
+
 resource "azurerm_role_assignment" "acr" {
+  for_each = toset(var.acr_name == null ? [] : ["acr"])
+
   principal_id                     = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
-  scope                            = azurerm_container_registry.this.id
+  scope                            = module.avm_res_containerregistry_registry["acr"].resource_id
   role_definition_name             = "AcrPull"
   skip_service_principal_aad_check = true
 }
@@ -290,14 +302,18 @@ module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.2.3"
 
-  address_space       = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
+  address_space       = var.vnet_cidr != null ? [var.vnet_cidr] : ["10.31.0.0/16"]
   location            = var.location
   name                = var.virtual_network_name
   resource_group_name = var.resource_group_name
   subnets = {
     "subnet" = {
       name             = "nodecidr"
-      address_prefixes = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/16"]
+      address_prefixes = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/17"]
+    }
+    "private_link_subnet" = {
+      name             = "private_link_subnet"
+      address_prefixes = ["10.31.129.0/24"]
     }
   }
 }

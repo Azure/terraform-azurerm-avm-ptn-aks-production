@@ -21,6 +21,12 @@ variable "resource_group_name" {
   nullable    = false
 }
 
+variable "acr_name" {
+  type        = string
+  default     = null
+  description = "(Optional) The name of the Azure Container Registry to use for the Kubernetes cluster."
+}
+
 variable "agents_tags" {
   type        = map(string)
   default     = {}
@@ -205,4 +211,10 @@ variable "virtual_network_name" {
   type        = string
   default     = "vnet"
   description = "(Optional) The Virtual Network for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
+}
+
+variable "vnet_cidr" {
+  type        = string
+  default     = null
+  description = "(Optional) The CIDR to use for the Azure Virtual Network. Changing this forces a new resource to be created."
 }
