@@ -1,30 +1,22 @@
-resource "azurerm_private_dns_zone" "this" {
-  for_each = toset(var.acr_name == null ? [] : ["acr"])
-
-  name                = "privatelink.azurecr.io"
-  resource_group_name = var.resource_group_name
-  tags                = var.tags
-}
-
 module "avm_res_containerregistry_registry" {
-  for_each                      = toset(var.acr_name == null ? [] : ["acr"])
+  for_each                      = toset(var.acr == null ? [] : ["acr"])
   source                        = "Azure/avm-res-containerregistry-registry/azurerm"
   version                       = "0.3.1"
-  name                          = var.acr_name
+  name                          = var.acr.name
   location                      = var.location
   resource_group_name           = var.resource_group_name
   sku                           = "Premium"
   public_network_access_enabled = false
   private_endpoints = {
     primary = {
-      private_dns_zone_resource_ids = [azurerm_private_dns_zone.this["acr"].id]
-      subnet_resource_id            = module.avm_res_network_virtualnetwork.subnets["private_link_subnet"].resource_id
+      private_dns_zone_resource_ids = var.acr.private_dns_zone_resource_ids
+      subnet_resource_id            = var.acr.subnet_resource_id
     }
   }
 }
 
 resource "azurerm_role_assignment" "acr" {
-  for_each = toset(var.acr_name == null ? [] : ["acr"])
+  for_each = toset(var.acr == null ? [] : ["acr"])
 
   principal_id                     = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
   scope                            = module.avm_res_containerregistry_registry["acr"].resource_id
@@ -85,7 +77,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     orchestrator_version   = var.orchestrator_version
     os_sku                 = "Ubuntu"
     tags                   = merge(var.tags, var.agents_tags)
-    vnet_subnet_id         = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
+    vnet_subnet_id         = var.network.node_subnet_id
     zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
 
     upgrade_settings {
@@ -122,7 +114,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     load_balancer_sku   = "standard"
     network_plugin_mode = "overlay"
     network_policy      = "calico"
-    pod_cidr            = var.pod_cidr
+    pod_cidr            = var.network.pod_cidr
   }
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
@@ -270,7 +262,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   os_disk_size_gb       = each.value.os_disk_size_gb
   os_sku                = each.value.os_sku
   tags                  = var.tags
-  vnet_subnet_id        = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
+  vnet_subnet_id        = var.network.node_subnet_id
   zones                 = each.value.zone == "" ? null : [each.value.zone]
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
@@ -291,29 +283,4 @@ data "local_file" "compute_provider" {
 
 data "local_file" "locations" {
   filename = "${path.module}/data/locations.json"
-}
-
-moved {
-  from = module.vnet
-  to   = module.avm_res_network_virtualnetwork
-}
-
-module "avm_res_network_virtualnetwork" {
-  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.2.3"
-
-  address_space       = var.vnet_cidr != null ? [var.vnet_cidr] : ["10.31.0.0/16"]
-  location            = var.location
-  name                = var.virtual_network_name
-  resource_group_name = var.resource_group_name
-  subnets = {
-    "subnet" = {
-      name             = "nodecidr"
-      address_prefixes = var.node_cidr != null ? [var.node_cidr] : ["10.31.0.0/17"]
-    }
-    "private_link_subnet" = {
-      name             = "private_link_subnet"
-      address_prefixes = ["10.31.129.0/24"]
-    }
-  }
 }

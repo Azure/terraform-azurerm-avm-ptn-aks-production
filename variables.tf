@@ -14,6 +14,16 @@ variable "name" {
   }
 }
 
+variable "network" {
+  type = object({
+    name                = string
+    resource_group_name = string
+    node_subnet_id      = string
+    pod_cidr            = string
+  })
+  description = "Values for the networking configuration of the AKS cluster"
+}
+
 # This is required for most resource modules
 variable "resource_group_name" {
   type        = string
@@ -21,10 +31,15 @@ variable "resource_group_name" {
   nullable    = false
 }
 
-variable "acr_name" {
-  type        = string
+variable "acr" {
+  type = object({
+    name                          = string
+    private_dns_zone_resource_ids = set(string)
+    subnet_resource_id            = string
+
+  })
   default     = null
-  description = "(Optional) The name of the Azure Container Registry to use for the Kubernetes cluster."
+  description = "(Optional) Parameters for the Azure Container Registry to use with the Kubernetes Cluster."
 }
 
 variable "agents_tags" {
@@ -99,12 +114,6 @@ variable "monitor_metrics" {
 EOT
 }
 
-variable "node_cidr" {
-  type        = string
-  default     = null
-  description = "(Optional) The CIDR to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
-}
-
 variable "node_labels" {
   type        = map(string)
   default     = {}
@@ -176,12 +185,6 @@ variable "orchestrator_version" {
   description = "Specify which Kubernetes release to use. Specify only minor version, such as '1.28'."
 }
 
-variable "pod_cidr" {
-  type        = string
-  default     = null
-  description = "(Optional) The CIDR to use for pod IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
-}
-
 variable "rbac_aad_admin_group_object_ids" {
   type        = list(string)
   default     = null
@@ -205,16 +208,4 @@ variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) Tags of the resource."
-}
-
-variable "virtual_network_name" {
-  type        = string
-  default     = "vnet"
-  description = "(Optional) The Virtual Network for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created."
-}
-
-variable "vnet_cidr" {
-  type        = string
-  default     = null
-  description = "(Optional) The CIDR to use for the Azure Virtual Network. Changing this forces a new resource to be created."
 }

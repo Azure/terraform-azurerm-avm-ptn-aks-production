@@ -52,7 +52,6 @@ The following resources are used by this module:
 - [azurerm_log_analytics_workspace_table.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
-- [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_role_assignment.acr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.network_contributor_on_resource_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_user_assigned_identity.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
@@ -83,6 +82,21 @@ Description: The name for the AKS resources created in the specified Azure Resou
 
 Type: `string`
 
+### <a name="input_network"></a> [network](#input\_network)
+
+Description: Values for the networking configuration of the AKS cluster
+
+Type:
+
+```hcl
+object({
+    name                = string
+    resource_group_name = string
+    node_subnet_id      = string
+    pod_cidr            = string
+  })
+```
+
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
 Description: The resource group where the resources will be deployed.
@@ -93,11 +107,20 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_acr_name"></a> [acr\_name](#input\_acr\_name)
+### <a name="input_acr"></a> [acr](#input\_acr)
 
-Description: (Optional) The name of the Azure Container Registry to use for the Kubernetes cluster.
+Description: (Optional) Parameters for the Azure Container Registry to use with the Kubernetes Cluster.
 
-Type: `string`
+Type:
+
+```hcl
+object({
+    name                          = string
+    private_dns_zone_resource_ids = set(string)
+    subnet_resource_id            = string
+
+  })
+```
 
 Default: `null`
 
@@ -182,14 +205,6 @@ object({
 
 Default: `null`
 
-### <a name="input_node_cidr"></a> [node\_cidr](#input\_node\_cidr)
-
-Description: (Optional) The CIDR to use for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_node_labels"></a> [node\_labels](#input\_node\_labels)
 
 Description: (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
@@ -268,14 +283,6 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_pod_cidr"></a> [pod\_cidr](#input\_pod\_cidr)
-
-Description: (Optional) The CIDR to use for pod IPs in the Kubernetes cluster. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_rbac_aad_admin_group_object_ids"></a> [rbac\_aad\_admin\_group\_object\_ids](#input\_rbac\_aad\_admin\_group\_object\_ids)
 
 Description: Object ID of groups with admin access.
@@ -308,22 +315,6 @@ Type: `map(string)`
 
 Default: `null`
 
-### <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name)
-
-Description: (Optional) The Virtual Network for node IPs in the Kubernetes cluster. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `"vnet"`
-
-### <a name="input_vnet_cidr"></a> [vnet\_cidr](#input\_vnet\_cidr)
-
-Description: (Optional) The CIDR to use for the Azure Virtual Network. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
-
 ## Outputs
 
 The following outputs are exported:
@@ -345,12 +336,6 @@ The following Modules are called:
 Source: Azure/avm-res-containerregistry-registry/azurerm
 
 Version: 0.3.1
-
-### <a name="module_avm_res_network_virtualnetwork"></a> [avm\_res\_network\_virtualnetwork](#module\_avm\_res\_network\_virtualnetwork)
-
-Source: Azure/avm-res-network-virtualnetwork/azurerm
-
-Version: 0.2.3
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
