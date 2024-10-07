@@ -75,7 +75,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     min_count              = 3
     node_labels            = var.node_labels
     orchestrator_version   = var.orchestrator_version
-    os_sku                 = "Ubuntu"
+    os_sku                 = var.os_sku
     tags                   = merge(var.tags, var.agents_tags)
     vnet_subnet_id         = var.network.node_subnet_id
     zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)

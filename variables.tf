@@ -128,12 +128,11 @@ variable "node_pools" {
     # do not add nodecount because we enforce the use of auto-scaling
     max_count       = optional(number)
     min_count       = optional(number)
-    os_sku          = optional(string)
+    os_sku          = optional(string, "AzureLinux")
     mode            = optional(string)
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
-    zones           = optional(set(string))
   }))
   default     = {}
   description = <<-EOT
@@ -144,12 +143,11 @@ map(object({
   orchestrator_version = (Required) The version of Kubernetes which should be used for this Node Pool. Changing this forces a new resource to be created.
   max_count            = (Optional) The maximum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be greater than or equal to `min_count`.
   min_count            = (Optional) The minimum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be less than or equal to `max_count`.
-  os_sku               = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`, `CBLMariner`, `Mariner`, `Windows2019`, `Windows2022`. If not specified, the default is `Ubuntu` if OSType=Linux or `Windows2019` if OSType=Windows. And the default Windows OSSKU will be changed to `Windows2022` after Windows2019 is deprecated. Changing this forces a new resource to be created.
+  os_sku               = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`or `AzureLinux`. If not specified, the default is `AzureLinux`. Changing this forces a new resource to be created.
   mode                 = (Optional) Should this Node Pool be used for System or User resources? Possible values are `System` and `User`. Defaults to `User`.
   os_disk_size_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
   labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
-  zones                = (Optional) Specifies a list of Availability Zones in which this Kubernetes Cluster Node Pool should be located. Changing this forces a new Kubernetes Cluster Node Pool to be created.
 }))
 
 Example input:
@@ -177,12 +175,28 @@ Example input:
   ```
 EOT
   nullable    = false
+
+  validation {
+    condition     = alltrue([for pool in var.node_pools : contains(["Ubuntu", "AzureLinux"], pool.os_sku)])
+    error_message = "os_sku must be either Ubuntu or AzureLinux"
+  }
 }
 
 variable "orchestrator_version" {
   type        = string
   default     = null
   description = "Specify which Kubernetes release to use. Specify only minor version, such as '1.28'."
+}
+
+variable "os_sku" {
+  type        = string
+  default     = "AzureLinux"
+  description = "(Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu` or `AzureLinux`. If not specified, the default is `AzureLinux`.Changing this forces a new resource to be created."
+
+  validation {
+    condition     = can(regex("^(Ubuntu|AzureLinux)$", var.os_sku))
+    error_message = "os_sku must be either Ubuntu or AzureLinux"
+  }
 }
 
 variable "rbac_aad_admin_group_object_ids" {

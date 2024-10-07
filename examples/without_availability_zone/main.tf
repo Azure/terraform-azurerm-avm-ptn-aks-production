@@ -69,7 +69,7 @@ module "test" {
       orchestrator_version = "1.28"
       max_count            = 110
       min_count            = 2
-      os_sku               = "Ubuntu"
+      os_sku               = "AzureLinux"
       mode                 = "User"
     },
     ingress = {
@@ -78,7 +78,7 @@ module "test" {
       orchestrator_version = "1.28"
       max_count            = 4
       min_count            = 2
-      os_sku               = "Ubuntu"
+      os_sku               = "AzureLinux"
       mode                 = "User"
     }
   }
