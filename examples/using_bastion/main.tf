@@ -47,7 +47,7 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-  
+
 
 # This is the module call
 # Do not specify location here due to the randomization above.
@@ -98,26 +98,26 @@ module "avm_res_network_virtualnetwork" {
     "bastion" = {
       name             = "AzureBastionSubnet"
       address_prefixes = ["10.31.128.0/26"]
+    }
   }
-}
 }
 
 resource "azurerm_public_ip" "this" {
-  name               = module.naming.public_ip.name_unique
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.public_ip.name_unique
+  resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard"
 }
 
 resource "azurerm_bastion_host" "this" {
-  name = module.naming.bastion_host.name_unique
-  location = azurerm_resource_group.this.location
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
+
   ip_configuration {
-    name = "ipconfig"
-    subnet_id = module.avm_res_network_virtualnetwork.subnets["bastion"].resource_id
+    name                 = "ipconfig"
     public_ip_address_id = azurerm_public_ip.this.id
+    subnet_id            = module.avm_res_network_virtualnetwork.subnets["bastion"].resource_id
   }
 }
-
