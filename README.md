@@ -227,7 +227,7 @@ map(object({
   os\_disk\_size\_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.  
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.  
   labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.  
-  taints               = (Optional) A list of the taints added to new nodes during node pool create and scale.
+  node\_taints               = (Optional) A list of the taints added to new nodes during node pool create and scale.
 }))
 
 Example input:
@@ -269,7 +269,7 @@ map(object({
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
-    taints          = list(string)
+    node_taints     = optional(list(string), null)
   }))
 ```
 
@@ -281,7 +281,7 @@ Description: (Optional) A list of the taints added to new nodes during node pool
 
 Type: `list(string)`
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_orchestrator_version"></a> [orchestrator\_version](#input\_orchestrator\_version)
 
