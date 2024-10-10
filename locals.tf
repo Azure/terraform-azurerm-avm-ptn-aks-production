@@ -39,6 +39,7 @@ locals {
         max_count            = pool.max_count
         min_count            = pool.min_count
         labels               = pool.labels
+        taint                = pool.taints
         os_sku               = pool.os_sku
         mode                 = pool.mode
         os_disk_size_gb      = pool.os_disk_size_gb
