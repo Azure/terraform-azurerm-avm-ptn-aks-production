@@ -186,7 +186,7 @@ EOT
 
 variable "node_taints" {
   type        = list(string)
-  default     = {}
+  default     = null
   description = "(Optional) A list of the taints added to new nodes during node pool create and scale. Changing this forces a new resource to be created."
 }
 
