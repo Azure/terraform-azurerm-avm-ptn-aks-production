@@ -52,22 +52,24 @@ resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
   name                              = "aks-${var.name}"
   resource_group_name               = var.resource_group_name
-  automatic_channel_upgrade         = "patch"
+  automatic_channel_upgrade         = var.automatic_channel_upgrade
   azure_policy_enabled              = true
   dns_prefix                        = var.name
   kubernetes_version                = var.kubernetes_version
   local_account_disabled            = true
   node_os_channel_upgrade           = "NodeImage"
   oidc_issuer_enabled               = true
-  private_cluster_enabled           = true
+  private_cluster_enabled           = var.private_cluster_enabled
   role_based_access_control_enabled = true
-  sku_tier                          = "Standard"
+  sku_tier                          = var.sku_tier
+  cost_analysis_enabled             = var.cost_analysis_enabled
   tags                              = var.tags
   workload_identity_enabled         = true
+  api_server_authorized_ip_ranges   = var.api_server_authorized_ip_ranges
 
   default_node_pool {
     name                   = "agentpool"
-    vm_size                = "Standard_D4d_v5"
+    vm_size                = var.default_node_pool_vm_size
     enable_auto_scaling    = true
     enable_host_encryption = true
     max_count              = 9
@@ -110,11 +112,13 @@ resource "azurerm_kubernetes_cluster" "this" {
     labels_allowed      = try(var.monitor_metrics.labels_allowed, null)
   }
   network_profile {
-    network_plugin      = "azure"
+    network_plugin      = var.network.network_plugin
     load_balancer_sku   = "standard"
-    network_plugin_mode = "overlay"
-    network_policy      = "calico"
-    pod_cidr            = var.network.pod_cidr
+    network_plugin_mode = var.network.network_plugin == "azure" ? var.network.network_plugin_mode : null
+    network_policy      = var.network.network_policy
+    pod_cidr            = var.network.network_plugin == "kubenet" || (var.network.network_plugin == "azure" && var.network.network_plugin_mode == "overlay") ? var.network.pod_cidr : null
+    service_cidr        = var.network.service_cidr
+    dns_service_ip      = var.network.dns_service_ip
   }
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
@@ -284,3 +288,4 @@ data "local_file" "compute_provider" {
 data "local_file" "locations" {
   filename = "${path.module}/data/locations.json"
 }
+

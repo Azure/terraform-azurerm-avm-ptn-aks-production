@@ -16,12 +16,48 @@ variable "name" {
 
 variable "network" {
   type = object({
+    dns_service_ip      = optional(string)
     name                = string
-    resource_group_name = string
+    network_data_plane  = optional(string, "azure")
+    network_plugin      = optional(string, "azure")
+    network_plugin_mode = optional(string, "overlay")
+    network_policy      = optional(string, "azure")
     node_subnet_id      = string
-    pod_cidr            = string
+    pod_cidr            = optional(string)
+    resource_group_name = string
+    service_cidr        = optional(string)
   })
   description = "Values for the networking configuration of the AKS cluster"
+
+  validation {
+    condition     = contains(["azure", "kubenet", "none"], var.network.network_plugin)
+    error_message = "The network_plugin value must be one of: azure, kubenet, or none."
+  }
+
+  validation {
+    condition     = var.network.network_plugin != "none" || var.network.network_policy == null
+    error_message = "When network_plugin is set to 'none', network_policy must be null."
+  }
+
+  validation {
+    condition     = var.network.network_plugin != "kubenet" || var.network.pod_cidr != null
+    error_message = "When network_plugin is set to 'kubenet', pod_cidr must be specified."
+  }
+
+  validation {
+    condition     = var.network.network_policy != "azure" || var.network.network_plugin == "azure"
+    error_message = "When network_policy is set to 'azure', network_plugin must be set to 'azure'."
+  }
+
+  validation {
+    condition     = var.network.network_policy != "cilium" || var.network.network_data_plane == "cilium"
+    error_message = "When network_policy is set to 'cilium', network_data_plane must be set to 'cilium'."
+  }
+
+  validation {
+    condition     = var.network.network_plugin != "azure" || (var.network.pod_cidr == null) || (var.network.network_plugin_mode == "overlay" && var.network.pod_cidr != null)
+    error_message = "When network_plugin is 'azure', pod_cidr must be null unless network_plugin_mode is set to 'overlay'."
+  }
 }
 
 # This is required for most resource modules
@@ -46,6 +82,40 @@ variable "agents_tags" {
   type        = map(string)
   default     = {}
   description = "(Optional) A mapping of tags to assign to the Node Pool."
+}
+
+variable "api_server_authorized_ip_ranges" {
+  type        = set(string)
+  default     = []
+  description = "(Optional) A list of IP ranges that are allowed to access the Kubernetes API server. The list can include a single IP address or a range of IP addresses in CIDR notation."
+}
+
+variable "automatic_channel_upgrade" {
+  type        = string
+  default     = "patch"
+  description = "The upgrade channel for this Kubernetes Cluster. Possible values are patch, rapid, node-image and stable. Omitting this field sets this value to none."
+
+  validation {
+    condition     = contains(["patch", "rapid", "node-image", "stable"], var.automatic_channel_upgrade)
+    error_message = "The automatic_channel_upgrade value must be one of: patch, rapid, node-image, or stable."
+  }
+}
+
+variable "cost_analysis_enabled" {
+  type        = bool
+  default     = true
+  description = "Should Cost Analysis be enabled for this Kubernetes Cluster? The sku_tier must be set to Standard or Premium to enable this feature."
+
+  validation {
+    condition     = !var.cost_analysis_enabled || contains(["Standard", "Premium"], var.sku_tier)
+    error_message = "Cost Analysis can only be enabled when sku_tier is set to Standard or Premium."
+  }
+}
+
+variable "default_node_pool_vm_size" {
+  type        = string
+  default     = "Standard_D4d_v5"
+  description = "The size of the Virtual Machine, such as Standard_DS2_v2. `temporary_name_for_rotation` must be specified when attempting a resize"
 }
 
 variable "enable_telemetry" {
@@ -199,6 +269,12 @@ variable "os_sku" {
   }
 }
 
+variable "private_cluster_enabled" {
+  type        = bool
+  default     = true
+  description = "Should the Kubernetes API server be exposed on a private IP address in the Virtual Network?"
+}
+
 variable "rbac_aad_admin_group_object_ids" {
   type        = list(string)
   default     = null
@@ -215,6 +291,17 @@ variable "rbac_aad_tenant_id" {
   type        = string
   default     = null
   description = "(Optional) The Tenant ID used for Azure Active Directory Application. If this isn't specified the Tenant ID of the current Subscription is used."
+}
+
+variable "sku_tier" {
+  type        = string
+  default     = "Standard"
+  description = "The SKU Tier that should be used for this Kubernetes Cluster. Possible values are Free, Standard, and Premium."
+
+  validation {
+    condition     = contains(["Free", "Standard", "Premium"], var.sku_tier)
+    error_message = "The sku_tier must be one of: Free, Standard, or Premium."
+  }
 }
 
 # tflint-ignore: terraform_unused_declarations
