@@ -226,7 +226,8 @@ map(object({
   mode                 = (Optional) Should this Node Pool be used for System or User resources? Possible values are `System` and `User`. Defaults to `User`.  
   os\_disk\_size\_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.  
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.  
-  labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
+  labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.  
+  node\_taints               = (Optional) A list of the taints added to new nodes during node pool create and scale.
 }))
 
 Example input:
@@ -268,10 +269,19 @@ map(object({
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
+    node_taints     = optional(list(string), null)
   }))
 ```
 
 Default: `{}`
+
+### <a name="input_node_taints"></a> [node\_taints](#input\_node\_taints)
+
+Description: (Optional) A list of the taints added to new nodes during node pool create and scale. Changing this forces a new resource to be created.
+
+Type: `list(string)`
+
+Default: `null`
 
 ### <a name="input_orchestrator_version"></a> [orchestrator\_version](#input\_orchestrator\_version)
 

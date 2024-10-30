@@ -74,6 +74,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     max_pods               = 110
     min_count              = 3
     node_labels            = var.node_labels
+    node_taints            = var.node_taints
     orchestrator_version   = var.orchestrator_version
     os_sku                 = var.os_sku
     tags                   = merge(var.tags, var.agents_tags)
@@ -258,6 +259,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   max_count             = each.value.max_count
   min_count             = each.value.min_count
   node_labels           = each.value.labels
+  node_taints           = each.value.node_taints
   orchestrator_version  = each.value.orchestrator_version
   os_disk_size_gb       = each.value.os_disk_size_gb
   os_sku                = each.value.os_sku
