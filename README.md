@@ -31,7 +31,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.4.0, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.86.0, <4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, <5)
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (>=2.4.1, < 3.0)
 
@@ -349,9 +349,9 @@ The following Modules are called:
 
 ### <a name="module_avm_res_containerregistry_registry"></a> [avm\_res\_containerregistry\_registry](#module\_avm\_res\_containerregistry\_registry)
 
-Source: Azure/avm-res-containerregistry-registry/azurerm
+Source: github.com/zioproto/terraform-azurerm-avm-res-containerregistry-registry
 
-Version: 0.3.1
+Version: provider-v4
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
