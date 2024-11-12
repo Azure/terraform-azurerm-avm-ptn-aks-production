@@ -38,7 +38,7 @@ data "azurerm_resource_group" "this" {
 }
 
 data "azurerm_user_assigned_identity" "cluster_identity" {
-  name                = split("/", one(azurerm_kubernetes_cluster.this.identity[0].identity_ids))[8]
+  name                = split("/", one(local.managed_identities.user_assigned.this.user_assigned_resource_ids))[8]
   resource_group_name = data.azurerm_resource_group.this.name
 }
 
@@ -46,6 +46,14 @@ resource "azurerm_role_assignment" "network_contributor_on_resource_group" {
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
   scope                = data.azurerm_resource_group.this.id
   role_definition_name = "Network Contributor"
+}
+
+resource "azurerm_role_assignment" "dns_zone_contributor" {
+  count = var.private_dns_zone_id_enabled ? 1 : 0
+
+  principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
+  scope                = var.private_dns_zone_id
+  role_definition_name = "Private DNS Zone Contributor"
 }
 
 resource "azurerm_kubernetes_cluster" "this" {
@@ -60,6 +68,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   node_os_channel_upgrade           = "NodeImage"
   oidc_issuer_enabled               = true
   private_cluster_enabled           = true
+  private_dns_zone_id               = var.private_dns_zone_id
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
   tags                              = var.tags
@@ -134,6 +143,14 @@ resource "azurerm_kubernetes_cluster" "this" {
     precondition {
       condition     = var.orchestrator_version == null || try(can(regex("^[0-9]+\\.[0-9]+$", var.orchestrator_version)), false)
       error_message = "Ensure that orchestrator_version does not specify a patch version"
+    }
+    precondition {
+      condition     = var.private_dns_zone_id == null ? true : (anytrue([for r in local.valid_private_dns_zone_regexs : try(regex(r, local.private_dns_zone_name) == local.private_dns_zone_name, false)]))
+      error_message = "According to the [document](https://learn.microsoft.com/en-us/azure/aks/private-clusters?tabs=azure-portal#configure-a-private-dns-zone), the private DNS zone must be in one of the following format: `privatelink.<region>.azmk8s.io`, `<subzone>.privatelink.<region>.azmk8s.io`, `private.<region>.azmk8s.io`, `<subzone>.private.<region>.azmk8s.io`"
+    }
+    precondition {
+      condition     = var.private_dns_zone_id != null ? var.private_dns_zone_id_enabled == true : var.private_dns_zone_id_enabled == false
+      error_message = "private_dns_zone_id must be set if private_dns_zone_id_enabled is true"
     }
   }
 }

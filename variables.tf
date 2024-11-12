@@ -207,6 +207,24 @@ variable "os_sku" {
   }
 }
 
+variable "private_dns_zone_id" {
+  type        = string
+  default     = null
+  description = "(Optional) Either the ID of Private DNS Zone which should be delegated to this Cluster."
+
+  validation {
+    condition     = var.private_dns_zone_id == null || can(regex("^(/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft.Network/privateDnsZones/[^/]+)$", var.private_dns_zone_id))
+    error_message = "private_dns_zone_id must be a valid Private DNS Zone ID"
+  }
+}
+
+variable "private_dns_zone_id_enabled" {
+  type        = bool
+  default     = false
+  description = "(Optional) Enable private DNS zone integration for the AKS cluster."
+  nullable    = false
+}
+
 variable "rbac_aad_admin_group_object_ids" {
   type        = list(string)
   default     = null

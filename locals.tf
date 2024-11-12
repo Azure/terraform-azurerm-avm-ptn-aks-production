@@ -1,4 +1,12 @@
-
+locals {
+  private_dns_zone_name = try(reverse(split("/", var.private_dns_zone_id))[0], null)
+  valid_private_dns_zone_regexs = [
+    "private\\.[a-z0-9]+\\.azmk8s\\.io",
+    "privatelink\\.[a-z0-9]+\\.azmk8s\\.io",
+    "[a-zA-Z0-9\\-]{1,32}\\.private\\.[a-z]+\\.azmk8s\\.io",
+    "[a-zA-Z0-9\\-]{1,32}\\.privatelink\\.[a-z]+\\.azmk8s\\.io",
+  ]
+}
 
 locals {
   locations_cached_or_live        = data.local_file.locations.content

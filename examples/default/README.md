@@ -58,12 +58,14 @@ resource "azurerm_resource_group" "this" {
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "test" {
-  source              = "../../"
-  kubernetes_version  = "1.30"
-  enable_telemetry    = var.enable_telemetry # see variables.tf
-  name                = module.naming.kubernetes_cluster.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
+  source                      = "../../"
+  kubernetes_version          = "1.30"
+  enable_telemetry            = var.enable_telemetry # see variables.tf
+  name                        = module.naming.kubernetes_cluster.name_unique
+  resource_group_name         = azurerm_resource_group.this.name
+  location                    = azurerm_resource_group.this.location
+  private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
+  private_dns_zone_id_enabled = true
   network = {
     name                = module.avm_res_network_virtualnetwork.name
     resource_group_name = azurerm_resource_group.this.name
@@ -79,6 +81,11 @@ module "test" {
 
 resource "azurerm_private_dns_zone" "this" {
   name                = "privatelink.azurecr.io"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+resource "azurerm_private_dns_zone" "mydomain" {
+  name                = "privatelink.eastus2.azmk8s.io"
   resource_group_name = azurerm_resource_group.this.name
 }
 
@@ -118,6 +125,7 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azurerm_private_dns_zone.mydomain](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)

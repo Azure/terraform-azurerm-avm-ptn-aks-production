@@ -53,6 +53,7 @@ The following resources are used by this module:
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_role_assignment.acr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.network_contributor_on_resource_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_user_assigned_identity.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
@@ -298,6 +299,22 @@ Description: (Optional) Specifies the OS SKU used by the agent pool. Possible va
 Type: `string`
 
 Default: `"AzureLinux"`
+
+### <a name="input_private_dns_zone_id"></a> [private\_dns\_zone\_id](#input\_private\_dns\_zone\_id)
+
+Description: (Optional) Either the ID of Private DNS Zone which should be delegated to this Cluster.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_private_dns_zone_id_enabled"></a> [private\_dns\_zone\_id\_enabled](#input\_private\_dns\_zone\_id\_enabled)
+
+Description: (Optional) Enable private DNS zone integration for the AKS cluster.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_rbac_aad_admin_group_object_ids"></a> [rbac\_aad\_admin\_group\_object\_ids](#input\_rbac\_aad\_admin\_group\_object\_ids)
 
