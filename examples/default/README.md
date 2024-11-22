@@ -59,7 +59,7 @@ resource "azurerm_resource_group" "this" {
 # with a data source.
 module "test" {
   source              = "../../"
-  kubernetes_version  = "1.28"
+  kubernetes_version  = "1.30"
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name

@@ -47,7 +47,7 @@ resource "azurerm_user_assigned_identity" "this" {
 # with a data source.
 module "test" {
   source              = "../../"
-  kubernetes_version  = "1.28"
+  kubernetes_version  = "1.30"
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
@@ -73,7 +73,7 @@ module "test" {
     workload = {
       name                 = "workloadworkload" #Long name to test the truncate to 12 characters
       vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
+      orchestrator_version = "1.30"
       max_count            = 10
       min_count            = 2
       os_sku               = "Ubuntu"
@@ -83,7 +83,7 @@ module "test" {
     ingress = {
       name                 = "ingress"
       vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
+      orchestrator_version = "1.30"
       max_count            = 4
       min_count            = 2
       os_sku               = "Ubuntu"
