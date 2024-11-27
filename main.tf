@@ -85,7 +85,6 @@ resource "azurerm_kubernetes_cluster" "this" {
     max_pods                = 110
     min_count               = 3
     node_labels             = var.node_labels
-    node_taints             = var.node_taints
     orchestrator_version    = var.orchestrator_version
     os_sku                  = var.os_sku
     tags                    = merge(var.tags, var.agents_tags)
@@ -294,7 +293,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
     }
   }
 }
-
 
 # These resources allow the use of consistent local data files, and semver versioning
 data "local_file" "compute_provider" {
