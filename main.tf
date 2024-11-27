@@ -95,6 +95,10 @@ resource "azurerm_kubernetes_cluster" "this" {
       max_surge = "10%"
     }
   }
+  # currently preview, requires Microsoft.ContainerService/EnableAPIServerVnetIntegrationPreview, not available via AzureRM
+  # api_server_access_profile {
+  #   vnet_integration_enabled = true
+  # }  
   auto_scaler_profile {
     balance_similar_node_groups = true
   }
@@ -292,6 +296,18 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
       error_message = "The name must begin with a lowercase letter, contain only lowercase letters and numbers, and be between 1 and 12 characters in length."
     }
   }
+}
+
+resource "azapi_update_resource" "aks_api_server_access_profile" {
+  type = "Microsoft.ContainerService/managedClusters@2024-02-01Microsoft.ContainerService/managedClusters@2024-06-02-preview"
+  body = jsonencode({
+    properties = {
+      apiServerAccessProfile = {
+        enableVnetIntegration = var.api_server_vnet_integration #true
+      }
+    }
+  })
+  resource_id = azurerm_kubernetes_cluster.this.id
 }
 
 # These resources allow the use of consistent local data files, and semver versioning
