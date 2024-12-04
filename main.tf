@@ -30,23 +30,19 @@ resource "azurerm_user_assigned_identity" "aks" {
   count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 0 : 1
 
   location            = var.location
-  name                = "uami-aks"
+  name                = local.user_assigned_identity_name
   resource_group_name = var.resource_group_name
   tags                = var.tags
 }
 
-data "azurerm_resource_group" "this" {
-  name = var.resource_group_name
-}
-
 data "azurerm_user_assigned_identity" "cluster_identity" {
   name                = split("/", one(local.managed_identities.user_assigned.this.user_assigned_resource_ids))[8]
-  resource_group_name = data.azurerm_resource_group.this.name
+  resource_group_name = var.resource_group_name
 }
 
 resource "azurerm_role_assignment" "network_contributor_on_resource_group" {
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
-  scope                = data.azurerm_resource_group.this.id
+  scope                = local.vnet_resource_group_name
   role_definition_name = "Network Contributor"
 }
 
@@ -62,7 +58,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
   name                              = "aks-${var.name}"
   resource_group_name               = var.resource_group_name
-  automatic_upgrade_channel         = "patch"
+  automatic_upgrade_channel         = var.automatic_upgrade_channel
   azure_policy_enabled              = true
   dns_prefix                        = var.name
   image_cleaner_enabled             = var.image_cleaner_enabled
@@ -125,6 +121,61 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
   key_vault_secrets_provider {
     secret_rotation_enabled = true
+  }
+  dynamic "maintenance_window_auto_upgrade" {
+    for_each = var.maintenance_window_auto_upgrade == null ? [] : [var.maintenance_window_auto_upgrade]
+
+    content {
+      duration     = maintenance_window_auto_upgrade.value.duration
+      frequency    = maintenance_window_auto_upgrade.value.frequency
+      interval     = maintenance_window_auto_upgrade.value.interval
+      day_of_month = maintenance_window_auto_upgrade.value.day_of_month
+      day_of_week  = maintenance_window_auto_upgrade.value.day_of_week
+      start_date   = maintenance_window_auto_upgrade.value.start_date
+      start_time   = maintenance_window_auto_upgrade.value.start_time
+      utc_offset   = maintenance_window_auto_upgrade.value.utc_offset
+      week_index   = maintenance_window_auto_upgrade.value.week_index
+
+      dynamic "not_allowed" {
+        for_each = maintenance_window_auto_upgrade.value.not_allowed == null ? [] : maintenance_window_auto_upgrade.value.not_allowed
+
+        content {
+          end   = not_allowed.value.end
+          start = not_allowed.value.start
+        }
+      }
+    }
+  }
+  dynamic "maintenance_window_node_os" {
+    for_each = var.maintenance_window_node_os == null ? [] : [var.maintenance_window_node_os]
+
+    content {
+      duration     = maintenance_window_node_os.value.duration
+      frequency    = maintenance_window_node_os.value.frequency
+      interval     = maintenance_window_node_os.value.interval
+      day_of_month = maintenance_window_node_os.value.day_of_month
+      day_of_week  = maintenance_window_node_os.value.day_of_week
+      start_date   = maintenance_window_node_os.value.start_date
+      start_time   = maintenance_window_node_os.value.start_time
+      utc_offset   = maintenance_window_node_os.value.utc_offset
+      week_index   = maintenance_window_node_os.value.week_index
+
+      dynamic "not_allowed" {
+        for_each = maintenance_window_node_os.value.not_allowed == null ? [] : maintenance_window_node_os.value.not_allowed
+
+        content {
+          end   = not_allowed.value.end
+          start = not_allowed.value.start
+        }
+      }
+    }
+  }
+  dynamic "microsoft_defender" {
+    for_each = var.microsoft_defender_enabled ? ["microsoft_defender"] : []
+
+    content {
+      log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
+    }
   }
   monitor_metrics {
     annotations_allowed = try(var.monitor_metrics.annotations_allowed, null)
@@ -322,7 +373,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
 }
 
 resource "azapi_update_resource" "aks_api_server_access_profile" {
-  type = "Microsoft.ContainerService/managedClusters@2024-02-01Microsoft.ContainerService/managedClusters@2024-06-02-preview"
+  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
   body = {
     properties = {
       apiServerAccessProfile = {

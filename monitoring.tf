@@ -1,14 +1,5 @@
-# LAW
-resource "azurerm_log_analytics_workspace" "this" {
-  name                = local.log_analytics_workspace_name
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-}
-
 # Grafana
-resource "azurerm_dashboard_grafana" "default" {
+resource "azurerm_dashboard_grafana" "this" {
   count                             = var.grafana_dashboard_name != null ? 1 : 0
   name                              = local.grafana_dashboard_name
   resource_group_name               = var.resource_group_name
@@ -26,14 +17,15 @@ resource "azurerm_dashboard_grafana" "default" {
 }
 
 resource "azurerm_role_assignment" "grafana_reader" {
-  scope                = azurerm_dashboard_grafana.default.id
+  count                = var.grafana_dashboard_name != null ? 1 : 0
+  scope                = azurerm_dashboard_grafana.this[0].id
   role_definition_name = "Monitoring Reader"
-  principal_id         = azurerm_dashboard_grafana.default.identity[0].principal_id
+  principal_id         = azurerm_dashboard_grafana.this[0].identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "grafana_admin" {
   count                = var.grafana_admin_entra_group_id != null ? 1 : 0
-  scope                = azurerm_dashboard_grafana.default.id
+  scope                = azurerm_dashboard_grafana.this[0].id
   role_definition_name = "Grafana Admin"
   principal_id         = var.grafana_admin_entra_group_id
 }
@@ -122,7 +114,7 @@ resource "azurerm_monitor_action_group" "this" {
   }
 }
 
-resource "azurerm_monitor_metric_alert" "res-15" {
+resource "azurerm_monitor_metric_alert" "cpu_usage" {
   auto_mitigate       = false
   frequency           = "PT5M"
   name                = "CPU Usage Percentage - ${var.name}"
@@ -140,7 +132,7 @@ resource "azurerm_monitor_metric_alert" "res-15" {
   }
 }
 
-resource "azurerm_monitor_metric_alert" "res-16" {
+resource "azurerm_monitor_metric_alert" "memory_ws" {
   auto_mitigate       = false
   frequency           = "PT5M"
   name                = "Memory Working Set Percentage - ${var.name}"

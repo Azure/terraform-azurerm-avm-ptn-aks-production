@@ -6,6 +6,8 @@ locals {
     "[a-zA-Z0-9\\-]{1,32}\\.private\\.[a-z]+\\.azmk8s\\.io",
     "[a-zA-Z0-9\\-]{1,32}\\.privatelink\\.[a-z]+\\.azmk8s\\.io",
   ]
+  vnet_resource_group_name = split("/", var.network.node_subnet_id)[4]
+
   action_group_name              = var.action_group_name != null ? var.action_group_name : "ag-${var.name}"
   action_group_short_name        = var.action_group_short_name != null ? var.action_group_short_name : replace("ag-${var.name}", "-", "")
   dcr_prometheus_linux_rule_name = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msprom-${var.location}-${var.name}"
@@ -15,6 +17,7 @@ locals {
   prometheus_dce_name            = var.prometheus_dce_name != null ? var.prometheus_dce_name : "dce-msprom-${var.name}"
   log_analytics_workspace_name   = var.log_analytics_workspace_name != null ? var.log_analytics_workspace_name : "law-${var.name}"
   grafana_dashboard_name         = var.grafana_dashboard_name != null ? var.grafana_dashboard_name : "grafana-${var.name}"
+  user_assigned_identity_name    = var.user_assigned_identity_name != null ? var.user_assigned_identity_name : "uaid-${var.name}"
 }
 
 locals {
