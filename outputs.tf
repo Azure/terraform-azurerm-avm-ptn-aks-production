@@ -9,3 +9,7 @@ output "resource_id" {
   description = "The `azurerm_kubernetes_cluster`'s resource id."
   value       = azurerm_kubernetes_cluster.this.id
 }
+
+output "grafana_url" {
+  value = azurerm_dashboard_grafana.default.endpoint
+}

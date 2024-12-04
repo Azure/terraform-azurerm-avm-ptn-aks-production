@@ -65,6 +65,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   automatic_upgrade_channel         = "patch"
   azure_policy_enabled              = true
   dns_prefix                        = var.name
+  image_cleaner_enabled             = var.image_cleaner_enabled
+  image_cleaner_interval_hours      = var.image_cleaner_interval_hours
   kubernetes_version                = var.kubernetes_version
   local_account_disabled            = true
   node_os_upgrade_channel           = "NodeImage"
@@ -73,23 +75,28 @@ resource "azurerm_kubernetes_cluster" "this" {
   private_dns_zone_id               = var.private_dns_zone_id
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
+  support_plan                      = "KubernetesOfficial"
   tags                              = var.tags
   workload_identity_enabled         = true
 
   default_node_pool {
-    name                    = "agentpool"
-    vm_size                 = "Standard_D4d_v5"
-    auto_scaling_enabled    = true
-    host_encryption_enabled = true
-    max_count               = 9
-    max_pods                = 110
-    min_count               = 3
-    node_labels             = var.node_labels
-    orchestrator_version    = var.orchestrator_version
-    os_sku                  = var.os_sku
-    tags                    = merge(var.tags, var.agents_tags)
-    vnet_subnet_id          = var.network.node_subnet_id
-    zones                   = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
+    name                         = "systempool"
+    vm_size                      = "Standard_D4d_v5"
+    auto_scaling_enabled         = true
+    host_encryption_enabled      = true
+    max_count                    = var.max_count_default_node_pool
+    max_pods                     = 110
+    min_count                    = 3
+    node_labels                  = var.node_labels
+    node_public_ip_enabled       = false
+    only_critical_addons_enabled = true
+    orchestrator_version         = var.orchestrator_version
+    os_disk_type                 = "Ephemeral"
+    os_sku                       = var.os_sku
+    tags                         = merge(var.tags, var.agents_tags)
+    temporary_name_for_rotation  = "tempsystempool"
+    vnet_subnet_id               = var.network.node_subnet_id
+    zones                        = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
 
     upgrade_settings {
       max_surge = "10%"
@@ -126,13 +133,30 @@ resource "azurerm_kubernetes_cluster" "this" {
   network_profile {
     network_plugin      = "azure"
     load_balancer_sku   = "standard"
+    network_data_plane  = var.network_policy == "cilium" ? "cilium" : "azure"
     network_plugin_mode = "overlay"
-    network_policy      = "calico"
+    network_policy      = var.network_policy
     pod_cidr            = var.network.pod_cidr
   }
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
     msi_auth_for_monitoring_enabled = true
+  }
+  storage_profile {
+    blob_driver_enabled         = false
+    disk_driver_enabled         = true
+    file_driver_enabled         = true
+    snapshot_controller_enabled = true
+  }
+  dynamic "web_app_routing" {
+    for_each = var.web_app_routing == null ? [] : [var.web_app_routing]
+    content {
+      dns_zone_ids = web_app_routing.value.dns_zone_ids
+    }
+  }
+  workload_autoscaler_profile {
+    keda_enabled                    = var.keda_enabled
+    vertical_pod_autoscaler_enabled = var.vertical_pod_autoscaler_enabled
   }
 
   lifecycle {
@@ -159,38 +183,37 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
 }
 
-# The following null_resource is used to trigger the update of the AKS cluster when the kubernetes_version changes
+# The following terraform_data is used to trigger the update of the AKS cluster when the kubernetes_version changes
 # This is necessary because the azurerm_kubernetes_cluster resource ignores changes to the kubernetes_version attribute
 # because AKS patch versions are upgraded automatically by Azure
 # The kubernetes_version_keeper and aks_cluster_post_create resources implement a mechanism to force the update
 # when the minor kubernetes version changes in var.kubernetes_version
 
-resource "null_resource" "kubernetes_version_keeper" {
-  triggers = {
-    version = var.kubernetes_version
-  }
+resource "terraform_data" "kubernetes_version_keeper" {
+  input = var.kubernetes_version
 }
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
   type = "Microsoft.ContainerService/managedClusters@2024-02-01"
-  body = jsonencode({
+  body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
     }
-  })
+  }
   resource_id = azurerm_kubernetes_cluster.this.id
 
   lifecycle {
     ignore_changes       = all
-    replace_triggered_by = [null_resource.kubernetes_version_keeper.id]
+    replace_triggered_by = [terraform_data.kubernetes_version_keeper]
   }
 }
 
 resource "azurerm_log_analytics_workspace" "this" {
+  name                = local.log_analytics_workspace_name
   location            = var.location
-  name                = "log-${var.name}-aks"
   resource_group_name = var.resource_group_name
   sku                 = "PerGB2018"
+  retention_in_days   = 30
   tags                = var.tags
 }
 
@@ -300,13 +323,13 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
 
 resource "azapi_update_resource" "aks_api_server_access_profile" {
   type = "Microsoft.ContainerService/managedClusters@2024-02-01Microsoft.ContainerService/managedClusters@2024-06-02-preview"
-  body = jsonencode({
+  body = {
     properties = {
       apiServerAccessProfile = {
         enableVnetIntegration = var.api_server_vnet_integration #true
       }
     }
-  })
+  }
   resource_id = azurerm_kubernetes_cluster.this.id
 }
 

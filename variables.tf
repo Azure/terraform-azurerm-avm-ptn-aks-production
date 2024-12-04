@@ -48,6 +48,21 @@ variable "agents_tags" {
   description = "(Optional) A mapping of tags to assign to the Node Pool."
 }
 
+variable "api_server_vnet_integration" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+  # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services
+  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+
+  Enable VNET integration for the AKS cluster
+
+  This requires the following preview feature registered on the subscription:
+
+  az feature register --namespace "Microsoft.ContainerService" --name "EnableAPIServerVnetIntegrationPreview"
+DESCRIPTION
+}
+
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -56,6 +71,24 @@ This variable controls whether or not telemetry is enabled for the module.
 For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
+}
+
+variable "image_cleaner_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable the image cleaner for the Kubernetes cluster."
+}
+
+variable "image_cleaner_interval_hours" {
+  type        = number
+  default     = 168
+  description = "Interval in hours for the image cleaner to run."
+}
+
+variable "keda_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable KEDA for the Kubernetes cluster."
 }
 
 variable "kubernetes_version" {
@@ -99,6 +132,12 @@ variable "managed_identities" {
   nullable    = false
 }
 
+variable "max_count_default_node_pool" {
+  type        = number
+  default     = 9
+  description = "The maximum number of nodes in the default node pool."
+}
+
 variable "monitor_metrics" {
   type = object({
     annotations_allowed = optional(string)
@@ -112,6 +151,19 @@ variable "monitor_metrics" {
     labels_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
   })
 EOT
+}
+
+variable "network_policy" {
+  type        = string
+  default     = "cilium"
+  description = <<DESCRIPTION
+  The Network Policy to use for this Kubernetes Cluster. Possible values are `azure`, `calico`, or `cilium`. Defaults to `cilium`.
+  DESCRIPTION
+
+  validation {
+    condition     = can(regex("^(azure|calico|cilium)$", var.network_policy))
+    error_message = "network_policy must be either azure, calico, or cilium."
+  }
 }
 
 variable "node_labels" {
@@ -149,7 +201,7 @@ map(object({
   os_disk_size_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
   labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
-  node_taints               = (Optional) A list of the taints added to new nodes during node pool create and scale.
+  node_taints          = (Optional) A list of the taints added to new nodes during node pool create and scale.
 }))
 
 Example input:
@@ -233,7 +285,7 @@ variable "rbac_aad_admin_group_object_ids" {
 
 variable "rbac_aad_azure_rbac_enabled" {
   type        = bool
-  default     = null
+  default     = true
   description = "(Optional) Is Role Based Access Control based on Azure AD enabled?"
 }
 
@@ -250,17 +302,16 @@ variable "tags" {
   description = "(Optional) Tags of the resource."
 }
 
-variable "api_server_vnet_integration" {
-  default     = false
+variable "vertical_pod_autoscaler_enabled" {
   type        = bool
-  description = <<DESCRIPTION
-  # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services
-  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+  default     = true
+  description = "Enable Vertical Pod Autoscaler for the Kubernetes cluster."
+}
 
-  Enable VNET integration for the AKS cluster
-
-  This requires the following preview feature registered on the subscription:
-
-  az feature register --namespace "Microsoft.ContainerService" --name "EnableAPIServerVnetIntegrationPreview"
-DESCRIPTION
+variable "web_app_routing" {
+  type = object({
+    dns_zone_ids = string
+  })
+  default     = null
+  description = "Configuration for web app routing."
 }

@@ -6,6 +6,15 @@ locals {
     "[a-zA-Z0-9\\-]{1,32}\\.private\\.[a-z]+\\.azmk8s\\.io",
     "[a-zA-Z0-9\\-]{1,32}\\.privatelink\\.[a-z]+\\.azmk8s\\.io",
   ]
+  action_group_name              = var.action_group_name != null ? var.action_group_name : "ag-${var.name}"
+  action_group_short_name        = var.action_group_short_name != null ? var.action_group_short_name : replace("ag-${var.name}", "-", "")
+  dcr_prometheus_linux_rule_name = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msprom-${var.location}-${var.name}"
+  dcr_insights_linux_rule_name   = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msci-${var.location}-${var.name}"
+  azure_monitor_name             = var.azure_monitor_name != null ? var.azure_monitor_name : "monitor-${var.name}"
+  diagnostic_settings_name       = var.diagnostic_settings_name != null ? var.diagnostic_settings_name : "amds-${var.name}-aks"
+  prometheus_dce_name            = var.prometheus_dce_name != null ? var.prometheus_dce_name : "dce-msprom-${var.name}"
+  log_analytics_workspace_name   = var.log_analytics_workspace_name != null ? var.log_analytics_workspace_name : "law-${var.name}"
+  grafana_dashboard_name         = var.grafana_dashboard_name != null ? var.grafana_dashboard_name : "grafana-${var.name}"
 }
 
 locals {
