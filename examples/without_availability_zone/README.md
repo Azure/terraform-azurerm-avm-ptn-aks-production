@@ -97,7 +97,7 @@ resource "azurerm_private_dns_zone" "this" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.2.3"
+  version = "0.7.1"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -172,7 +172,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 0.2.3
+Version: 0.7.1
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
