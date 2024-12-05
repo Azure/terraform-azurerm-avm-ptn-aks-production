@@ -188,6 +188,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     network_plugin_mode = "overlay"
     network_policy      = var.network_policy
     pod_cidr            = var.network.pod_cidr
+    service_cidr        = try(var.network.service_cidr, null)
   }
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id

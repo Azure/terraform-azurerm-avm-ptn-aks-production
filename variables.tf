@@ -18,6 +18,7 @@ variable "network" {
   type = object({
     node_subnet_id = string
     pod_cidr       = string
+    service_cidr   = optional(string)
   })
   description = "Values for the networking configuration of the AKS cluster"
 }
