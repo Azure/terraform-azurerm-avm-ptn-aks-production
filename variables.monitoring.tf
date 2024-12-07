@@ -15,6 +15,10 @@ variable "action_group_short_name" {
   description = "The short name of the action group."
   type        = string
   default     = null
+  validation {
+    condition     = var.action_group_short_name == null || try(length(var.action_group_short_name) <= 12, false)
+    error_message = "The action group short name must be 12 characters or less."
+  }
 }
 
 variable "action_group_email" {
@@ -64,6 +68,10 @@ variable "grafana_dashboard_name" {
   description = "The name of the Grafana dashboard."
   type        = string
   default     = null
+  validation {
+    condition     = var.grafana_dashboard_name == null || can(regex("^[a-zA-Z0-9][a-zA-Z0-9-]{0,21}[a-zA-Z0-9]$", var.grafana_dashboard_name))
+    error_message = "The Grafana dashboard name must be 2 to 23 characters, containing alphanumerics and hyphens, and must end with an alphanumeric."
+  }
 }
 
 variable "diagnostic_settings_name" {
