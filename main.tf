@@ -28,7 +28,7 @@ resource "azurerm_role_assignment" "acr" {
 
 resource "azurerm_user_assigned_identity" "aks" {
   # create the user assigned identity if the user_assigned_resource_id is not supplied
-  count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 1 : 0
+  count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 0 : 1
 
   location            = var.location
   name                = local.user_assigned_identity_name
@@ -37,7 +37,7 @@ resource "azurerm_user_assigned_identity" "aks" {
 }
 
 data "azurerm_user_assigned_identity" "cluster_identity" {
-  name                = split("/", one(local.managed_identities.user_assigned.this.user_assigned_resource_ids))[8]
+  name                = split("/", local.user_assigned_identity_resource_id)[8]
   resource_group_name = var.resource_group_name
 }
 
@@ -113,7 +113,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
   ## Resources that only support UserAssigned
   dynamic "identity" {
-    for_each = local.managed_identities.user_assigned
+    for_each = local.user_assigned_identity_resource_id != null ? [local.user_assigned_identity_resource_id] : []
 
     content {
       type         = identity.value.type

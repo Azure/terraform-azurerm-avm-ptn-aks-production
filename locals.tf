@@ -19,7 +19,7 @@ locals {
   azure_monitor_workspace_resource_id = var.azure_monitor_workspace_resource_id != null ? var.azure_monitor_workspace_resource_id : try(azurerm_monitor_workspace.this[0].id, null)
   grafana_dashboard_resource_id       = var.grafana_dashboard_resource_id != null ? var.grafana_dashboard_resource_id : try(azurerm_dashboard_grafana.this[0].id, null)
   log_analytics_workspace_resource_id = var.log_analytics_workspace_resource_id != null ? var.log_analytics_workspace_resource_id : azurerm_log_analytics_workspace.this[0].id
-  user_assigned_identity_resource_id  = var.managed_identities.user_assigned_resource_ids != null ? var.managed_identities.user_assigned_resource_ids : azurerm_user_assigned_identity.aks[0].id
+  user_assigned_identity_resource_id  = var.managed_identities.user_assigned_resource_ids != null ? one(var.managed_identities.user_assigned_resource_ids) : azurerm_user_assigned_identity.aks[0].id
 }
 
 locals {
@@ -83,23 +83,4 @@ locals {
 }
 locals {
   log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
-}
-
-# Helper locals to make the dynamic block more readable
-# There are three attributes here to cater for resources that
-# support both user and system MIs, only system MIs, and only user MIs
-locals {
-  managed_identities = {
-    user_assigned = length(var.managed_identities.user_assigned_resource_ids) > 0 ? {
-      this = {
-        type                       = "UserAssigned"
-        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
-      }
-      } : {
-      this = {
-        type                       = "UserAssigned"
-        user_assigned_resource_ids = azurerm_user_assigned_identity.aks[*].id
-      }
-    }
-  }
 }
