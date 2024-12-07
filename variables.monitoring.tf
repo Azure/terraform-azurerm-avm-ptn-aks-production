@@ -1,3 +1,10 @@
+variable "enable_monitoring" {
+  description = "Whether or not to enable monitoring."
+  type        = bool
+  default     = true
+  nullable    = false
+}
+
 variable "action_group_name" {
   description = "The name of the action group."
   type        = string
@@ -20,6 +27,13 @@ variable "dcr_prometheus_linux_rule_name" {
   description = "The name of the data collection rule for Linux."
   type        = string
   default     = null
+}
+
+variable "grafana_dashboard_enabled" {
+  description = "Whether or not the Grafana dashboard is enabled."
+  type        = bool
+  default     = true
+  nullable    = false
 }
 
 variable "grafana_admin_entra_group_id" {
@@ -54,6 +68,36 @@ variable "grafana_dashboard_name" {
 
 variable "diagnostic_settings_name" {
   description = "The name of the diagnostic settings."
+  type        = string
+  default     = null
+}
+
+variable "aks_monitor_association_name" {
+  description = "The name of the association between AKS monitor prometheus and the AKS cluster."
+  type        = string
+  default     = null
+}
+
+variable "aks_monitor_ci_association_name" {
+  description = "The name of the association between AKS monitor container insights and the AKS cluster."
+  type        = string
+  default     = null
+}
+
+variable "log_analytics_workspace_resource_id" {
+  type        = string
+  default     = null
+  description = "Optional.  The resource ID of an existing Log Analytics Workspace. If not provided, a new one will be created by the module."
+}
+
+variable "azure_monitor_workspace_resource_id" {
+  type        = string
+  default     = null
+  description = "Optional.  The resource ID of an existing Azure Monitor Workspace. If not provided, a new one will be created by the module."
+}
+
+variable "grafana_dashboard_resource_id" {
+  description = "Optional.  The resource ID of an existing Grafana Dashboard. If not provided, a new one will be created by the module."
   type        = string
   default     = null
 }

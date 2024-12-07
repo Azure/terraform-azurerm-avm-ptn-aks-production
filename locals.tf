@@ -1,4 +1,27 @@
 locals {
+  # Overridable naming conventions - these exist to help reduce the number of required inputs
+  action_group_name               = var.action_group_name != null ? var.action_group_name : "ag-${var.name}"
+  action_group_short_name         = var.action_group_short_name != null ? var.action_group_short_name : replace("ag-${var.name}", "-", "")
+  aks_monitor_association_name    = var.aks_monitor_association_name != null ? var.aks_monitor_association_name : "monitor-assoc-${var.name}"
+  aks_monitor_ci_association_name = var.aks_monitor_ci_association_name != null ? var.aks_monitor_ci_association_name : "monitor-ci-assoc-${var.name}"
+  azure_monitor_name              = var.azure_monitor_name != null ? var.azure_monitor_name : "monitor-${var.name}"
+  dcr_insights_linux_rule_name    = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msci-${var.location}-${var.name}"
+  dcr_prometheus_linux_rule_name  = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msprom-${var.location}-${var.name}"
+  diagnostic_settings_name        = var.diagnostic_settings_name != null ? var.diagnostic_settings_name : "amds-${var.name}-aks"
+  grafana_dashboard_name          = var.grafana_dashboard_name != null ? var.grafana_dashboard_name : "amg-aks-${var.name}"
+  log_analytics_workspace_name    = var.log_analytics_workspace_name != null ? var.log_analytics_workspace_name : "law-${var.name}"
+  prometheus_dce_name             = var.prometheus_dce_name != null ? var.prometheus_dce_name : "dce-msprom-${var.name}"
+  user_assigned_identity_name     = var.user_assigned_identity_name != null ? var.user_assigned_identity_name : "uaid-${var.name}"
+}
+
+locals {
+  # the following resources can be supplied to the module, use the resource ID if supplied, otherwise create the resource if the feature flag is enabled
+  azure_monitor_workspace_resource_id = var.azure_monitor_workspace_resource_id != null ? var.azure_monitor_workspace_resource_id : try(azurerm_monitor_workspace.this[0].id, null)
+  grafana_dashboard_resource_id       = var.grafana_dashboard_resource_id != null ? var.grafana_dashboard_resource_id : try(azurerm_dashboard_grafana.this[0].id, null)
+  log_analytics_workspace_resource_id = var.log_analytics_workspace_resource_id != null ? var.log_analytics_workspace_resource_id : azurerm_log_analytics_workspace.this[0].id
+}
+
+locals {
   private_dns_zone_name = try(reverse(split("/", var.private_dns_zone_id))[0], null)
   valid_private_dns_zone_regexs = [
     "private\\.[a-z0-9]+\\.azmk8s\\.io",
@@ -7,17 +30,6 @@ locals {
     "[a-zA-Z0-9\\-]{1,32}\\.privatelink\\.[a-z]+\\.azmk8s\\.io",
   ]
   vnet_resource_group_name = split("/", var.network.node_subnet_id)[4]
-
-  action_group_name              = var.action_group_name != null ? var.action_group_name : "ag-${var.name}"
-  action_group_short_name        = var.action_group_short_name != null ? var.action_group_short_name : replace("ag-${var.name}", "-", "")
-  dcr_prometheus_linux_rule_name = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msprom-${var.location}-${var.name}"
-  dcr_insights_linux_rule_name   = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msci-${var.location}-${var.name}"
-  azure_monitor_name             = var.azure_monitor_name != null ? var.azure_monitor_name : "monitor-${var.name}"
-  diagnostic_settings_name       = var.diagnostic_settings_name != null ? var.diagnostic_settings_name : "amds-${var.name}-aks"
-  prometheus_dce_name            = var.prometheus_dce_name != null ? var.prometheus_dce_name : "dce-msprom-${var.name}"
-  log_analytics_workspace_name   = var.log_analytics_workspace_name != null ? var.log_analytics_workspace_name : "law-${var.name}"
-  grafana_dashboard_name         = var.grafana_dashboard_name != null ? var.grafana_dashboard_name : "grafana-${var.name}"
-  user_assigned_identity_name    = var.user_assigned_identity_name != null ? var.user_assigned_identity_name : "uaid-${var.name}"
 }
 
 locals {

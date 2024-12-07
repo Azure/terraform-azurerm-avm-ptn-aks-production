@@ -62,6 +62,23 @@ variable "api_server_vnet_integration" {
 DESCRIPTION
 }
 
+variable "automatic_upgrade_channel" {
+  type        = string
+  default     = "stable"
+  description = <<DESCRIPTION
+Specifies the automatic upgrade channel for the cluster. Possible values are:
+- `stable`: Ensures the cluster is always in a supported version (i.e., within the N-2 rule).
+- `rapid`: Ensures the cluster is always in a supported version on a faster release cadence.
+- `patch`: Gets the latest patches as soon as possible.
+- `node-image`: Ensures the node image is always up to date.
+DESCRIPTION
+
+  validation {
+    condition     = can(regex("^(stable|rapid|patch|node-image|none)$", var.automatic_upgrade_channel))
+    error_message = "automatic_upgrade_channel must be one of 'stable', 'rapid', 'patch', or 'node-image'.  If not set it will default to `stable`."
+  }
+}
+
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -115,6 +132,108 @@ variable "lock" {
   }
 }
 
+variable "maintenance_window_auto_upgrade" {
+  type = object({
+    day_of_month = optional(number)
+    day_of_week  = optional(string)
+    duration     = optional(number, 4)
+    frequency    = optional(string)
+    interval     = optional(number, 1)
+    start_date   = optional(string)
+    start_time   = optional(string)
+    utc_offset   = optional(string)
+    week_index   = optional(string)
+    not_allowed = optional(set(object({
+      end   = string
+      start = string
+    })))
+  })
+  default     = null
+  description = <<DESCRIPTION
+ - `day_of_month` - (Optional) The day of the month for the maintenance run. Required in combination with RelativeMonthly frequency. Value between 0 and 31 (inclusive).
+ - `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
+ - `duration` - (Required) The duration of the window for maintenance to run in hours.
+ - `frequency` - (Required) Frequency of maintenance. Possible options are `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
+ - `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.
+ - `start_date` - (Optional) The date on which the maintenance window begins to take effect.
+ - `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
+ - `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.
+ - `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
+
+ ---
+ `not_allowed` block supports the following:
+ - `end` - (Required) The end of a time span, formatted as an RFC3339 string.
+ - `start` - (Required) The start of a time span, formatted as an RFC3339 string.
+
+Example input:
+
+maintenance_window_auto_upgrade = {
+    duration     = 8
+    interval     = 1
+    day_of_month = 1
+    day_of_week  = "Monday"
+    start_date   = "2024-12-01"
+    start_time   = "00:00"
+    frequency    = "Weekly"
+    duration     = "PT1H"
+    week_index   = 1
+    utcoffset    = "+00:00"
+  }
+
+DESCRIPTION
+}
+
+variable "maintenance_window_node_os" {
+  type = object({
+    day_of_month = optional(number)
+    day_of_week  = optional(string)
+    duration     = optional(number, 4)
+    frequency    = optional(string)
+    interval     = optional(number, 1)
+    start_date   = optional(string)
+    start_time   = optional(string)
+    utc_offset   = optional(string)
+    week_index   = optional(string)
+    not_allowed = optional(set(object({
+      end   = string
+      start = string
+    })))
+  })
+  default     = null
+  description = <<DESCRIPTION
+ - `day_of_month` - (Optional) The day of the month for the maintenance run. Required in combination with RelativeMonthly frequency. Value between 0 and 31 (inclusive).
+ - `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
+ - `duration` - (Required) The duration of the window for maintenance to run in hours.  Valid values are between 4 and 24 (inclusive).
+ - `frequency` - (Required) Frequency of maintenance. Possible options are `Daily`, `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
+ - `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.  E.g. a value of 2 for a weekly frequency means maintenance will run every 2 weeks.
+ - `start_date` - (Optional) The date on which the maintenance window begins to take effect.
+ - `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
+ - `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.  Format is `+HH:MM` or `-HH:MM`.
+ - `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
+
+ ---
+ `not_allowed` block supports the following:
+ - `end` - (Required) The end of a time span, formatted as an RFC3339 string.
+ - `start` - (Required) The start of a time span, formatted as an RFC3339 string.
+Configuration for the maintenance window node OS.
+
+Example input:
+
+maintenance_window_node_os = {
+    duration     = 8
+    interval     = 1
+    day_of_month = 1
+    day_of_week  = "Monday"
+    start_date   = "2024-12-01"
+    start_time   = "00:00"
+    frequency    = "Weekly"
+    week_index   = 1
+    utcoffset    = "+00:00"
+  }
+
+DESCRIPTION
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "managed_identities" {
   type = object({
@@ -135,6 +254,13 @@ variable "max_count_default_node_pool" {
   type        = number
   default     = 9
   description = "The maximum number of nodes in the default node pool."
+}
+
+variable "microsoft_defender_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable Microsoft Defender for the Kubernetes cluster."
+  nullable    = false
 }
 
 variable "monitor_metrics" {
@@ -301,6 +427,12 @@ variable "tags" {
   description = "(Optional) Tags of the resource."
 }
 
+variable "user_assigned_identity_name" {
+  type        = string
+  default     = null
+  description = "(Optional) The name of the User Assigned Identity which should be assigned to the Kubernetes Cluster."
+}
+
 variable "vertical_pod_autoscaler_enabled" {
   type        = bool
   default     = true
@@ -313,135 +445,4 @@ variable "web_app_routing" {
   })
   default     = null
   description = "Configuration for web app routing."
-}
-
-variable "user_assigned_identity_name" {
-  type        = string
-  default     = null
-  description = "(Optional) The name of the User Assigned Identity which should be assigned to the Kubernetes Cluster."
-}
-
-variable "maintenance_window_auto_upgrade" {
-  type = object({
-    day_of_month = optional(number)
-    day_of_week  = optional(string)
-    duration     = number
-    frequency    = string
-    interval     = number
-    start_date   = optional(string)
-    start_time   = optional(string)
-    utc_offset   = optional(string)
-    week_index   = optional(string)
-    not_allowed = optional(set(object({
-      end   = string
-      start = string
-    })))
-  })
-  default     = null
-  description = <<DESCRIPTION
- - `day_of_month` - (Optional) The day of the month for the maintenance run. Required in combination with RelativeMonthly frequency. Value between 0 and 31 (inclusive).
- - `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
- - `duration` - (Required) The duration of the window for maintenance to run in hours.
- - `frequency` - (Required) Frequency of maintenance. Possible options are `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
- - `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.
- - `start_date` - (Optional) The date on which the maintenance window begins to take effect.
- - `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
- - `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.
- - `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
-
- ---
- `not_allowed` block supports the following:
- - `end` - (Required) The end of a time span, formatted as an RFC3339 string.
- - `start` - (Required) The start of a time span, formatted as an RFC3339 string.
-
-Example input:
-
-maintenance_window_auto_upgrade = {
-    interval     = "P1D"
-    day_of_month = "1"
-    day_of_week  = "Monday"
-    start_date   = "2024-12-01"
-    start_time   = "00:00"
-    frequency    = "Weekly"
-    duration     = "PT1H"
-    week_index   = 1
-    utcoffset    = "+00:00"
-  }
-
-DESCRIPTION
-}
-
-variable "maintenance_window_node_os" {
-  type = object({
-    day_of_month = optional(number)
-    day_of_week  = optional(string)
-    duration     = number
-    frequency    = string
-    interval     = number
-    start_date   = optional(string)
-    start_time   = optional(string)
-    utc_offset   = optional(string)
-    week_index   = optional(string)
-    not_allowed = optional(set(object({
-      end   = string
-      start = string
-    })))
-  })
-  default     = null
-  description = <<DESCRIPTION
- - `day_of_month` -
- - `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
- - `duration` - (Required) The duration of the window for maintenance to run in hours.
- - `frequency` - (Required) Frequency of maintenance. Possible options are `Daily`, `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
- - `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.
- - `start_date` - (Optional) The date on which the maintenance window begins to take effect.
- - `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
- - `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.
- - `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
-
- ---
- `not_allowed` block supports the following:
- - `end` - (Required) The end of a time span, formatted as an RFC3339 string.
- - `start` - (Required) The start of a time span, formatted as an RFC3339 string.
-Configuration for the maintenance window node OS.
-
-Example input:
-
-maintenance_window_node_os = {
-    interval     = "P1D"
-    day_of_month = "1"
-    day_of_week  = "Monday"
-    start_date   = "2024-12-01"
-    start_time   = "00:00"
-    frequency    = "Weekly"
-    duration     = "PT1H"
-    week_index   = 1
-    utcoffset    = "+00:00"
-  }
-
-DESCRIPTION
-}
-
-variable "microsoft_defender_enabled" {
-  type        = bool
-  default     = false
-  description = "Enable Microsoft Defender for the Kubernetes cluster."
-  nullable    = false
-}
-
-variable "automatic_upgrade_channel" {
-  type        = string
-  default     = "stable"
-  description = <<DESCRIPTION
-Specifies the automatic upgrade channel for the cluster. Possible values are:
-- `stable`: Ensures the cluster is always in a supported version (i.e., within the N-2 rule).
-- `rapid`: Ensures the cluster is always in a supported version on a faster release cadence.
-- `patch`: Gets the latest patches as soon as possible.
-- `node-image`: Ensures the node image is always up to date.
-DESCRIPTION
-
-  validation {
-    condition     = can(regex("^(stable|rapid|patch|node-image|none)$", var.automatic_upgrade_channel))
-    error_message = "automatic_upgrade_channel must be one of 'stable', 'rapid', 'patch', or 'node-image'.  If not set it will default to `stable`."
-  }
 }

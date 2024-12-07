@@ -174,7 +174,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.microsoft_defender_enabled ? ["microsoft_defender"] : []
 
     content {
-      log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
+      log_analytics_workspace_id = local.log_analytics_workspace_resource_id
     }
   }
   monitor_metrics {
@@ -191,7 +191,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     service_cidr        = try(var.network.service_cidr, null)
   }
   oms_agent {
-    log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
+    log_analytics_workspace_id      = local.log_analytics_workspace_resource_id
     msi_auth_for_monitoring_enabled = true
   }
   storage_profile {
@@ -202,6 +202,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
   dynamic "web_app_routing" {
     for_each = var.web_app_routing == null ? [] : [var.web_app_routing]
+
     content {
       dns_zone_ids = web_app_routing.value.dns_zone_ids
     }
@@ -261,11 +262,13 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
 }
 
 resource "azurerm_log_analytics_workspace" "this" {
-  name                = local.log_analytics_workspace_name
+  count = var.log_analytics_workspace_resource_id != null ? 0 : 1
+
   location            = var.location
+  name                = local.log_analytics_workspace_name
   resource_group_name = var.resource_group_name
-  sku                 = "PerGB2018"
   retention_in_days   = 30
+  sku                 = "PerGB2018"
   tags                = var.tags
 }
 
@@ -273,7 +276,7 @@ resource "azurerm_log_analytics_workspace_table" "this" {
   for_each = toset(local.log_analytics_tables)
 
   name         = each.value
-  workspace_id = azurerm_log_analytics_workspace.this.id
+  workspace_id = local.log_analytics_workspace_resource_id
   plan         = "Basic"
 }
 
@@ -281,7 +284,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks" {
   name                           = "amds-${var.name}-aks"
   target_resource_id             = azurerm_kubernetes_cluster.this.id
   log_analytics_destination_type = "Dedicated"
-  log_analytics_workspace_id     = azurerm_log_analytics_workspace.this.id
+  log_analytics_workspace_id     = local.log_analytics_workspace_resource_id
 
   # Kubernetes API Server
   enabled_log {
