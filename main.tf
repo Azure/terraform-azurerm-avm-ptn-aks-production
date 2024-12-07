@@ -27,7 +27,8 @@ resource "azurerm_role_assignment" "acr" {
 }
 
 resource "azurerm_user_assigned_identity" "aks" {
-  count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 0 : 1
+  # create the user assigned identity if the user_assigned_resource_id is not supplied
+  count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 1 : 0
 
   location            = var.location
   name                = local.user_assigned_identity_name
@@ -47,7 +48,7 @@ resource "azurerm_role_assignment" "network_contributor_on_resource_group" {
 }
 
 resource "azurerm_role_assignment" "dns_zone_contributor" {
-  count = var.private_dns_zone_id_enabled ? 1 : 0
+  count = var.private_dns_zone_set_rbac_permissions ? 1 : 0
 
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
   scope                = var.private_dns_zone_id
@@ -230,8 +231,8 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "According to the [document](https://learn.microsoft.com/en-us/azure/aks/private-clusters?tabs=azure-portal#configure-a-private-dns-zone), the private DNS zone must be in one of the following format: `privatelink.<region>.azmk8s.io`, `<subzone>.privatelink.<region>.azmk8s.io`, `private.<region>.azmk8s.io`, `<subzone>.private.<region>.azmk8s.io`"
     }
     precondition {
-      condition     = var.private_dns_zone_id != null ? var.private_dns_zone_id_enabled == true : var.private_dns_zone_id_enabled == false
-      error_message = "private_dns_zone_id must be set if private_dns_zone_id_enabled is true"
+      condition     = var.private_dns_zone_id != null ? var.private_dns_zone_set_rbac_permissions == true : var.private_dns_zone_set_rbac_permissions == false
+      error_message = "private_dns_zone_id must be set if private_dns_zone_set_rbac_permissions is true"
     }
   }
 }
@@ -377,11 +378,13 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
 }
 
 resource "azapi_update_resource" "aks_api_server_access_profile" {
-  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
+  count = var.enable_api_server_vnet_integration ? 0 : 1
+  type  = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
   body = {
     properties = {
       apiServerAccessProfile = {
-        enableVnetIntegration = var.api_server_vnet_integration #true
+        enableVnetIntegration = var.enable_api_server_vnet_integration
+        subnetId              = var.network.api_server_subnet_id
       }
     }
   }

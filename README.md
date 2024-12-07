@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
 # terraform-azurerm-avm-ptn-aks-production
 
-### NOTE: This module follows the semantic versioning and versions prior to 1.0.0 should be consider pre-release versions.
+### NOTE: This module follows the semantic versioning and versions prior to 1.0.0 should be consider pre-release versions
 
 This is the Production Standard for AKS pattern module for [Azure Verified Modules (AVM)](https://azure.github.io/Azure-Verified-Modules/) library. This module deploys a production standard AKS cluster along with an Azure container registry. It is possible to provide an existing Log Analytics workspace or the module will create one for you. It provisions an environment sufficient for most production deployments for AKS. It leverages the AzureRM provider and sets a number of initial defaults to minimize the overall inputs for simple configurations. You can read more about our design choices in our [Tech Community Article](https://techcommunity.microsoft.com/t5/azure-for-isv-and-startups/how-to-deploy-a-production-ready-aks-cluster-with-terraform/ba-p/4122013).
 
@@ -189,9 +189,9 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_api_server_vnet_integration"></a> [api\_server\_vnet\_integration](#input\_api\_server\_vnet\_integration)
+### <a name="input_enable_api_server_vnet_integration"></a> [api\_server\_vnet\_integration](#input\_api\_server\_vnet\_integration)
 
-Description:   # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services  
+Description:   # <https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services>  
   THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
 
   Enable VNET integration for the AKS cluster
@@ -207,6 +207,7 @@ Default: `false`
 ### <a name="input_automatic_upgrade_channel"></a> [automatic\_upgrade\_channel](#input\_automatic\_upgrade\_channel)
 
 Description: Specifies the automatic upgrade channel for the cluster. Possible values are:
+
 - `stable`: Ensures the cluster is always in a supported version (i.e., within the N-2 rule).
 - `rapid`: Ensures the cluster is always in a supported version on a faster release cadence.
 - `patch`: Gets the latest patches as soon as possible.
@@ -334,8 +335,8 @@ Default: `null`
 
 Description:   Controls the Resource Lock configuration for this resource. The following properties can be specified:
 
-  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
-  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+- `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+- `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
 
 Type:
 
@@ -367,19 +368,21 @@ Default: `null`
 ### <a name="input_maintenance_window_auto_upgrade"></a> [maintenance\_window\_auto\_upgrade](#input\_maintenance\_window\_auto\_upgrade)
 
 Description:  - `day_of_month` - (Optional) The day of the month for the maintenance run. Required in combination with RelativeMonthly frequency. Value between 0 and 31 (inclusive).
- - `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
- - `duration` - (Required) The duration of the window for maintenance to run in hours.
- - `frequency` - (Required) Frequency of maintenance. Possible options are `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
- - `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.
- - `start_date` - (Optional) The date on which the maintenance window begins to take effect.
- - `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
- - `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.
- - `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
+
+- `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
+- `duration` - (Required) The duration of the window for maintenance to run in hours.
+- `frequency` - (Required) Frequency of maintenance. Possible options are `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
+- `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.
+- `start_date` - (Optional) The date on which the maintenance window begins to take effect.
+- `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
+- `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.
+- `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
 
  ---
  `not_allowed` block supports the following:
- - `end` - (Required) The end of a time span, formatted as an RFC3339 string.
- - `start` - (Required) The start of a time span, formatted as an RFC3339 string.
+
+- `end` - (Required) The end of a time span, formatted as an RFC3339 string.
+- `start` - (Required) The start of a time span, formatted as an RFC3339 string.
 
 Example input:
 
@@ -421,19 +424,21 @@ Default: `null`
 ### <a name="input_maintenance_window_node_os"></a> [maintenance\_window\_node\_os](#input\_maintenance\_window\_node\_os)
 
 Description:  - `day_of_month` - (Optional) The day of the month for the maintenance run. Required in combination with RelativeMonthly frequency. Value between 0 and 31 (inclusive).
- - `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
- - `duration` - (Required) The duration of the window for maintenance to run in hours.  Valid values are between 4 and 24 (inclusive).
- - `frequency` - (Required) Frequency of maintenance. Possible options are `Daily`, `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
- - `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.  E.g. a value of 2 for a weekly frequency means maintenance will run every 2 weeks.
- - `start_date` - (Optional) The date on which the maintenance window begins to take effect.
- - `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
- - `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.  Format is `+HH:MM` or `-HH:MM`.
- - `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
+
+- `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
+- `duration` - (Required) The duration of the window for maintenance to run in hours.  Valid values are between 4 and 24 (inclusive).
+- `frequency` - (Required) Frequency of maintenance. Possible options are `Daily`, `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
+- `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.  E.g. a value of 2 for a weekly frequency means maintenance will run every 2 weeks.
+- `start_date` - (Optional) The date on which the maintenance window begins to take effect.
+- `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
+- `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.  Format is `+HH:MM` or `-HH:MM`.
+- `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
 
  ---
  `not_allowed` block supports the following:
- - `end` - (Required) The end of a time span, formatted as an RFC3339 string.
- - `start` - (Required) The start of a time span, formatted as an RFC3339 string.  
+
+- `end` - (Required) The end of a time span, formatted as an RFC3339 string.
+- `start` - (Required) The start of a time span, formatted as an RFC3339 string.  
 Configuration for the maintenance window node OS.
 
 Example input:
@@ -476,8 +481,8 @@ Default: `null`
 
 Description:   Controls the Managed Identity configuration on this resource. The following properties can be specified:
 
-  - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
-  - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
+- `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
+- `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
 
 Type:
 
@@ -559,6 +564,7 @@ map(object({
 }))
 
 Example input:
+
 ```terraform
   node_pools = {
     workload = {

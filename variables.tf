@@ -16,9 +16,10 @@ variable "name" {
 
 variable "network" {
   type = object({
-    node_subnet_id = string
-    pod_cidr       = string
-    service_cidr   = optional(string)
+    node_subnet_id       = string
+    pod_cidr             = string
+    service_cidr         = optional(string)
+    api_server_subnet_id = optional(string)
   })
   description = "Values for the networking configuration of the AKS cluster"
 }
@@ -47,21 +48,6 @@ variable "agents_tags" {
   description = "(Optional) A mapping of tags to assign to the Node Pool."
 }
 
-variable "api_server_vnet_integration" {
-  type        = bool
-  default     = false
-  description = <<DESCRIPTION
-  # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services
-  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
-
-  Enable VNET integration for the AKS cluster
-
-  This requires the following preview feature registered on the subscription:
-
-  az feature register --namespace "Microsoft.ContainerService" --name "EnableAPIServerVnetIntegrationPreview"
-DESCRIPTION
-}
-
 variable "automatic_upgrade_channel" {
   type        = string
   default     = "stable"
@@ -77,6 +63,21 @@ DESCRIPTION
     condition     = can(regex("^(stable|rapid|patch|node-image|none)$", var.automatic_upgrade_channel))
     error_message = "automatic_upgrade_channel must be one of 'stable', 'rapid', 'patch', or 'node-image'.  If not set it will default to `stable`."
   }
+}
+
+variable "enable_api_server_vnet_integration" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+  # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services
+  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+
+  Enable VNET integration for the AKS cluster
+
+  This requires the following preview feature registered on the subscription:
+
+  az feature register --namespace "Microsoft.ContainerService" --name "EnableAPIServerVnetIntegrationPreview"
+DESCRIPTION
 }
 
 variable "enable_telemetry" {
@@ -395,7 +396,7 @@ variable "private_dns_zone_id" {
   }
 }
 
-variable "private_dns_zone_id_enabled" {
+variable "private_dns_zone_set_rbac_permissions" {
   type        = bool
   default     = false
   description = "(Optional) Enable private DNS zone integration for the AKS cluster."
