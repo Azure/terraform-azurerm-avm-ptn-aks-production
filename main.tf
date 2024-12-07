@@ -111,14 +111,9 @@ resource "azurerm_kubernetes_cluster" "this" {
     azure_rbac_enabled     = var.rbac_aad_azure_rbac_enabled
     tenant_id              = var.rbac_aad_tenant_id
   }
-  ## Resources that only support UserAssigned
-  dynamic "identity" {
-    for_each = local.user_assigned_identity_resource_id != null ? [local.user_assigned_identity_resource_id] : []
-
-    content {
-      type         = identity.value.type
-      identity_ids = identity.value.user_assigned_resource_ids
-    }
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [local.user_assigned_identity_resource_id]
   }
   key_vault_secrets_provider {
     secret_rotation_enabled = true
