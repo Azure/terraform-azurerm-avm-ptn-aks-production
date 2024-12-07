@@ -37,7 +37,7 @@ module "naming" {
 
 resource "azurerm_user_assigned_identity" "this" {
   location            = azurerm_resource_group.this.location
-  name                = "uami-${var.kubernetes_cluster_name}"
+  name                = "uami-${var.name}"
   resource_group_name = azurerm_resource_group.this.name
 }
 
@@ -155,14 +155,6 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
-
-### <a name="input_kubernetes_cluster_name"></a> [kubernetes\_cluster\_name](#input\_kubernetes\_cluster\_name)
-
-Description: The name of the Kubernetes cluster.
-
-Type: `string`
-
-Default: `"myAks"`
 
 ## Outputs
 

@@ -57,7 +57,7 @@ resource "azurerm_role_assignment" "dns_zone_contributor" {
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
-  name                              = "aks-${var.name}"
+  name                              = var.name
   resource_group_name               = var.resource_group_name
   automatic_upgrade_channel         = var.automatic_upgrade_channel
   azure_policy_enabled              = true
@@ -379,7 +379,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
 
 resource "azapi_update_resource" "aks_api_server_access_profile" {
   count = var.enable_api_server_vnet_integration ? 0 : 1
-  type  = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
+
+  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
   body = {
     properties = {
       apiServerAccessProfile = {
