@@ -30,7 +30,6 @@ locals {
     "[a-zA-Z0-9\\-]{1,32}\\.private\\.[a-z]+\\.azmk8s\\.io",
     "[a-zA-Z0-9\\-]{1,32}\\.privatelink\\.[a-z]+\\.azmk8s\\.io",
   ]
-  vnet_resource_group_name = split("/", var.network.node_subnet_id)[4]
 }
 
 locals {

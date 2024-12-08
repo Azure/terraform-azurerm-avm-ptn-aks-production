@@ -41,9 +41,19 @@ data "azurerm_user_assigned_identity" "cluster_identity" {
   resource_group_name = var.resource_group_name
 }
 
-resource "azurerm_role_assignment" "network_contributor_on_resource_group" {
+resource "azurerm_role_assignment" "network_contributor_on_node_subnet" {
+  count = var.subnet_set_rbac_permissions ? 1 : 0
+
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
-  scope                = local.vnet_resource_group_name
+  scope                = var.network.node_subnet_id
+  role_definition_name = "Network Contributor"
+}
+
+resource "azurerm_role_assignment" "network_contributor_on_api_subnet" {
+  count = var.subnet_set_rbac_permissions && var.enable_api_server_vnet_integration ? 1 : 0
+
+  principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
+  scope                = var.network.api_server_subnet_id
   role_definition_name = "Network Contributor"
 }
 
@@ -91,7 +101,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     os_disk_type                 = "Ephemeral"
     os_sku                       = var.os_sku
     tags                         = merge(var.tags, var.agents_tags)
-    temporary_name_for_rotation  = "tempsystempool"
+    temporary_name_for_rotation  = "tempsyspool" # must begin with a lowercase letter, contain only lowercase letters and numbers and be between 1 and 12 characters in length.
     vnet_subnet_id               = var.network.node_subnet_id
     zones                        = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
 
@@ -230,6 +240,12 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "private_dns_zone_id must be set if private_dns_zone_set_rbac_permissions is true"
     }
   }
+
+  depends_on = [
+    azurerm_role_assignment.network_contributor_on_api_subnet[0],
+    azurerm_role_assignment.network_contributor_on_node_subnet[0],
+    azurerm_role_assignment.dns_zone_contributor[0],
+  ]
 }
 
 # The following terraform_data is used to trigger the update of the AKS cluster when the kubernetes_version changes

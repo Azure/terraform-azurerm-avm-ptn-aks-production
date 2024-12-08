@@ -447,3 +447,10 @@ variable "web_app_routing" {
   default     = null
   description = "Configuration for web app routing."
 }
+
+variable "subnet_set_rbac_permissions" {
+  type        = bool
+  default     = true
+  description = "(Optional) Whether to create Network Contributor RBAC on the supplied subnets"
+  nullable    = false
+}
