@@ -242,10 +242,6 @@ resource "azurerm_kubernetes_cluster" "this" {
       condition     = var.private_dns_zone_id == null ? true : (anytrue([for r in local.valid_private_dns_zone_regexs : try(regex(r, local.private_dns_zone_name) == local.private_dns_zone_name, false)]))
       error_message = "According to the [document](https://learn.microsoft.com/en-us/azure/aks/private-clusters?tabs=azure-portal#configure-a-private-dns-zone), the private DNS zone must be in one of the following format: `privatelink.<region>.azmk8s.io`, `<subzone>.privatelink.<region>.azmk8s.io`, `private.<region>.azmk8s.io`, `<subzone>.private.<region>.azmk8s.io`"
     }
-    precondition {
-      condition     = var.private_dns_zone_id != null ? var.private_dns_zone_set_rbac_permissions == true : var.private_dns_zone_set_rbac_permissions == false
-      error_message = "private_dns_zone_id must be set if private_dns_zone_set_rbac_permissions is true"
-    }
   }
 }
 
