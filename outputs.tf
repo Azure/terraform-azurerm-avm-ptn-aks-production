@@ -35,7 +35,7 @@ output "key_vault_secrets_provider" {
 
 output "kubelet_identity" {
   description = "The user-defined Managed Identity assigned to the Kubelets."
-  value       = try(azurerm_kubernetes_cluster.this.kubelet_identity, null)
+  value       = try(azurerm_kubernetes_cluster.this.kubelet_identity[0], null)
 }
 
 output "name" {

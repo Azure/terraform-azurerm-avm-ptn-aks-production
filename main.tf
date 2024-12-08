@@ -288,9 +288,10 @@ resource "azurerm_log_analytics_workspace" "this" {
 resource "azurerm_log_analytics_workspace_table" "this" {
   for_each = toset(local.log_analytics_tables)
 
-  name         = each.value
-  workspace_id = local.log_analytics_workspace_resource_id
-  plan         = "Basic"
+  name                    = each.value
+  workspace_id            = local.log_analytics_workspace_resource_id
+  plan                    = "Basic"
+  total_retention_in_days = 8
 }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
@@ -390,7 +391,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
 }
 
 resource "azapi_update_resource" "aks_api_server_access_profile" {
-  count = var.enable_api_server_vnet_integration ? 0 : 1
+  count = var.enable_api_server_vnet_integration ? 1 : 0
 
   type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
   body = {
