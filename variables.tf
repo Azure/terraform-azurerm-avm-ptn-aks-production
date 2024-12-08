@@ -396,6 +396,17 @@ variable "private_dns_zone_id" {
   }
 }
 
+variable "private_dns_zone_id_api_server" {
+  type        = string
+  default     = null
+  description = "(Optional) The ID of Private DNS Zone used by the API server."
+
+  validation {
+    condition     = var.private_dns_zone_id_api_server == null || can(regex("^(/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft.Network/privateDnsZones/[^/]+)$", var.private_dns_zone_id_api_server))
+    error_message = "private_dns_zone_id_api_server must be a valid Private DNS Zone ID"
+  }
+}
+
 variable "private_dns_zone_set_rbac_permissions" {
   type        = bool
   default     = false
@@ -419,6 +430,13 @@ variable "rbac_aad_tenant_id" {
   type        = string
   default     = null
   description = "(Optional) The Tenant ID used for Azure Active Directory Application. If this isn't specified the Tenant ID of the current Subscription is used."
+}
+
+variable "subnet_set_rbac_permissions" {
+  type        = bool
+  default     = true
+  description = "(Optional) Whether to create Network Contributor RBAC on the supplied subnets"
+  nullable    = false
 }
 
 # tflint-ignore: terraform_unused_declarations
@@ -446,11 +464,4 @@ variable "web_app_routing" {
   })
   default     = null
   description = "Configuration for web app routing."
-}
-
-variable "subnet_set_rbac_permissions" {
-  type        = bool
-  default     = true
-  description = "(Optional) Whether to create Network Contributor RBAC on the supplied subnets"
-  nullable    = false
 }

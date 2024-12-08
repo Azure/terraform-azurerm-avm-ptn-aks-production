@@ -72,7 +72,8 @@ The following resources are used by this module:
 - [azurerm_role_assignment.grafana_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.grafana_data_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.grafana_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_role_assignment.network_contributor_on_resource_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.network_contributor_on_api_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.network_contributor_on_node_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_user_assigned_identity.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
@@ -96,7 +97,7 @@ Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: The name for the AKS resources created in the specified Azure Resource Group. This variable overwrites the 'prefix' var (The 'prefix' var will still be applied to the dns\_prefix if it is set)
+Description: The name of the AKS cluster.
 
 Type: `string`
 
@@ -636,6 +637,14 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_private_dns_zone_id_api_server"></a> [private\_dns\_zone\_id\_api\_server](#input\_private\_dns\_zone\_id\_api\_server)
+
+Description: (Optional) The ID of Private DNS Zone used by the API server.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_private_dns_zone_set_rbac_permissions"></a> [private\_dns\_zone\_set\_rbac\_permissions](#input\_private\_dns\_zone\_set\_rbac\_permissions)
 
 Description: (Optional) Enable private DNS zone integration for the AKS cluster.
@@ -675,6 +684,14 @@ Description: (Optional) The Tenant ID used for Azure Active Directory Applicatio
 Type: `string`
 
 Default: `null`
+
+### <a name="input_subnet_set_rbac_permissions"></a> [subnet\_set\_rbac\_permissions](#input\_subnet\_set\_rbac\_permissions)
+
+Description: (Optional) Whether to create Network Contributor RBAC on the supplied subnets
+
+Type: `bool`
+
+Default: `true`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

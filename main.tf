@@ -189,13 +189,13 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
   network_profile {
     network_plugin      = "azure"
+    dns_service_ip      = var.network.service_cidr == null ? null : try(cidrhost(var.network.service_cidr, 10), null)
     load_balancer_sku   = "standard"
     network_data_plane  = var.network_policy == "cilium" ? "cilium" : "azure"
     network_plugin_mode = "overlay"
     network_policy      = var.network_policy
     pod_cidr            = var.network.pod_cidr
     service_cidr        = try(var.network.service_cidr, null)
-    dns_service_ip      = var.network.service_cidr == null ? null : try(cidrhost(var.network.service_cidr, 10), null)
   }
   oms_agent {
     log_analytics_workspace_id      = local.log_analytics_workspace_resource_id
@@ -219,6 +219,12 @@ resource "azurerm_kubernetes_cluster" "this" {
     vertical_pod_autoscaler_enabled = var.vertical_pod_autoscaler_enabled
   }
 
+  depends_on = [
+    azurerm_role_assignment.network_contributor_on_api_subnet[0],
+    azurerm_role_assignment.network_contributor_on_node_subnet[0],
+    azurerm_role_assignment.dns_zone_contributor[0],
+  ]
+
   lifecycle {
     ignore_changes = [
       kubernetes_version
@@ -241,12 +247,6 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "private_dns_zone_id must be set if private_dns_zone_set_rbac_permissions is true"
     }
   }
-
-  depends_on = [
-    azurerm_role_assignment.network_contributor_on_api_subnet[0],
-    azurerm_role_assignment.network_contributor_on_node_subnet[0],
-    azurerm_role_assignment.dns_zone_contributor[0],
-  ]
 }
 
 # The following terraform_data is used to trigger the update of the AKS cluster when the kubernetes_version changes
@@ -291,7 +291,7 @@ resource "azurerm_log_analytics_workspace_table" "this" {
   name                    = each.value
   workspace_id            = local.log_analytics_workspace_resource_id
   plan                    = "Basic"
-  total_retention_in_days = 8
+  total_retention_in_days = 30
 }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
@@ -399,6 +399,7 @@ resource "azapi_update_resource" "aks_api_server_access_profile" {
       apiServerAccessProfile = {
         enableVnetIntegration = var.enable_api_server_vnet_integration
         subnetId              = var.network.api_server_subnet_id
+        privateDNSZone        = var.private_dns_zone_id_api_server
       }
     }
   }
