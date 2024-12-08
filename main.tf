@@ -291,7 +291,7 @@ resource "azurerm_log_analytics_workspace_table" "this" {
   name              = each.value
   workspace_id      = local.log_analytics_workspace_resource_id
   plan              = "Basic"
-  retention_in_days = 7
+  retention_in_days = 8
 }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
