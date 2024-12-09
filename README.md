@@ -300,6 +300,14 @@ Type: `string`
 
 Default: `"AzureLinux"`
 
+### <a name="input_private_cluster_enabled"></a> [private\_cluster\_enabled](#input\_private\_cluster\_enabled)
+
+Description: (Optional) Should this Kubernetes Cluster have its API server only exposed on internal IP addresses? Defaults to `true`.
+
+Type: `bool`
+
+Default: `true`
+
 ### <a name="input_private_dns_zone_id"></a> [private\_dns\_zone\_id](#input\_private\_dns\_zone\_id)
 
 Description: (Optional) Either the ID of Private DNS Zone which should be delegated to this Cluster.

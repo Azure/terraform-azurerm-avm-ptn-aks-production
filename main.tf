@@ -67,7 +67,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   local_account_disabled            = true
   node_os_channel_upgrade           = "NodeImage"
   oidc_issuer_enabled               = true
-  private_cluster_enabled           = true
+  private_cluster_enabled           = var.private_cluster_enabled
   private_dns_zone_id               = var.private_dns_zone_id
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
