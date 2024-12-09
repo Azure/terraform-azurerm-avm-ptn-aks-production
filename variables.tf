@@ -207,6 +207,12 @@ variable "os_sku" {
   }
 }
 
+variable "private_cluster_enabled" {
+  type = bool
+  default = true
+  description = "(Optional) Should this Kubernetes Cluster have its API server only exposed on internal IP addresses? Defaults to `true`."
+}
+
 variable "private_dns_zone_id" {
   type        = string
   default     = null
