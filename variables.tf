@@ -432,13 +432,6 @@ variable "rbac_aad_tenant_id" {
   description = "(Optional) The Tenant ID used for Azure Active Directory Application. If this isn't specified the Tenant ID of the current Subscription is used."
 }
 
-variable "subnet_set_rbac_permissions" {
-  type        = bool
-  default     = true
-  description = "(Optional) Whether to create Network Contributor RBAC on the supplied subnets"
-  nullable    = false
-}
-
 # tflint-ignore: terraform_unused_declarations
 variable "tags" {
   type        = map(string)
@@ -456,6 +449,13 @@ variable "vertical_pod_autoscaler_enabled" {
   type        = bool
   default     = true
   description = "Enable Vertical Pod Autoscaler for the Kubernetes cluster."
+}
+
+variable "vnet_set_rbac_permissions" {
+  type        = bool
+  default     = true
+  description = "(Optional) Whether to create Network Contributor RBAC on the supplied subnets"
+  nullable    = false
 }
 
 variable "web_app_routing" {

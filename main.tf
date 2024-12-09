@@ -41,19 +41,11 @@ data "azurerm_user_assigned_identity" "cluster_identity" {
   resource_group_name = var.resource_group_name
 }
 
-resource "azurerm_role_assignment" "network_contributor_on_node_subnet" {
-  count = var.subnet_set_rbac_permissions ? 1 : 0
+resource "azurerm_role_assignment" "network_contributor_on_aks_vnet" {
+  count = var.vnet_set_rbac_permissions ? 1 : 0
 
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
-  scope                = var.network.node_subnet_id
-  role_definition_name = "Network Contributor"
-}
-
-resource "azurerm_role_assignment" "network_contributor_on_api_subnet" {
-  count = var.subnet_set_rbac_permissions && var.enable_api_server_vnet_integration ? 1 : 0
-
-  principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
-  scope                = var.network.api_server_subnet_id
+  scope                = join("/", slice(split("/", var.network.node_subnet_id), 0, 9)) # needs to be Microsoft.Network/virtualNetworks/join/action at the vnet scope
   role_definition_name = "Network Contributor"
 }
 
@@ -220,8 +212,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
 
   depends_on = [
-    azurerm_role_assignment.network_contributor_on_api_subnet[0],
-    azurerm_role_assignment.network_contributor_on_node_subnet[0],
+    azurerm_role_assignment.network_contributor_on_aks_vnet[0],
     azurerm_role_assignment.dns_zone_contributor[0],
   ]
 
