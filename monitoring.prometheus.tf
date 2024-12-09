@@ -1,7 +1,7 @@
 # Managed Prometheus
 resource "azurerm_monitor_workspace" "this" {
   # only create the Azure Monitor workspace if monitoring is enabled and an existing Azure Monitor resource ID is not provided
-  count = var.enable_monitoring && var.azure_monitor_workspace_resource_id == null ? 1 : 0
+  count = var.azure_monitor_enabled && var.azure_monitor_workspace_resource_id == null ? 1 : 0
 
   location            = var.location
   name                = local.azure_monitor_name
@@ -10,7 +10,7 @@ resource "azurerm_monitor_workspace" "this" {
 }
 
 resource "azurerm_monitor_data_collection_endpoint" "this" {
-  count = var.enable_monitoring ? 1 : 0
+  count = var.azure_monitor_enabled ? 1 : 0
 
   location            = var.location
   name                = local.prometheus_dce_name
@@ -20,7 +20,7 @@ resource "azurerm_monitor_data_collection_endpoint" "this" {
 }
 
 resource "azurerm_monitor_data_collection_rule" "prometheus_to_monitor" {
-  count = var.enable_monitoring ? 1 : 0
+  count = var.azure_monitor_enabled ? 1 : 0
 
   location                    = var.location
   name                        = local.dcr_prometheus_linux_rule_name
@@ -48,7 +48,7 @@ resource "azurerm_monitor_data_collection_rule" "prometheus_to_monitor" {
 }
 
 resource "azurerm_monitor_data_collection_rule_association" "dcra_prometheus" {
-  count = var.enable_monitoring ? 1 : 0
+  count = var.azure_monitor_enabled ? 1 : 0
 
   target_resource_id      = azurerm_kubernetes_cluster.this.id
   data_collection_rule_id = azurerm_monitor_data_collection_rule.prometheus_to_monitor[0].id

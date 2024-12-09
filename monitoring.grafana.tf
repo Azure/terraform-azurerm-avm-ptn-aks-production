@@ -19,19 +19,21 @@ resource "azurerm_dashboard_grafana" "this" {
   }
 }
 
+# only create the permissions on the Azure Monitor workspace if monitoring is enabled and an existing Azure Monitor resource ID is not provided
+# if supplying an existing Monitor Workspace, it is assumed that permissions are already set.
 resource "azurerm_role_assignment" "grafana_reader" {
-  count = var.grafana_dashboard_enabled && var.grafana_dashboard_resource_id == null ? 1 : 0
+  count = var.grafana_dashboard_enabled && var.azure_monitor_enabled && var.azure_monitor_workspace_resource_id == null ? 1 : 0
 
   principal_id         = azurerm_dashboard_grafana.this[0].identity[0].principal_id
-  scope                = local.grafana_dashboard_resource_id
+  scope                = local.azure_monitor_workspace_resource_id
   role_definition_name = "Monitoring Reader"
 }
 
 resource "azurerm_role_assignment" "grafana_data_reader" {
-  count = var.grafana_dashboard_enabled && var.grafana_dashboard_resource_id == null ? 1 : 0
+  count = var.grafana_dashboard_enabled && var.azure_monitor_enabled && var.azure_monitor_workspace_resource_id == null ? 1 : 0
 
   principal_id         = azurerm_dashboard_grafana.this[0].identity[0].principal_id
-  scope                = local.grafana_dashboard_resource_id
+  scope                = local.azure_monitor_workspace_resource_id
   role_definition_name = "Monitoring Data Reader"
 }
 

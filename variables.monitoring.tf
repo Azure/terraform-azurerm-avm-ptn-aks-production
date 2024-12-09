@@ -1,10 +1,3 @@
-variable "enable_monitoring" {
-  description = "Whether or not to enable monitoring."
-  type        = bool
-  default     = true
-  nullable    = false
-}
-
 variable "action_group_name" {
   description = "The name of the action group."
   type        = string
@@ -35,6 +28,13 @@ variable "dcr_prometheus_linux_rule_name" {
 
 variable "grafana_dashboard_enabled" {
   description = "Whether or not the Grafana dashboard is enabled."
+  type        = bool
+  default     = true
+  nullable    = false
+}
+
+variable "azure_monitor_enabled" {
+  description = "Whether or not to enable monitoring."
   type        = bool
   default     = true
   nullable    = false
