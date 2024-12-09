@@ -281,14 +281,14 @@ resource "azurerm_log_analytics_workspace" "this" {
   tags                = var.tags
 }
 
-resource "azurerm_log_analytics_workspace_table" "this" {
-  for_each = toset(local.log_analytics_tables)
+# resource "azurerm_log_analytics_workspace_table" "this" {
+#   for_each = toset(local.log_analytics_tables)
 
-  name                    = each.value
-  workspace_id            = local.log_analytics_workspace_resource_id
-  plan                    = "Basic"
-  total_retention_in_days = 30
-}
+#   name                    = each.value
+#   workspace_id            = local.log_analytics_workspace_resource_id
+#   plan                    = "Basic"
+#   total_retention_in_days = 30
+# }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
   name                           = "amds-${var.name}-aks"
