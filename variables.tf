@@ -208,8 +208,8 @@ variable "os_sku" {
 }
 
 variable "private_cluster_enabled" {
-  type = bool
-  default = true
+  type        = bool
+  default     = true
   description = "(Optional) Should this Kubernetes Cluster have its API server only exposed on internal IP addresses? Defaults to `true`."
 }
 
