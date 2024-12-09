@@ -1,5 +1,6 @@
 # these are the prometheus rule groups created by the portal when enabling the Insights blade in AKS.
 resource "azurerm_monitor_alert_prometheus_rule_group" "UXRecordingRulesRuleGroup" {
+  count               = var.azure_monitor_enabled ? 1 : 0
   location            = var.location
   name                = "UXRecordingRulesRuleGroup - ${var.name}"
   resource_group_name = var.resource_group_name
@@ -88,6 +89,7 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "UXRecordingRulesRuleGrou
 }
 
 resource "azurerm_monitor_alert_prometheus_rule_group" "UXRecordingRulesRuleGroup_Windows" {
+  count               = var.azure_monitor_enabled ? 1 : 0
   location            = var.location
   name                = "UXRecordingRulesRuleGroup-Win - ${var.name}"
   resource_group_name = var.resource_group_name
@@ -136,6 +138,7 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "UXRecordingRulesRuleGrou
 }
 
 resource "azurerm_monitor_alert_prometheus_rule_group" "NodeRecordingRulesRuleGroup" {
+  count               = var.azure_monitor_enabled ? 1 : 0
   location            = var.location
   name                = "NodeRecordingRulesRuleGroup-${var.name}"
   resource_group_name = var.resource_group_name
@@ -196,6 +199,7 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "NodeRecordingRulesRuleGr
 }
 
 resource "azurerm_monitor_alert_prometheus_rule_group" "NodeRecordingRulesRuleGroup_Windows" {
+  count               = var.azure_monitor_enabled ? 1 : 0
   location            = var.location
   name                = "NodeRecordingRulesRuleGroup-Win-${var.name}"
   resource_group_name = var.resource_group_name
@@ -272,6 +276,7 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "NodeRecordingRulesRuleGr
 }
 
 resource "azurerm_monitor_alert_prometheus_rule_group" "kubernetes-recording-rules-group" {
+  count               = var.azure_monitor_enabled ? 1 : 0
   location            = var.location
   name                = "KubernetesRecordingRulesRuleGroup-${var.name}"
   resource_group_name = var.resource_group_name
@@ -376,6 +381,7 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "kubernetes-recording-rul
 }
 
 resource "azurerm_monitor_alert_prometheus_rule_group" "kubernetes-recording-rules-group_Windows" {
+  count               = var.azure_monitor_enabled ? 1 : 0
   location            = var.location
   name                = "NodeAndK8sRecordingRulesRuleGroup-Win-${var.name}"
   resource_group_name = var.resource_group_name
