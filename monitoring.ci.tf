@@ -22,7 +22,8 @@ resource "azurerm_monitor_data_collection_rule" "container-insights" {
       streams        = ["Microsoft-ContainerInsights-Group-Default"]
       extension_json = jsonencode({
         dataCollectionSettings = {
-          #enableContainerLogV2   = true
+          # ContainerLogsV2 is listed in the AzAPI export but appears to throw an Invalid Payload error - perhaps a preview feature?
+          enableContainerLogV2   = true
           interval               = "5m"
           namespaceFilteringMode = "Exclude"
           namespaces             = ["kube-system", "gatekeeper-system", "azure-arc"]

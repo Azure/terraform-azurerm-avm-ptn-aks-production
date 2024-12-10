@@ -45,7 +45,7 @@ resource "azurerm_role_assignment" "network_contributor_on_aks_vnet" {
   count = var.vnet_set_rbac_permissions ? 1 : 0
 
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
-  scope                = join("/", slice(split("/", var.network.node_subnet_id), 0, 9)) # needs to be Microsoft.Network/virtualNetworks/join/action at the vnet scope
+  scope                = join("/", slice(split("/", var.network.node_subnet_id), 0, 9)) # least privilege is Microsoft.Network/virtualNetworks/join/action at the vnet scope?
   role_definition_name = "Network Contributor"
 }
 
@@ -231,7 +231,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     }
     precondition {
       condition     = var.private_dns_zone_id == null ? true : (anytrue([for r in local.valid_private_dns_zone_regexs : try(regex(r, local.private_dns_zone_name) == local.private_dns_zone_name, false)]))
-      error_message = "According to the [document](https://learn.microsoft.com/en-us/azure/aks/private-clusters?tabs=azure-portal#configure-a-private-dns-zone), the private DNS zone must be in one of the following format: `privatelink.<region>.azmk8s.io`, `<subzone>.privatelink.<region>.azmk8s.io`, `private.<region>.azmk8s.io`, `<subzone>.private.<region>.azmk8s.io`"
+      error_message = "According to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/aks/private-clusters?tabs=azure-portal#configure-a-private-dns-zone), the private DNS zone must be in one of the following format: `privatelink.<region>.azmk8s.io`, `<subzone>.privatelink.<region>.azmk8s.io`, `private.<region>.azmk8s.io`, `<subzone>.private.<region>.azmk8s.io`"
     }
   }
 }
@@ -272,13 +272,15 @@ resource "azurerm_log_analytics_workspace" "this" {
   tags                = var.tags
 }
 
+# TODO seeing issues with this on subsequent runs after the first deploy, need to investigate
+# appers to relate to retention settings - setting `total_retention_in_days = 30` on later runs works, but then doesn't deploy
+# cleanly because the workspace is not active in time.
 # resource "azurerm_log_analytics_workspace_table" "this" {
 #   for_each = toset(local.log_analytics_tables)
 
 #   name                    = each.value
 #   workspace_id            = local.log_analytics_workspace_resource_id
 #   plan                    = "Basic"
-#   total_retention_in_days = 30
 # }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {

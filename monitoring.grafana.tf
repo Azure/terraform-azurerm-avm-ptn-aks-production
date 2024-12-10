@@ -1,4 +1,6 @@
 # Grafana
+
+# todo a simple implementation for now whilst watching progress here - https://github.com/Azure/terraform-azurerm-avm-res-dashboard-grafana
 resource "azurerm_dashboard_grafana" "this" {
   count = var.grafana_dashboard_enabled && var.grafana_dashboard_resource_id == null ? 1 : 0
 
