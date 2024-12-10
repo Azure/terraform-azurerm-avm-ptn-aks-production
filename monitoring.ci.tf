@@ -2,7 +2,6 @@ resource "azurerm_monitor_data_collection_rule" "container-insights" {
   location            = var.location
   name                = local.dcr_insights_linux_rule_name
   resource_group_name = var.resource_group_name
-  kind                = "Linux"
   tags                = var.tags
 
   data_flow {
@@ -22,9 +21,9 @@ resource "azurerm_monitor_data_collection_rule" "container-insights" {
       streams        = ["Microsoft-ContainerInsights-Group-Default"]
       extension_json = jsonencode({
         dataCollectionSettings = {
-          enableContainerLogV2   = true,
-          interval               = "5m",
-          namespaceFilteringMode = "Exclude",
+          enableContainerLogV2   = true
+          interval               = "5m"
+          namespaceFilteringMode = "Exclude"
           namespaces             = ["kube-system", "gatekeeper-system", "azure-arc"]
         }
       })
