@@ -199,13 +199,13 @@ resource "azurerm_kubernetes_cluster" "this" {
     file_driver_enabled         = true
     snapshot_controller_enabled = true
   }
-  dynamic "web_app_routing" {
-    for_each = var.web_app_routing == null ? [] : [var.web_app_routing]
+  # dynamic "web_app_routing" {
+  #   for_each = var.web_app_routing == null ? [] : [var.web_app_routing]
 
-    content {
-      dns_zone_ids = web_app_routing.value.dns_zone_ids
-    }
-  }
+  #   content {
+  #     dns_zone_ids = web_app_routing.value.dns_zone_ids
+  #   }
+  # }
   workload_autoscaler_profile {
     keda_enabled                    = var.keda_enabled
     vertical_pod_autoscaler_enabled = var.vertical_pod_autoscaler_enabled
@@ -247,10 +247,19 @@ resource "terraform_data" "kubernetes_version_keeper" {
 }
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
-  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
   body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
+      ingressProfile = var.ingress_profile == null ? null : {
+        webAppRouting = {
+          dnsZoneResourceIds = var.ingress_profile.dns_zone_resource_ids
+          enabled            = try(var.ingress_profile.enabled, true)
+          nginx = {
+            defaultIngressControllerType = var.ingress_profile.nginx.default_ingress_controller_type
+          }
+        }
+      }
     }
   }
   resource_id = azurerm_kubernetes_cluster.this.id

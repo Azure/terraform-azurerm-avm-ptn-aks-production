@@ -22,7 +22,6 @@ resource "azurerm_monitor_data_collection_rule" "container-insights" {
       streams        = ["Microsoft-ContainerInsights-Group-Default"]
       extension_json = jsonencode({
         dataCollectionSettings = {
-          # ContainerLogsV2 is listed in the AzAPI export but appears to throw an Invalid Payload error - perhaps a preview feature?
           enableContainerLogV2   = true
           interval               = "5m"
           namespaceFilteringMode = "Exclude"
@@ -31,6 +30,11 @@ resource "azurerm_monitor_data_collection_rule" "container-insights" {
       })
     }
   }
+  depends_on = [
+    # An Invalid Payload error is thrown on first run but not subsequently - not sure why - trying explicit dependencies
+    azurerm_log_analytics_workspace.this,
+    azurerm_kubernetes_cluster.this
+  ]
 }
 
 resource "azurerm_monitor_data_collection_rule_association" "dcra_ci" {

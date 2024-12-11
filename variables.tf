@@ -458,10 +458,18 @@ variable "vnet_set_rbac_permissions" {
   nullable    = false
 }
 
-variable "web_app_routing" {
+variable "ingress_profile" {
   type = object({
-    dns_zone_ids = string
+    dns_zone_resource_ids = list(string)
+    enabled               = optional(bool, true)
+    nginx = object({
+      default_ingress_controller_type = string
+    })
   })
   default     = null
-  description = "Configuration for web app routing."
+  description = "Configuration for the ingress profile."
+  validation {
+    condition     = var.ingress_profile == null || contains(["AnnotationControlled", "External", "Internal", "None"], try(var.ingress_profile.nginx.default_ingress_controller_type, "None"))
+    error_message = "The default_ingress_controller_type must be one of `AnnotationControlled`, `External`, `Internal`, or `None`."
+  }
 }
