@@ -169,10 +169,10 @@ resource "azurerm_kubernetes_cluster" "this" {
     }
   }
   dynamic "microsoft_defender" {
-    for_each = var.microsoft_defender_enabled ? ["microsoft_defender"] : []
+    for_each = var.microsoft_defender_log_analytics_resource_id == null ? [] : ["microsoft_defender"]
 
     content {
-      log_analytics_workspace_id = local.log_analytics_workspace_resource_id
+      log_analytics_workspace_id = var.microsoft_defender_log_analytics_resource_id
     }
   }
   monitor_metrics {

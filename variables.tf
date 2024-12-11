@@ -257,11 +257,10 @@ variable "max_count_default_node_pool" {
   description = "The maximum number of nodes in the default node pool."
 }
 
-variable "microsoft_defender_enabled" {
-  type        = bool
-  default     = false # TODO probably should be 'true' but may not work with E2E testing.
+variable "microsoft_defender_log_analytics_resource_id" {
+  type        = string
+  default     = null # TODO probably should be 'true' but may not work with E2E testing.
   description = "Enable Microsoft Defender for the Kubernetes cluster."
-  nullable    = false
 }
 
 variable "monitor_metrics" {
