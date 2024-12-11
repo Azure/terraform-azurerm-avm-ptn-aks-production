@@ -247,11 +247,27 @@ resource "terraform_data" "kubernetes_version_keeper" {
 }
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
-  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
+  type = "Microsoft.ContainerService/managedClusters@2024-09-01"
   body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
-      ingressProfile = var.ingress_profile == null ? null : {
+    }
+  }
+  resource_id = azurerm_kubernetes_cluster.this.id
+
+  lifecycle {
+    ignore_changes       = all
+    replace_triggered_by = [terraform_data.kubernetes_version_keeper]
+  }
+}
+
+resource "azapi_update_resource" "ingress_profile" {
+  count = var.ingress_profile == null ? 0 : 1
+
+  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
+  body = {
+    properties = {
+      ingressProfile = {
         webAppRouting = {
           dnsZoneResourceIds = var.ingress_profile.dns_zone_resource_ids
           enabled            = try(var.ingress_profile.enabled, true)
@@ -263,11 +279,6 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
     }
   }
   resource_id = azurerm_kubernetes_cluster.this.id
-
-  lifecycle {
-    ignore_changes       = all
-    replace_triggered_by = [terraform_data.kubernetes_version_keeper]
-  }
 }
 
 resource "azurerm_log_analytics_workspace" "this" {
