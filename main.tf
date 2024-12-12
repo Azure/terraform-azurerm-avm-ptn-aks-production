@@ -88,7 +88,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     os_sku                 = var.os_sku
     tags                   = merge(var.tags, var.agents_tags)
     vnet_subnet_id         = var.network.node_subnet_id
-    zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
+    zones                  = local.default_node_pool_available_zones
 
     upgrade_settings {
       max_surge = "10%"
@@ -169,11 +169,11 @@ resource "null_resource" "kubernetes_version_keeper" {
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
   type = "Microsoft.ContainerService/managedClusters@2024-02-01"
-  body = jsonencode({
+  body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
     }
-  })
+  }
   resource_id = azurerm_kubernetes_cluster.this.id
 
   lifecycle {
@@ -282,7 +282,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   os_sku                = each.value.os_sku
   tags                  = var.tags
   vnet_subnet_id        = var.network.node_subnet_id
-  zones                 = each.value.zone == "" ? null : [each.value.zone]
+  zones                 = each.value.zone
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 
@@ -294,12 +294,14 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   }
 }
 
+# Data source for the current subscription
+data "azurerm_subscription" "current" {}
 
-# These resources allow the use of consistent local data files, and semver versioning
-data "local_file" "compute_provider" {
-  filename = "${path.module}/data/microsoft.compute_resourceTypes.json"
-}
-
-data "local_file" "locations" {
-  filename = "${path.module}/data/locations.json"
+data "azapi_resource_list" "example" {
+  parent_id = data.azurerm_subscription.current.id
+  type      = "Microsoft.Compute/Skus@2021-07-01"
+  query_parameters = {
+    "$filter" = [format("location eq '%s'", var.location)]
+  }
+  response_export_values = ["*"]
 }
