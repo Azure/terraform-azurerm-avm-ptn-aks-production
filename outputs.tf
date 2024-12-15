@@ -85,5 +85,5 @@ output "resource_id" {
 
 output "web_app_routing" {
   description = "Exported web_app_routing_identity settings associated with the cluster."
-  value       = try(azurerm_kubernetes_cluster.this.web_app_routing, null)
+  value       = try(azapi_update_resource.ingress_profile.output.properties.ingressProfile, null)
 }

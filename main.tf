@@ -199,13 +199,6 @@ resource "azurerm_kubernetes_cluster" "this" {
     file_driver_enabled         = true
     snapshot_controller_enabled = true
   }
-  # dynamic "web_app_routing" {
-  #   for_each = var.web_app_routing == null ? [] : [var.web_app_routing]
-
-  #   content {
-  #     dns_zone_ids = web_app_routing.value.dns_zone_ids
-  #   }
-  # }
   workload_autoscaler_profile {
     keda_enabled                    = var.keda_enabled
     vertical_pod_autoscaler_enabled = var.vertical_pod_autoscaler_enabled
@@ -218,7 +211,8 @@ resource "azurerm_kubernetes_cluster" "this" {
 
   lifecycle {
     ignore_changes = [
-      kubernetes_version
+      kubernetes_version,
+      web_app_routing
     ]
 
     precondition {
@@ -254,6 +248,7 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
     }
   }
   resource_id = azurerm_kubernetes_cluster.this.id
+  locks       = [azurerm_kubernetes_cluster.this.id]
 
   lifecycle {
     ignore_changes       = all
@@ -278,6 +273,24 @@ resource "azapi_update_resource" "ingress_profile" {
       }
     }
   }
+  locks       = [azurerm_kubernetes_cluster.this.id]
+  resource_id = azurerm_kubernetes_cluster.this.id
+}
+
+resource "azapi_update_resource" "safeguard_profile" {
+  count = var.safeguard_profile == null ? 0 : 1
+
+  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
+  body = {
+    properties = {
+      safeguardsProfile = {
+        level              = var.safeguard_profile.level
+        version            = var.safeguard_profile.version,
+        excludedNamespaces = var.safeguard_profile.excluded_namespaces
+      }
+    }
+  }
+  locks       = [azurerm_kubernetes_cluster.this.id]
   resource_id = azurerm_kubernetes_cluster.this.id
 }
 

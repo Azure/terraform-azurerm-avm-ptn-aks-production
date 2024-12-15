@@ -466,9 +466,47 @@ variable "ingress_profile" {
     })
   })
   default     = null
-  description = "Configuration for the ingress profile."
+  description = <<DESCRIPTION
+  # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services
+  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+
+  Configuration for the ingress profile that will be used to configure web application routing extension for the AKS cluster.
+DESCRIPTION
+
   validation {
     condition     = var.ingress_profile == null || contains(["AnnotationControlled", "External", "Internal", "None"], try(var.ingress_profile.nginx.default_ingress_controller_type, "None"))
     error_message = "The default_ingress_controller_type must be one of `AnnotationControlled`, `External`, `Internal`, or `None`."
+  }
+}
+
+variable "safeguard_profile" {
+  type = object({
+    level               = string
+    version             = string
+    excluded_namespaces = optional(list(string))
+  })
+  default     = null
+  description = <<DESCRIPTION
+  # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services
+  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+
+  Configuration for the safeguard profile that will warning or block the deployment of resources that are not compliant with the Azure policies. 
+
+  safeguard_profile = {
+    level = "Warning",
+    version = "v1.0.0",
+    excluded_namespaces = [
+      "kube-system",
+      "calico-system",
+      "tigera-system",
+      "gatekeeper-system"
+    ]
+  }
+
+DESCRIPTION
+
+  validation {
+    condition     = var.safeguard_profile == null || contains(["Enforcement", "Warning", "Off"], var.safeguard_profile.level)
+    error_message = "The level must be one of `Enforcement`, `Warning`, or `Off`."
   }
 }
