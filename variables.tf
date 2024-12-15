@@ -474,7 +474,7 @@ variable "ingress_profile" {
 DESCRIPTION
 
   validation {
-    condition     = var.ingress_profile == null || contains(["AnnotationControlled", "External", "Internal", "None"], try(var.ingress_profile.nginx.default_ingress_controller_type, "None"))
+    condition     = var.ingress_profile == null || try(contains(["AnnotationControlled", "External", "Internal", "None"], var.ingress_profile.nginx.default_ingress_controller_type), false)
     error_message = "The default_ingress_controller_type must be one of `AnnotationControlled`, `External`, `Internal`, or `None`."
   }
 }
@@ -506,7 +506,7 @@ variable "safeguard_profile" {
 DESCRIPTION
 
   validation {
-    condition     = var.safeguard_profile == null || contains(["Enforcement", "Warning", "Off"], try(var.safeguard_profile.level, null))
+    condition     = var.safeguard_profile == null || try(contains(["Enforcement", "Warning", "Off"], var.safeguard_profile.level), false)
     error_message = "The level must be one of `Enforcement`, `Warning`, or `Off`."
   }
 }
