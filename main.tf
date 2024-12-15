@@ -273,8 +273,9 @@ resource "azapi_update_resource" "ingress_profile" {
       }
     }
   }
-  locks       = [azurerm_kubernetes_cluster.this.id]
-  resource_id = azurerm_kubernetes_cluster.this.id
+  locks                  = [azurerm_kubernetes_cluster.this.id]
+  resource_id            = azurerm_kubernetes_cluster.this.id
+  response_export_values = ["properties.ingressProfile"]
 }
 
 resource "azapi_update_resource" "safeguard_profile" {
@@ -290,8 +291,9 @@ resource "azapi_update_resource" "safeguard_profile" {
       }
     }
   }
-  locks       = [azurerm_kubernetes_cluster.this.id]
-  resource_id = azurerm_kubernetes_cluster.this.id
+  locks                  = [azurerm_kubernetes_cluster.this.id]
+  resource_id            = azurerm_kubernetes_cluster.this.id
+  response_export_values = ["properties.safeguardsProfile"]
 }
 
 resource "azurerm_log_analytics_workspace" "this" {
