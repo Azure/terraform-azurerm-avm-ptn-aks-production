@@ -30,7 +30,7 @@ output "ingress_application_gateway" {
 
 output "key_vault_secrets_provider" {
   description = "Exported key_vault_secrets_provider settings associated with the cluster."
-  value       = try(azurerm_kubernetes_cluster.this.key_vault_secrets_provider, null)
+  value       = try(azurerm_kubernetes_cluster.this.key_vault_secrets_provider[0], null)
 }
 
 output "kubelet_identity" {
