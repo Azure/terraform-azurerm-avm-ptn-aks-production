@@ -506,7 +506,7 @@ variable "safeguard_profile" {
 DESCRIPTION
 
   validation {
-    condition     = var.safeguard_profile == null || contains(["Enforcement", "Warning", "Off"], var.safeguard_profile.level)
+    condition     = var.safeguard_profile == null || contains(["Enforcement", "Warning", "Off"], try(var.safeguard_profile.level, null))
     error_message = "The level must be one of `Enforcement`, `Warning`, or `Off`."
   }
 }
