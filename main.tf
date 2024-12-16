@@ -1,9 +1,8 @@
 module "avm_res_containerregistry_registry" {
   for_each = toset(var.acr == null ? [] : ["acr"])
-  # point to https://github.com/zioproto/terraform-azurerm-avm-res-containerregistry-registry/tree/provider-v4
-  source = "github.com/zioproto/terraform-azurerm-avm-res-containerregistry-registry?ref=provider-v4"
+  source   = "github.com/Azure/terraform-azurerm-avm-res-containerregistry-registry"
   #source                        = "Azure/avm-res-containerregistry-registry/azurerm"
-  #version                       = "0.3.1"
+  #version                       = "0.4.0"
   name                          = var.acr.name
   location                      = var.location
   resource_group_name           = var.resource_group_name
