@@ -28,9 +28,9 @@ output "ingress_application_gateway" {
   value       = try(azurerm_kubernetes_cluster.this.ingress_application_gateway, null)
 }
 
-output "key_vault_secrets_provider" {
-  description = "Exported key_vault_secrets_provider settings associated with the cluster."
-  value       = try(azurerm_kubernetes_cluster.this.key_vault_secrets_provider[0], null)
+output "key_vault_secrets_provider_identity" {
+  description = "Exported key_vault_secrets_provider settings associated with the cluster.  It is recommended to use workload identity for pods rather than use this cluster-wide identity."
+  value       = try(azurerm_kubernetes_cluster.this.key_vault_secrets_provider[0].secret_identity[0], null)
 }
 
 output "kubelet_identity" {
