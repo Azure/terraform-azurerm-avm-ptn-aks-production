@@ -84,11 +84,9 @@ locals {
   log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
 }
 locals {
-  web_app_routing_identity_output = var.ingress_profile != null ? [
-    for id in azapi_update_resource.ingress_profile[0].output.properties.ingressProfile.webAppRouting.identity : {
-      object_id   = id.objectId
-      client_id   = id.clientId
-      resource_id = id.resourceId
-    }
-  ] : null
+  web_app_routing_identity_output = var.ingress_profile != null ? {
+    object_id   = azapi_update_resource.ingress_profile[0].output.properties.ingressProfile.webAppRouting.identity.objectId
+    client_id   = azapi_update_resource.ingress_profile[0].output.properties.ingressProfile.webAppRouting.identity.clientId
+    resource_id = azapi_update_resource.ingress_profile[0].output.properties.ingressProfile.webAppRouting.identity.resourceId
+  } : null
 }
