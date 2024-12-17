@@ -85,5 +85,5 @@ output "resource_id" {
 
 output "web_app_routing_identity" {
   description = "Exported web_app_routing_identity settings associated with the cluster."
-  value       = local.web_app_routing_identity_output
+  value       = local.web_app_routing_identity_outputs
 }
