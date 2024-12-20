@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.7.0, < 4.0.0"
+      version = ">= 4, <5"
     }
     random = {
       source  = "hashicorp/random"
@@ -47,6 +47,9 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
+# Datasource of current tenant ID
+data "azurerm_client_config" "current" {}
+
 # This is the module call
 # Do not specify location here due to the randomization above.
 # Leaving location as `null` will cause the module to use the resource group location
@@ -60,6 +63,7 @@ module "test" {
   location                    = azurerm_resource_group.this.location
   private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
   private_dns_zone_id_enabled = true
+  rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
   network = {
     name                = module.avm_res_network_virtualnetwork.name
     resource_group_name = azurerm_resource_group.this.name
