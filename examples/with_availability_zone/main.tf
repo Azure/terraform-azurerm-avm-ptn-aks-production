@@ -35,6 +35,9 @@ resource "azurerm_user_assigned_identity" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
+# Datasource of current tenant ID
+data "azurerm_client_config" "current" {}
+
 # This is the module call
 # Do not specify location here due to the randomization above.
 # Leaving location as `null` will cause the module to use the resource group location
@@ -61,6 +64,7 @@ module "test" {
       azurerm_user_assigned_identity.this.id
     ]
   }
+  rbac_aad_tenant_id = data.azurerm_client_config.current.tenant_id
 
   location = "East US 2" # Hardcoded because we have to test in a region with availability zones
   node_pools = {
