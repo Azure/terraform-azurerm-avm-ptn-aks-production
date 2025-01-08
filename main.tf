@@ -1,8 +1,7 @@
 module "avm_res_containerregistry_registry" {
-  for_each = toset(var.acr == null ? [] : ["acr"])
-  source   = "github.com/Azure/terraform-azurerm-avm-res-containerregistry-registry"
-  #source                        = "Azure/avm-res-containerregistry-registry/azurerm"
-  #version                       = "0.4.0"
+  for_each                      = toset(var.acr == null ? [] : ["acr"])
+  source                        = "Azure/avm-res-containerregistry-registry/azurerm"
+  version                       = "0.4.0"
   name                          = var.acr.name
   location                      = var.location
   resource_group_name           = var.resource_group_name
@@ -192,9 +191,10 @@ resource "azurerm_log_analytics_workspace" "this" {
 resource "azurerm_log_analytics_workspace_table" "this" {
   for_each = toset(local.log_analytics_tables)
 
-  name         = each.value
-  workspace_id = azurerm_log_analytics_workspace.this.id
-  plan         = "Basic"
+  name                    = each.value
+  workspace_id            = azurerm_log_analytics_workspace.this.id
+  plan                    = "Basic"
+  total_retention_in_days = 30
 }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
@@ -278,7 +278,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   orchestrator_version  = each.value.orchestrator_version
   os_disk_size_gb       = each.value.os_disk_size_gb
   os_sku                = each.value.os_sku
-  tags                  = var.tags
+  tags                  = each.value.tags
   vnet_subnet_id        = var.network.node_subnet_id
   zones                 = each.value.zone
 

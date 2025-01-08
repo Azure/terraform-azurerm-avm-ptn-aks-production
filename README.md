@@ -354,9 +354,9 @@ The following Modules are called:
 
 ### <a name="module_avm_res_containerregistry_registry"></a> [avm\_res\_containerregistry\_registry](#module\_avm\_res\_containerregistry\_registry)
 
-Source: github.com/Azure/terraform-azurerm-avm-res-containerregistry-registry
+Source: Azure/avm-res-containerregistry-registry/azurerm
 
-Version:
+Version: 0.4.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

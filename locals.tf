@@ -48,6 +48,7 @@ locals {
         orchestrator_version = pool.orchestrator_version
         max_count            = pool.max_count
         min_count            = pool.min_count
+        tags                 = pool.tags
         labels               = pool.labels
         os_sku               = pool.os_sku
         mode                 = pool.mode
