@@ -1,7 +1,7 @@
 module "avm_res_containerregistry_registry" {
   for_each                      = toset(var.acr == null ? [] : ["acr"])
   source                        = "Azure/avm-res-containerregistry-registry/azurerm"
-  version                       = "0.3.1"
+  version                       = "0.4.0"
   name                          = var.acr.name
   location                      = var.location
   resource_group_name           = var.resource_group_name
@@ -60,12 +60,12 @@ resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
   name                              = "aks-${var.name}"
   resource_group_name               = var.resource_group_name
-  automatic_channel_upgrade         = "patch"
+  automatic_upgrade_channel         = "patch"
   azure_policy_enabled              = true
   dns_prefix                        = var.name
   kubernetes_version                = var.kubernetes_version
   local_account_disabled            = true
-  node_os_channel_upgrade           = "NodeImage"
+  node_os_upgrade_channel           = "NodeImage"
   oidc_issuer_enabled               = true
   private_cluster_enabled           = true
   private_dns_zone_id               = var.private_dns_zone_id
@@ -75,20 +75,19 @@ resource "azurerm_kubernetes_cluster" "this" {
   workload_identity_enabled         = true
 
   default_node_pool {
-    name                   = "agentpool"
-    vm_size                = "Standard_D4d_v5"
-    enable_auto_scaling    = true
-    enable_host_encryption = true
-    max_count              = 9
-    max_pods               = 110
-    min_count              = 3
-    node_labels            = var.node_labels
-    node_taints            = var.node_taints
-    orchestrator_version   = var.orchestrator_version
-    os_sku                 = var.os_sku
-    tags                   = merge(var.tags, var.agents_tags)
-    vnet_subnet_id         = var.network.node_subnet_id
-    zones                  = local.default_node_pool_available_zones
+    name                    = "agentpool"
+    vm_size                 = "Standard_D4d_v5"
+    auto_scaling_enabled    = true
+    host_encryption_enabled = true
+    max_count               = 9
+    max_pods                = 110
+    min_count               = 3
+    node_labels             = var.node_labels
+    orchestrator_version    = var.orchestrator_version
+    os_sku                  = var.os_sku
+    tags                    = merge(var.tags, var.agents_tags)
+    vnet_subnet_id          = var.network.node_subnet_id
+    zones                   = local.default_node_pool_available_zones
 
     upgrade_settings {
       max_surge = "10%"
@@ -100,7 +99,6 @@ resource "azurerm_kubernetes_cluster" "this" {
   azure_active_directory_role_based_access_control {
     admin_group_object_ids = var.rbac_aad_admin_group_object_ids
     azure_rbac_enabled     = var.rbac_aad_azure_rbac_enabled
-    managed                = true
     tenant_id              = var.rbac_aad_tenant_id
   }
   ## Resources that only support UserAssigned
@@ -193,9 +191,10 @@ resource "azurerm_log_analytics_workspace" "this" {
 resource "azurerm_log_analytics_workspace_table" "this" {
   for_each = toset(local.log_analytics_tables)
 
-  name         = each.value
-  workspace_id = azurerm_log_analytics_workspace.this.id
-  plan         = "Basic"
+  name                    = each.value
+  workspace_id            = azurerm_log_analytics_workspace.this.id
+  plan                    = "Basic"
+  total_retention_in_days = 30
 }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
@@ -272,15 +271,14 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
   name                  = each.value.name
   vm_size               = each.value.vm_size
-  enable_auto_scaling   = true
+  auto_scaling_enabled  = true
   max_count             = each.value.max_count
   min_count             = each.value.min_count
   node_labels           = each.value.labels
-  node_taints           = each.value.node_taints
   orchestrator_version  = each.value.orchestrator_version
   os_disk_size_gb       = each.value.os_disk_size_gb
   os_sku                = each.value.os_sku
-  tags                  = var.tags
+  tags                  = each.value.tags
   vnet_subnet_id        = var.network.node_subnet_id
   zones                 = each.value.zone
 
