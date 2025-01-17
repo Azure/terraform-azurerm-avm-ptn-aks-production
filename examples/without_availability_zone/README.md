@@ -91,6 +91,9 @@ module "test" {
       min_count            = 2
       os_sku               = "AzureLinux"
       mode                 = "User"
+      labels = {
+        "ingress" = "true"
+      }
     }
   }
 }

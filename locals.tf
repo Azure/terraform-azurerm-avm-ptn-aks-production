@@ -12,7 +12,7 @@ locals {
   default_node_pool_available_zones = setsubtract(local.zones, local.restricted_zones)
   filtered_vms = [
     for sku in data.azapi_resource_list.example.output.value :
-    sku if(sku.resourceType == "virtualMachines" && sku.name == "Standard_D4d_v5")
+    sku if(sku.resourceType == "virtualMachines" && sku.name == var.default_node_pool_vm_sku)
   ]
   restricted_zones = try(local.filtered_vms[0].restrictions[0].restrictionInfo.zones, [])
   zones            = local.filtered_vms[0].locationInfo[0].zones
