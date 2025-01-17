@@ -120,8 +120,9 @@ resource "azurerm_kubernetes_cluster" "this" {
   network_profile {
     network_plugin      = "azure"
     load_balancer_sku   = "standard"
+    network_data_plane  = "cilium"
     network_plugin_mode = "overlay"
-    network_policy      = "calico"
+    network_policy      = "cilium"
     pod_cidr            = var.network.pod_cidr
   }
   oms_agent {
