@@ -1,9 +1,5 @@
-# Module owners should include the full resource via a 'resource' output
-# https://azure.github.io/Azure-Verified-Modules/specs/terraform/#id-tffr2---category-outputs---additional-terraform-outputs
-output "resource" {
-  description = "This is the full output for the resource."
-  value       = azurerm_kubernetes_cluster.this
-}
+# Authors SHOULD NOT output entire resource objects as these may contain sensitive outputs and the schema can change with API or provider versions
+# https://azure.github.io/Azure-Verified-Modules/specs/tf/res/#id-tffr2---category-outputs---additional-terraform-outputs
 
 output "resource_id" {
   description = "The `azurerm_kubernetes_cluster`'s resource id."
