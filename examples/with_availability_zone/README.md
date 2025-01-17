@@ -93,7 +93,9 @@ module "test" {
       os_sku               = "Ubuntu"
       mode                 = "User"
       os_disk_size_gb      = 128
-
+      labels = {
+        "ingress" = "true"
+      }
     }
   }
 }

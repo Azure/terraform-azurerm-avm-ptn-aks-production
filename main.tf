@@ -76,7 +76,7 @@ resource "azurerm_kubernetes_cluster" "this" {
 
   default_node_pool {
     name                    = "agentpool"
-    vm_size                 = "Standard_D4d_v5"
+    vm_size                 = var.default_node_pool_vm_sku
     auto_scaling_enabled    = true
     host_encryption_enabled = true
     max_count               = 9

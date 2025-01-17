@@ -131,6 +131,14 @@ Type: `map(string)`
 
 Default: `{}`
 
+### <a name="input_default_node_pool_vm_sku"></a> [default\_node\_pool\_vm\_sku](#input\_default\_node\_pool\_vm\_sku)
+
+Description: The VM SKU to use for the default node pool. A minimum of three nodes of 8 vCPUs or two nodes of at least 16 vCPUs is recommended. Do not use SKUs with less than 4 CPUs and 4Gb of memory.
+
+Type: `string`
+
+Default: `"Standard_D4d_v5"`
+
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
