@@ -344,6 +344,14 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_user_assigned_identity_id"></a> [user\_assigned\_identity\_id](#input\_user\_assigned\_identity\_id)
+
+Description: (Optional) The ID of the User Assigned Identity which should be assigned to the Kubernetes Cluster.
+
+Type: `string`
+
+Default: `"uami-aks"`
+
 ## Outputs
 
 The following outputs are exported:
