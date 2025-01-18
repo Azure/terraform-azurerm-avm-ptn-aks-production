@@ -24,8 +24,8 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = ">= 0.3.0"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.3.0"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -47,19 +47,22 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
+# Datasource of current tenant ID
+data "azurerm_client_config" "current" {}
+
 # This is the module call
 # Do not specify location here due to the randomization above.
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "test" {
-  source                      = "../../"
-  kubernetes_version          = "1.30"
-  enable_telemetry            = var.enable_telemetry # see variables.tf
-  name                        = module.naming.kubernetes_cluster.name_unique
-  resource_group_name         = azurerm_resource_group.this.name
-  location                    = azurerm_resource_group.this.location
-  private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
-  private_dns_zone_id_enabled = true
+  source              = "../../"
+  kubernetes_version  = "1.30"
+  enable_telemetry    = var.enable_telemetry # see variables.tf
+  name                = module.naming.kubernetes_cluster.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+  private_dns_zone_id = azurerm_private_dns_zone.mydomain.id
+  rbac_aad_tenant_id  = data.azurerm_client_config.current.tenant_id
   network = {
     name                = module.avm_res_network_virtualnetwork.name
     resource_group_name = azurerm_resource_group.this.name
@@ -85,7 +88,7 @@ resource "azurerm_private_dns_zone" "mydomain" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.5.0"
+  version = "0.7.1"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location

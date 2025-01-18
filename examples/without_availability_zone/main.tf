@@ -34,6 +34,9 @@ resource "azurerm_user_assigned_identity" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
+# Datasource of current tenant ID
+data "azurerm_client_config" "current" {}
+
 # This is the module call
 # Do not specify location here due to the randomization above.
 # Leaving location as `null` will cause the module to use the resource group location
@@ -61,6 +64,8 @@ module "test" {
     ]
   }
 
+  rbac_aad_tenant_id = data.azurerm_client_config.current.tenant_id
+
   location = "West US" # Hardcoded because we have to test in a region without availability zones
   node_pools = {
     workload = {
@@ -80,6 +85,9 @@ module "test" {
       min_count            = 2
       os_sku               = "AzureLinux"
       mode                 = "User"
+      labels = {
+        "ingress" = "true"
+      }
     }
   }
 }
@@ -91,7 +99,7 @@ resource "azurerm_private_dns_zone" "this" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.5.0"
+  version = "0.7.1"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location

@@ -1,9 +1,7 @@
 module "avm_res_containerregistry_registry" {
-  for_each = toset(var.acr == null ? [] : ["acr"])
-  # point to https://github.com/zioproto/terraform-azurerm-avm-res-containerregistry-registry/tree/provider-v4
-  source = "github.com/zioproto/terraform-azurerm-avm-res-containerregistry-registry?ref=provider-v4"
-  #source                        = "Azure/avm-res-containerregistry-registry/azurerm"
-  #version                       = "0.3.1"
+  for_each                      = toset(var.acr == null ? [] : ["acr"])
+  source                        = "Azure/avm-res-containerregistry-registry/azurerm"
+  version                       = "0.4.0"
   name                          = var.acr.name
   location                      = var.location
   resource_group_name           = var.resource_group_name
@@ -80,7 +78,7 @@ resource "azurerm_kubernetes_cluster" "this" {
 
   default_node_pool {
     name                         = "systempool"
-    vm_size                      = "Standard_D4d_v5"
+    vm_size                      = var.default_node_pool_vm_sku
     auto_scaling_enabled         = true
     host_encryption_enabled      = true
     max_count                    = var.max_count_default_node_pool
@@ -95,7 +93,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     tags                         = merge(var.tags, var.agents_tags)
     temporary_name_for_rotation  = "tempsyspool" # must begin with a lowercase letter, contain only lowercase letters and numbers and be between 1 and 12 characters in length.
     vnet_subnet_id               = var.network.node_subnet_id
-    zones                        = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
+    zones                        = local.default_node_pool_available_zones
 
     upgrade_settings {
       max_surge = "10%"
@@ -395,13 +393,12 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   max_count             = each.value.max_count
   min_count             = each.value.min_count
   node_labels           = each.value.labels
-  node_taints           = each.value.node_taints
   orchestrator_version  = each.value.orchestrator_version
   os_disk_size_gb       = each.value.os_disk_size_gb
   os_sku                = each.value.os_sku
-  tags                  = var.tags
+  tags                  = each.value.tags
   vnet_subnet_id        = var.network.node_subnet_id
-  zones                 = each.value.zone == "" ? null : [each.value.zone]
+  zones                 = each.value.zone
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 
@@ -429,11 +426,11 @@ resource "azapi_update_resource" "aks_api_server_access_profile" {
   resource_id = azurerm_kubernetes_cluster.this.id
 }
 
-# These resources allow the use of consistent local data files, and semver versioning
-data "local_file" "compute_provider" {
-  filename = "${path.module}/data/microsoft.compute_resourceTypes.json"
-}
-
-data "local_file" "locations" {
-  filename = "${path.module}/data/locations.json"
+data "azapi_resource_list" "example" {
+  parent_id = data.azurerm_subscription.current.id
+  type      = "Microsoft.Compute/Skus@2021-07-01"
+  query_parameters = {
+    "$filter" = [format("location eq '%s'", var.location)]
+  }
+  response_export_values = ["*"]
 }

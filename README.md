@@ -29,11 +29,9 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.3.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.4.0, < 3.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>= 1.13.0, < 3.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, < 5)
-
-- <a name="requirement_local"></a> [local](#requirement\_local) (>=2.4.1, < 3.0)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (>= 0.3, < 1.0)
 
@@ -45,20 +43,22 @@ The following resources are used by this module:
 
 - [azapi_update_resource.aks_api_server_access_profile](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azapi_update_resource.aks_cluster_post_create](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.ingress_profile](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.safeguard_profile](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_dashboard_grafana.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dashboard_grafana) (resource)
 - [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
 - [azurerm_kubernetes_cluster_node_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
 - [azurerm_log_analytics_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_action_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_action_group) (resource)
-- [azurerm_monitor_alert_prometheus_rule_group.NodeRecordingRulesRuleGroup](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
-- [azurerm_monitor_alert_prometheus_rule_group.NodeRecordingRulesRuleGroup_Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
-- [azurerm_monitor_alert_prometheus_rule_group.UXRecordingRulesRuleGroup](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
-- [azurerm_monitor_alert_prometheus_rule_group.UXRecordingRulesRuleGroup_Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
-- [azurerm_monitor_alert_prometheus_rule_group.kubernetes-recording-rules-group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
-- [azurerm_monitor_alert_prometheus_rule_group.kubernetes-recording-rules-group_Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
+- [azurerm_monitor_alert_prometheus_rule_group.kubernetes_recording_rules_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
+- [azurerm_monitor_alert_prometheus_rule_group.kubernetes_recording_rules_group_windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
+- [azurerm_monitor_alert_prometheus_rule_group.node_recording_rules_rulegroup](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
+- [azurerm_monitor_alert_prometheus_rule_group.node_recording_rules_rulegroup_windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
+- [azurerm_monitor_alert_prometheus_rule_group.ux_recording_rules_rulegroup](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
+- [azurerm_monitor_alert_prometheus_rule_group.ux_recording_rules_rulegroup_windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_alert_prometheus_rule_group) (resource)
 - [azurerm_monitor_data_collection_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_endpoint) (resource)
-- [azurerm_monitor_data_collection_rule.container-insights](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_rule) (resource)
+- [azurerm_monitor_data_collection_rule.container_insights](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_rule) (resource)
 - [azurerm_monitor_data_collection_rule.prometheus_to_monitor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_rule) (resource)
 - [azurerm_monitor_data_collection_rule_association.dcra_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_rule_association) (resource)
 - [azurerm_monitor_data_collection_rule_association.dcra_prometheus](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_rule_association) (resource)
@@ -76,10 +76,9 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [terraform_data.kubernetes_version_keeper](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [azapi_resource_list.example](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_user_assigned_identity.cluster_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) (data source)
-- [local_file.compute_provider](https://registry.terraform.io/providers/hashicorp/local/latest/docs/data-sources/file) (data source)
-- [local_file.locations](https://registry.terraform.io/providers/hashicorp/local/latest/docs/data-sources/file) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -233,13 +232,13 @@ Type: `string`
 
 Default: `null`
 
-### <a name="input_diagnostic_settings_name"></a> [diagnostic\_settings\_name](#input\_diagnostic\_settings\_name)
+### <a name="input_default_node_pool_vm_sku"></a> [default\_node\_pool\_vm\_sku](#input\_default\_node\_pool\_vm\_sku)
 
-Description: The name of the diagnostic settings.
+Description: The VM SKU to use for the default node pool. A minimum of three nodes of 8 vCPUs or two nodes of at least 16 vCPUs is recommended. Do not use SKUs with less than 4 CPUs and 4Gb of memory.
 
 Type: `string`
 
-Default: `null`
+Default: `"Standard_D4d_v5"`
 
 ### <a name="input_enable_api_server_vnet_integration"></a> [enable\_api\_server\_vnet\_integration](#input\_enable\_api\_server\_vnet\_integration)
 
@@ -313,6 +312,27 @@ Description: Interval in hours for the image cleaner to run.
 Type: `number`
 
 Default: `168`
+
+### <a name="input_ingress_profile"></a> [ingress\_profile](#input\_ingress\_profile)
+
+Description:   # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services  
+  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+
+  Configuration for the ingress profile that will be used to configure web application routing extension for the AKS cluster.
+
+Type:
+
+```hcl
+object({
+    dns_zone_resource_ids = list(string)
+    enabled               = optional(bool, true)
+    nginx = object({
+      default_ingress_controller_type = string
+    })
+  })
+```
+
+Default: `null`
 
 ### <a name="input_keda_enabled"></a> [keda\_enabled](#input\_keda\_enabled)
 
@@ -498,13 +518,13 @@ Type: `number`
 
 Default: `9`
 
-### <a name="input_microsoft_defender_enabled"></a> [microsoft\_defender\_enabled](#input\_microsoft\_defender\_enabled)
+### <a name="input_microsoft_defender_log_analytics_resource_id"></a> [microsoft\_defender\_log\_analytics\_resource\_id](#input\_microsoft\_defender\_log\_analytics\_resource\_id)
 
 Description: Enable Microsoft Defender for the Kubernetes cluster.
 
-Type: `bool`
+Type: `string`
 
-Default: `false`
+Default: `null`
 
 ### <a name="input_monitor_metrics"></a> [monitor\_metrics](#input\_monitor\_metrics)
 
@@ -597,19 +617,10 @@ map(object({
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
-    node_taints     = optional(list(string), null)
   }))
 ```
 
 Default: `{}`
-
-### <a name="input_node_taints"></a> [node\_taints](#input\_node\_taints)
-
-Description: (Optional) A list of the taints added to new nodes during node pool create and scale. Changing this forces a new resource to be created.
-
-Type: `list(string)`
-
-Default: `null`
 
 ### <a name="input_orchestrator_version"></a> [orchestrator\_version](#input\_orchestrator\_version)
 
@@ -683,6 +694,36 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_safeguard_profile"></a> [safeguard\_profile](#input\_safeguard\_profile)
+
+Description:   # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services  
+  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+
+  Configuration for the safeguard profile that will warning or block the deployment of resources that are not compliant with the Azure policies.
+
+  safeguard\_profile = {  
+    level = "Warning",  
+    version = "v1.0.0",  
+    excluded\_namespaces = [
+      "kube-system",
+      "calico-system",
+      "tigera-system",
+      "gatekeeper-system"
+    ]
+  }
+
+Type:
+
+```hcl
+object({
+    level               = string
+    version             = string
+    excluded_namespaces = optional(list(string))
+  })
+```
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: (Optional) Tags of the resource.
@@ -715,20 +756,6 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_web_app_routing"></a> [web\_app\_routing](#input\_web\_app\_routing)
-
-Description: Configuration for web app routing.
-
-Type:
-
-```hcl
-object({
-    dns_zone_ids = string
-  })
-```
-
-Default: `null`
-
 ## Outputs
 
 The following outputs are exported:
@@ -757,9 +784,9 @@ Description: The Principal ID and Tenant ID associated with this Managed Service
 
 Description: Exported ingress\_application\_gateway settings associated with the cluster.
 
-### <a name="output_key_vault_secrets_provider"></a> [key\_vault\_secrets\_provider](#output\_key\_vault\_secrets\_provider)
+### <a name="output_key_vault_secrets_provider_identity"></a> [key\_vault\_secrets\_provider\_identity](#output\_key\_vault\_secrets\_provider\_identity)
 
-Description: Exported key\_vault\_secrets\_provider settings associated with the cluster.
+Description: Exported key\_vault\_secrets\_provider settings associated with the cluster.  It is recommended to use workload identity for pods rather than use this cluster-wide identity.
 
 ### <a name="output_kubelet_identity"></a> [kubelet\_identity](#output\_kubelet\_identity)
 
@@ -801,7 +828,7 @@ Description: The FQDN for the Kubernetes Cluster when private link has been enab
 
 Description: The `azurerm_kubernetes_cluster`'s resource id.
 
-### <a name="output_web_app_routing"></a> [web\_app\_routing](#output\_web\_app\_routing)
+### <a name="output_web_app_routing_identity"></a> [web\_app\_routing\_identity](#output\_web\_app\_routing\_identity)
 
 Description: Exported web\_app\_routing\_identity settings associated with the cluster.
 
@@ -811,9 +838,9 @@ The following Modules are called:
 
 ### <a name="module_avm_res_containerregistry_registry"></a> [avm\_res\_containerregistry\_registry](#module\_avm\_res\_containerregistry\_registry)
 
-Source: github.com/zioproto/terraform-azurerm-avm-res-containerregistry-registry
+Source: Azure/avm-res-containerregistry-registry/azurerm
 
-Version: provider-v4
+Version: 0.4.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

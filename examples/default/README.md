@@ -30,8 +30,8 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = ">= 0.3.0"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.3.0"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -53,19 +53,22 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
+# Datasource of current tenant ID
+data "azurerm_client_config" "current" {}
+
 # This is the module call
 # Do not specify location here due to the randomization above.
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "test" {
-  source                      = "../../"
-  kubernetes_version          = "1.30"
-  enable_telemetry            = var.enable_telemetry # see variables.tf
-  name                        = module.naming.kubernetes_cluster.name_unique
-  resource_group_name         = azurerm_resource_group.this.name
-  location                    = azurerm_resource_group.this.location
-  private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
-  private_dns_zone_id_enabled = true
+  source              = "../../"
+  kubernetes_version  = "1.30"
+  enable_telemetry    = var.enable_telemetry # see variables.tf
+  name                = module.naming.kubernetes_cluster.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+  private_dns_zone_id = azurerm_private_dns_zone.mydomain.id
+  rbac_aad_tenant_id  = data.azurerm_client_config.current.tenant_id
   network = {
     name                = module.avm_res_network_virtualnetwork.name
     resource_group_name = azurerm_resource_group.this.name
@@ -91,7 +94,7 @@ resource "azurerm_private_dns_zone" "mydomain" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.5.0"
+  version = "0.7.1"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -129,6 +132,7 @@ The following resources are used by this module:
 - [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -161,7 +165,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 0.5.0
+Version: 0.7.1
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
@@ -171,9 +175,9 @@ Version: >= 0.3.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
-Source: Azure/regions/azurerm
+Source: Azure/avm-utl-regions/azurerm
 
-Version: >= 0.3.0
+Version: 0.3.0
 
 ### <a name="module_test"></a> [test](#module\_test)
 

@@ -80,6 +80,12 @@ variable "enable_api_server_vnet_integration" {
 DESCRIPTION
 }
 
+variable "default_node_pool_vm_sku" {
+  type        = string
+  default     = "Standard_D4d_v5"
+  description = "The VM SKU to use for the default node pool. A minimum of three nodes of 8 vCPUs or two nodes of at least 16 vCPUs is recommended. Do not use SKUs with less than 4 CPUs and 4Gb of memory."
+}
+
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -310,7 +316,6 @@ variable "node_pools" {
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
-    node_taints     = optional(list(string), null)
   }))
   default     = {}
   description = <<-EOT
@@ -359,12 +364,6 @@ EOT
     condition     = alltrue([for pool in var.node_pools : contains(["Ubuntu", "AzureLinux"], pool.os_sku)])
     error_message = "os_sku must be either Ubuntu or AzureLinux"
   }
-}
-
-variable "node_taints" {
-  type        = list(string)
-  default     = null
-  description = "(Optional) A list of the taints added to new nodes during node pool create and scale. Changing this forces a new resource to be created."
 }
 
 variable "orchestrator_version" {

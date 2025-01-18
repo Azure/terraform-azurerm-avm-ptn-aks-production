@@ -1,4 +1,4 @@
-resource "azurerm_monitor_data_collection_rule" "container-insights" {
+resource "azurerm_monitor_data_collection_rule" "container_insights" {
   location            = var.location
   name                = local.dcr_insights_linux_rule_name
   resource_group_name = var.resource_group_name
@@ -39,7 +39,7 @@ resource "azurerm_monitor_data_collection_rule" "container-insights" {
 
 resource "azurerm_monitor_data_collection_rule_association" "dcra_ci" {
   target_resource_id      = azurerm_kubernetes_cluster.this.id
-  data_collection_rule_id = azurerm_monitor_data_collection_rule.container-insights.id
+  data_collection_rule_id = azurerm_monitor_data_collection_rule.container_insights.id
   description             = "Association between AKS and Data Collection Rule for Azure Monitor Metrics for Container Insights.  Deleting this association will break the data collection for this AKS Cluster."
   name                    = local.aks_monitor_ci_association_name
 }

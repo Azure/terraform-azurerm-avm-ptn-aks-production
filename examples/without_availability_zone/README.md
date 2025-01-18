@@ -40,6 +40,9 @@ resource "azurerm_user_assigned_identity" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
+# Datasource of current tenant ID
+data "azurerm_client_config" "current" {}
+
 # This is the module call
 # Do not specify location here due to the randomization above.
 # Leaving location as `null` will cause the module to use the resource group location
@@ -67,6 +70,8 @@ module "test" {
     ]
   }
 
+  rbac_aad_tenant_id = data.azurerm_client_config.current.tenant_id
+
   location = "West US" # Hardcoded because we have to test in a region without availability zones
   node_pools = {
     workload = {
@@ -86,6 +91,9 @@ module "test" {
       min_count            = 2
       os_sku               = "AzureLinux"
       mode                 = "User"
+      labels = {
+        "ingress" = "true"
+      }
     }
   }
 }
@@ -97,7 +105,7 @@ resource "azurerm_private_dns_zone" "this" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.5.0"
+  version = "0.7.1"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -132,6 +140,7 @@ The following resources are used by this module:
 - [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -172,7 +181,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 0.5.0
+Version: 0.7.1
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 

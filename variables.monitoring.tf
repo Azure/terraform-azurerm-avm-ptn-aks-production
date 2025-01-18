@@ -74,12 +74,6 @@ variable "grafana_dashboard_name" {
   }
 }
 
-variable "diagnostic_settings_name" {
-  description = "The name of the diagnostic settings."
-  type        = string
-  default     = null
-}
-
 variable "aks_monitor_association_name" {
   description = "The name of the association between AKS monitor prometheus and the AKS cluster."
   type        = string

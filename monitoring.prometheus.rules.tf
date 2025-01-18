@@ -1,9 +1,9 @@
 # these are the prometheus rule groups created by the portal when enabling the Insights blade in AKS.
-resource "azurerm_monitor_alert_prometheus_rule_group" "UXRecordingRulesRuleGroup" {
+resource "azurerm_monitor_alert_prometheus_rule_group" "ux_recording_rules_rulegroup" {
   count = var.azure_monitor_enabled ? 1 : 0
 
   location            = var.location
-  name                = "UXRecordingRulesRuleGroup - ${var.name}"
+  name                = "ux_recording_rules_rulegroup - ${var.name}"
   resource_group_name = var.resource_group_name
   scopes = [
     local.azure_monitor_workspace_resource_id,
@@ -89,18 +89,18 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "UXRecordingRulesRuleGrou
   }
 }
 
-resource "azurerm_monitor_alert_prometheus_rule_group" "UXRecordingRulesRuleGroup_Windows" {
+resource "azurerm_monitor_alert_prometheus_rule_group" "ux_recording_rules_rulegroup_windows" {
   count = var.azure_monitor_enabled ? 1 : 0
 
   location            = var.location
-  name                = "UXRecordingRulesRuleGroup-Win - ${var.name}"
+  name                = "ux_recording_rules_rulegroup-Win - ${var.name}"
   resource_group_name = var.resource_group_name
   scopes = [
     local.azure_monitor_workspace_resource_id,
     azurerm_kubernetes_cluster.this.id,
   ]
   cluster_name       = var.name
-  description        = "UX Recording Rules for Windows"
+  description        = "UX Recording Rules for windows"
   interval           = "PT1M"
   rule_group_enabled = false
   tags               = var.tags
@@ -139,11 +139,11 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "UXRecordingRulesRuleGrou
   }
 }
 
-resource "azurerm_monitor_alert_prometheus_rule_group" "NodeRecordingRulesRuleGroup" {
+resource "azurerm_monitor_alert_prometheus_rule_group" "node_recording_rules_rulegroup" {
   count = var.azure_monitor_enabled ? 1 : 0
 
   location            = var.location
-  name                = "NodeRecordingRulesRuleGroup-${var.name}"
+  name                = "node_recording_rules_rulegroup-${var.name}"
   resource_group_name = var.resource_group_name
   scopes = [
     local.azure_monitor_workspace_resource_id,
@@ -201,18 +201,18 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "NodeRecordingRulesRuleGr
   }
 }
 
-resource "azurerm_monitor_alert_prometheus_rule_group" "NodeRecordingRulesRuleGroup_Windows" {
+resource "azurerm_monitor_alert_prometheus_rule_group" "node_recording_rules_rulegroup_windows" {
   count = var.azure_monitor_enabled ? 1 : 0
 
   location            = var.location
-  name                = "NodeRecordingRulesRuleGroup-Win-${var.name}"
+  name                = "node_recording_rules_rulegroup-Win-${var.name}"
   resource_group_name = var.resource_group_name
   scopes = [
     local.azure_monitor_workspace_resource_id,
     azurerm_kubernetes_cluster.this.id,
   ]
   cluster_name       = var.name
-  description        = "Node Recording Rules RuleGroup for Windows"
+  description        = "Node Recording Rules RuleGroup for windows"
   interval           = "PT1M"
   rule_group_enabled = true
   tags               = var.tags
@@ -279,7 +279,7 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "NodeRecordingRulesRuleGr
   }
 }
 
-resource "azurerm_monitor_alert_prometheus_rule_group" "kubernetes-recording-rules-group" {
+resource "azurerm_monitor_alert_prometheus_rule_group" "kubernetes_recording_rules_group" {
   count = var.azure_monitor_enabled ? 1 : 0
 
   location            = var.location
@@ -385,7 +385,7 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "kubernetes-recording-rul
   }
 }
 
-resource "azurerm_monitor_alert_prometheus_rule_group" "kubernetes-recording-rules-group_Windows" {
+resource "azurerm_monitor_alert_prometheus_rule_group" "kubernetes_recording_rules_group_windows" {
   count = var.azure_monitor_enabled ? 1 : 0
 
   location            = var.location
@@ -396,7 +396,7 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "kubernetes-recording-rul
     azurerm_kubernetes_cluster.this.id,
   ]
   cluster_name       = var.name
-  description        = "Node and Kubernetes Recording Rules RuleGroup for Windows"
+  description        = "Node and Kubernetes Recording Rules RuleGroup for windows"
   interval           = "PT1M"
   rule_group_enabled = false
   tags               = var.tags

@@ -7,7 +7,6 @@ locals {
   azure_monitor_name              = var.azure_monitor_name != null ? var.azure_monitor_name : "monitor-${var.name}"
   dcr_insights_linux_rule_name    = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msci-${lower(var.location)}-${var.name}"
   dcr_prometheus_linux_rule_name  = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msprom-${lower(var.location)}-${var.name}"
-  diagnostic_settings_name        = var.diagnostic_settings_name != null ? var.diagnostic_settings_name : "amds-${var.name}-aks"
   grafana_dashboard_name          = var.grafana_dashboard_name != null ? var.grafana_dashboard_name : substr(replace("amg${var.name}", "-", ""), 1, 23)
   log_analytics_workspace_name    = var.log_analytics_workspace_name != null ? var.log_analytics_workspace_name : "law-${var.name}"
   prometheus_dce_name             = var.prometheus_dce_name != null ? var.prometheus_dce_name : "dce-msprom-${var.name}"
@@ -33,55 +32,54 @@ locals {
 }
 
 locals {
-  locations_cached_or_live        = data.local_file.locations.content
-  regions_by_display_name         = { for v in local.regions_recommended_or_not : v.display_name => v }
-  regions_by_name                 = { for v in local.regions_recommended_or_not : v.name => v }
-  regions_by_name_or_display_name = merge(local.regions_by_display_name, local.regions_by_name)
-  regions_data_merged = [
-    for v in jsondecode(local.locations_cached_or_live).value :
-    merge(
-      {
-        name               = v.name
-        display_name       = v.displayName
-        paired_region_name = try(one(v.metadata.pairedRegion).name, null)
-        geography          = v.metadata.geography
-        geography_group    = v.metadata.geographyGroup
-        recommended        = v.metadata.regionCategory == "Recommended"
-      },
-      {
-        zones = sort(lookup(local.regions_to_zones_map, v.displayName, []))
-      }
-    ) if v.metadata.regionType == "Physical"
+  default_node_pool_available_zones = setsubtract(local.zones, local.restricted_zones)
+  filtered_vms = [
+    for sku in data.azapi_resource_list.example.output.value :
+    sku if(sku.resourceType == "virtualMachines" && sku.name == var.default_node_pool_vm_sku)
   ]
-  # Filter out regions that are not recommended
-  regions_recommended_or_not          = [for v in local.regions_data_merged : v if v.recommended]
-  regions_to_zones_map                = { for v in local.regions_zonemappings : v.location => v.zones }
-  regions_zonemappings                = flatten([for v in jsondecode(local.regions_zonemappings_cached_or_live).resourceTypes : v.zoneMappings if v.resourceType == "virtualMachines"])
-  regions_zonemappings_cached_or_live = data.local_file.compute_provider.content
+  restricted_zones = try(local.filtered_vms[0].restrictions[0].restrictionInfo.zones, [])
+  zones            = local.filtered_vms[0].locationInfo[0].zones
 }
+
+locals {
+  filtered_vms_by_node_pool = {
+    for pool_name, pool in var.node_pools : pool_name => [
+      for sku in data.azapi_resource_list.example.output.value :
+      sku if(sku.resourceType == "virtualMachines" && sku.name == pool.vm_size)
+    ]
+  }
+  my_node_pool_zones_by_pool = {
+    for pool_name, pool in var.node_pools : pool_name => setsubtract(
+      local.filtered_vms_by_node_pool[pool_name][0].locationInfo[0].zones,
+      try(local.filtered_vms_by_node_pool[pool_name][0].restrictions[0].restrictionInfo.zones, [])
+    )
+  }
+  zonetagged_node_pools = {
+    for pool_name, pool in var.node_pools : pool_name => merge(pool, { zones = local.my_node_pool_zones_by_pool[pool_name] })
+  }
+}
+
+
 locals {
   # Flatten a list of var.node_pools and zones
   node_pools = flatten([
-    for pool in var.node_pools : [
-      for zone in try(local.regions_by_name_or_display_name[var.location].zones, [""]) : {
+    for pool in local.zonetagged_node_pools : [
+      for zone in pool.zones : {
         # concatenate name and zone trim to 12 characters
         name                 = "${substr(pool.name, 0, 10)}${zone}"
         vm_size              = pool.vm_size
         orchestrator_version = pool.orchestrator_version
         max_count            = pool.max_count
         min_count            = pool.min_count
+        tags                 = pool.tags
         labels               = pool.labels
-        node_taints          = pool.node_taints
         os_sku               = pool.os_sku
         mode                 = pool.mode
         os_disk_size_gb      = pool.os_disk_size_gb
-        zone                 = zone
+        zone                 = [zone]
       }
     ]
   ])
-}
-locals {
-  log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
 }
 locals {
   web_app_routing_identity_outputs = var.ingress_profile != null ? {
