@@ -6,7 +6,7 @@ variable "location" {
 
 variable "name" {
   type        = string
-  description = "The name for the AKS resources created in the specified Azure Resource Group. This variable overwrites the 'prefix' var (The 'prefix' var will still be applied to the dns_prefix if it is set)"
+  description = "The name of the AKS cluster."
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9]$|^[a-zA-Z0-9][-_a-zA-Z0-9]{0,61}[a-zA-Z0-9]$", var.name))
@@ -16,10 +16,10 @@ variable "name" {
 
 variable "network" {
   type = object({
-    name                = string
-    resource_group_name = string
-    node_subnet_id      = string
-    pod_cidr            = string
+    node_subnet_id       = string
+    pod_cidr             = string
+    service_cidr         = optional(string)
+    api_server_subnet_id = optional(string)
   })
   description = "Values for the networking configuration of the AKS cluster"
 }
@@ -48,6 +48,38 @@ variable "agents_tags" {
   description = "(Optional) A mapping of tags to assign to the Node Pool."
 }
 
+variable "automatic_upgrade_channel" {
+  type        = string
+  default     = "stable"
+  description = <<DESCRIPTION
+Specifies the automatic upgrade channel for the cluster. Possible values are:
+- `stable`: Ensures the cluster is always in a supported version (i.e., within the N-2 rule).
+- `rapid`: Ensures the cluster is always in a supported version on a faster release cadence.
+- `patch`: Gets the latest patches as soon as possible.
+- `node-image`: Ensures the node image is always up to date.
+DESCRIPTION
+
+  validation {
+    condition     = can(regex("^(stable|rapid|patch|node-image|none)$", var.automatic_upgrade_channel))
+    error_message = "automatic_upgrade_channel must be one of 'stable', 'rapid', 'patch', or 'node-image'.  If not set it will default to `stable`."
+  }
+}
+
+variable "enable_api_server_vnet_integration" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+  # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services
+  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+
+  Enable VNET integration for the AKS cluster
+
+  This requires the following preview feature registered on the subscription:
+
+  az feature register --namespace "Microsoft.ContainerService" --name "EnableAPIServerVnetIntegrationPreview"
+DESCRIPTION
+}
+
 variable "default_node_pool_vm_sku" {
   type        = string
   default     = "Standard_D4d_v5"
@@ -62,6 +94,24 @@ This variable controls whether or not telemetry is enabled for the module.
 For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
+}
+
+variable "image_cleaner_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable the image cleaner for the Kubernetes cluster."
+}
+
+variable "image_cleaner_interval_hours" {
+  type        = number
+  default     = 168
+  description = "Interval in hours for the image cleaner to run."
+}
+
+variable "keda_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable KEDA for the Kubernetes cluster."
 }
 
 variable "kubernetes_version" {
@@ -89,6 +139,108 @@ variable "lock" {
   }
 }
 
+variable "maintenance_window_auto_upgrade" {
+  type = object({
+    day_of_month = optional(number)
+    day_of_week  = optional(string)
+    duration     = optional(number, 4)
+    frequency    = optional(string)
+    interval     = optional(number, 1)
+    start_date   = optional(string)
+    start_time   = optional(string)
+    utc_offset   = optional(string)
+    week_index   = optional(string)
+    not_allowed = optional(set(object({
+      end   = string
+      start = string
+    })))
+  })
+  default     = null
+  description = <<DESCRIPTION
+ - `day_of_month` - (Optional) The day of the month for the maintenance run. Required in combination with RelativeMonthly frequency. Value between 0 and 31 (inclusive).
+ - `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
+ - `duration` - (Required) The duration of the window for maintenance to run in hours.
+ - `frequency` - (Required) Frequency of maintenance. Possible options are `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
+ - `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.
+ - `start_date` - (Optional) The date on which the maintenance window begins to take effect.
+ - `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
+ - `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.
+ - `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
+
+ ---
+ `not_allowed` block supports the following:
+ - `end` - (Required) The end of a time span, formatted as an RFC3339 string.
+ - `start` - (Required) The start of a time span, formatted as an RFC3339 string.
+
+Example input:
+
+maintenance_window_auto_upgrade = {
+    duration     = 8
+    interval     = 1
+    day_of_month = 1
+    day_of_week  = "Monday"
+    start_date   = "2024-12-01"
+    start_time   = "00:00"
+    frequency    = "Weekly"
+    duration     = "PT1H"
+    week_index   = 1
+    utcoffset    = "+00:00"
+  }
+
+DESCRIPTION
+}
+
+variable "maintenance_window_node_os" {
+  type = object({
+    day_of_month = optional(number)
+    day_of_week  = optional(string)
+    duration     = optional(number, 4)
+    frequency    = optional(string)
+    interval     = optional(number, 1)
+    start_date   = optional(string)
+    start_time   = optional(string)
+    utc_offset   = optional(string)
+    week_index   = optional(string)
+    not_allowed = optional(set(object({
+      end   = string
+      start = string
+    })))
+  })
+  default     = null
+  description = <<DESCRIPTION
+ - `day_of_month` - (Optional) The day of the month for the maintenance run. Required in combination with RelativeMonthly frequency. Value between 0 and 31 (inclusive).
+ - `day_of_week` - (Optional) The day of the week for the maintenance run. Options are `Monday`, `Tuesday`, `Wednesday`, `Thurday`, `Friday`, `Saturday` and `Sunday`. Required in combination with weekly frequency.
+ - `duration` - (Required) The duration of the window for maintenance to run in hours.  Valid values are between 4 and 24 (inclusive).
+ - `frequency` - (Required) Frequency of maintenance. Possible options are `Daily`, `Weekly`, `AbsoluteMonthly` and `RelativeMonthly`.
+ - `interval` - (Required) The interval for maintenance runs. Depending on the frequency this interval is week or month based.  E.g. a value of 2 for a weekly frequency means maintenance will run every 2 weeks.
+ - `start_date` - (Optional) The date on which the maintenance window begins to take effect.
+ - `start_time` - (Optional) The time for maintenance to begin, based on the timezone determined by `utc_offset`. Format is `HH:mm`.
+ - `utc_offset` - (Optional) Used to determine the timezone for cluster maintenance.  Format is `+HH:MM` or `-HH:MM`.
+ - `week_index` - (Optional) The week in the month used for the maintenance run. Options are `First`, `Second`, `Third`, `Fourth`, and `Last`.
+
+ ---
+ `not_allowed` block supports the following:
+ - `end` - (Required) The end of a time span, formatted as an RFC3339 string.
+ - `start` - (Required) The start of a time span, formatted as an RFC3339 string.
+Configuration for the maintenance window node OS.
+
+Example input:
+
+maintenance_window_node_os = {
+    duration     = 8
+    interval     = 1
+    day_of_month = 1
+    day_of_week  = "Monday"
+    start_date   = "2024-12-01"
+    start_time   = "00:00"
+    frequency    = "Weekly"
+    week_index   = 1
+    utcoffset    = "+00:00"
+  }
+
+DESCRIPTION
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "managed_identities" {
   type = object({
@@ -105,6 +257,18 @@ variable "managed_identities" {
   nullable    = false
 }
 
+variable "max_count_default_node_pool" {
+  type        = number
+  default     = 9
+  description = "The maximum number of nodes in the default node pool."
+}
+
+variable "microsoft_defender_log_analytics_resource_id" {
+  type        = string
+  default     = null # TODO probably should be 'true' but may not work with E2E testing.
+  description = "Enable Microsoft Defender for the Kubernetes cluster."
+}
+
 variable "monitor_metrics" {
   type = object({
     annotations_allowed = optional(string)
@@ -118,6 +282,19 @@ variable "monitor_metrics" {
     labels_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
   })
 EOT
+}
+
+variable "network_policy" {
+  type        = string
+  default     = "cilium"
+  description = <<DESCRIPTION
+  The Network Policy to use for this Kubernetes Cluster. Possible values are `azure`, `calico`, or `cilium`. Defaults to `cilium`.
+  DESCRIPTION
+
+  validation {
+    condition     = can(regex("^(azure|calico|cilium)$", var.network_policy))
+    error_message = "network_policy must be either azure, calico, or cilium."
+  }
 }
 
 variable "node_labels" {
@@ -154,6 +331,7 @@ map(object({
   os_disk_size_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
   labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
+  node_taints          = (Optional) A list of the taints added to new nodes during node pool create and scale.
 }))
 
 Example input:
@@ -216,7 +394,18 @@ variable "private_dns_zone_id" {
   }
 }
 
-variable "private_dns_zone_id_enabled" {
+variable "private_dns_zone_id_api_server" {
+  type        = string
+  default     = null
+  description = "(Optional) The ID of Private DNS Zone used by the API server."
+
+  validation {
+    condition     = var.private_dns_zone_id_api_server == null || can(regex("^(/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft.Network/privateDnsZones/[^/]+)$", var.private_dns_zone_id_api_server))
+    error_message = "private_dns_zone_id_api_server must be a valid Private DNS Zone ID"
+  }
+}
+
+variable "private_dns_zone_set_rbac_permissions" {
   type        = bool
   default     = false
   description = "(Optional) Enable private DNS zone integration for the AKS cluster."
@@ -231,7 +420,7 @@ variable "rbac_aad_admin_group_object_ids" {
 
 variable "rbac_aad_azure_rbac_enabled" {
   type        = bool
-  default     = null
+  default     = true
   description = "(Optional) Is Role Based Access Control based on Azure AD enabled?"
 }
 
@@ -246,4 +435,77 @@ variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) Tags of the resource."
+}
+
+variable "user_assigned_identity_name" {
+  type        = string
+  default     = null
+  description = "(Optional) The name of the User Assigned Identity which should be assigned to the Kubernetes Cluster."
+}
+
+variable "vertical_pod_autoscaler_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable Vertical Pod Autoscaler for the Kubernetes cluster."
+}
+
+variable "vnet_set_rbac_permissions" {
+  type        = bool
+  default     = true
+  description = "(Optional) Whether to create Network Contributor RBAC on the supplied subnets"
+  nullable    = false
+}
+
+variable "ingress_profile" {
+  type = object({
+    dns_zone_resource_ids = list(string)
+    enabled               = optional(bool, true)
+    nginx = object({
+      default_ingress_controller_type = string
+    })
+  })
+  default     = null
+  description = <<DESCRIPTION
+  # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services
+  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+
+  Configuration for the ingress profile that will be used to configure web application routing extension for the AKS cluster.
+DESCRIPTION
+
+  validation {
+    condition     = var.ingress_profile == null || try(contains(["AnnotationControlled", "External", "Internal", "None"], var.ingress_profile.nginx.default_ingress_controller_type), false)
+    error_message = "The default_ingress_controller_type must be one of `AnnotationControlled`, `External`, `Internal`, or `None`."
+  }
+}
+
+variable "safeguard_profile" {
+  type = object({
+    level               = string
+    version             = string
+    excluded_namespaces = optional(list(string))
+  })
+  default     = null
+  description = <<DESCRIPTION
+  # https://azure.github.io/Azure-Verified-Modules/specs/shared/#id-sfr1---category-composition---preview-services
+  THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION
+
+  Configuration for the safeguard profile that will warning or block the deployment of resources that are not compliant with the Azure policies. 
+
+  safeguard_profile = {
+    level = "Warning",
+    version = "v1.0.0",
+    excluded_namespaces = [
+      "kube-system",
+      "calico-system",
+      "tigera-system",
+      "gatekeeper-system"
+    ]
+  }
+
+DESCRIPTION
+
+  validation {
+    condition     = var.safeguard_profile == null || try(contains(["Enforcement", "Warning", "Off"], var.safeguard_profile.level), false)
+    error_message = "The level must be one of `Enforcement`, `Warning`, or `Off`."
+  }
 }

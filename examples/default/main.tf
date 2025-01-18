@@ -55,15 +55,14 @@ data "azurerm_client_config" "current" {}
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "test" {
-  source                      = "../../"
-  kubernetes_version          = "1.30"
-  enable_telemetry            = var.enable_telemetry # see variables.tf
-  name                        = module.naming.kubernetes_cluster.name_unique
-  resource_group_name         = azurerm_resource_group.this.name
-  location                    = azurerm_resource_group.this.location
-  private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
-  private_dns_zone_id_enabled = true
-  rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
+  source              = "../../"
+  kubernetes_version  = "1.30"
+  enable_telemetry    = var.enable_telemetry # see variables.tf
+  name                = module.naming.kubernetes_cluster.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+  private_dns_zone_id = azurerm_private_dns_zone.mydomain.id
+  rbac_aad_tenant_id  = data.azurerm_client_config.current.tenant_id
   network = {
     name                = module.avm_res_network_virtualnetwork.name
     resource_group_name = azurerm_resource_group.this.name

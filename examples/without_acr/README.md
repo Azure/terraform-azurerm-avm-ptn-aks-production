@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# AKS cluster with region having availability zone
+# AKS cluster without Container Registry
 
-This deploys the module with a region that has availability zones.
+This deploys the module without the Container Registry.
 
 ```hcl
 terraform {
@@ -22,17 +22,16 @@ provider "azurerm" {
   }
 }
 
-# This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = "East US 2" # Hardcoded because we have to test in a region with availability zones
-  name     = module.naming.resource_group.name_unique
-}
-
-
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = ">= 0.3.0"
+}
+
+# This is required for resource modules
+resource "azurerm_resource_group" "this" {
+  location = "West US" # Hardcoded because we have to test in a region without availability zones
+  name     = module.naming.resource_group.name_unique
 }
 
 resource "azurerm_user_assigned_identity" "this" {
@@ -41,73 +40,44 @@ resource "azurerm_user_assigned_identity" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-# Datasource of current tenant ID
 data "azurerm_client_config" "current" {}
 
 # This is the module call
 # Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
 module "test" {
   source              = "../../"
-  kubernetes_version  = "1.30"
+  kubernetes_version  = "1.31"
   enable_telemetry    = var.enable_telemetry # see variables.tf
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   network = {
-    name                = module.avm_res_network_virtualnetwork.name
-    resource_group_name = azurerm_resource_group.this.name
-    node_subnet_id      = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
-    pod_cidr            = "192.168.0.0/16"
-    acr = {
-      name                          = module.naming.container_registry.name_unique
-      subnet_resource_id            = module.avm_res_network_virtualnetwork.subnets["private_link_subnet"].resource_id
-      private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
-    }
+    node_subnet_id = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
+    pod_cidr       = "192.168.0.0/16"
   }
   managed_identities = {
     user_assigned_resource_ids = [
       azurerm_user_assigned_identity.this.id
     ]
   }
-  rbac_aad_tenant_id = data.azurerm_client_config.current.tenant_id
+  rbac_aad_admin_group_object_ids = [data.azurerm_client_config.current.object_id]
 
-  location = "East US 2" # Hardcoded because we have to test in a region with availability zones
+  location = "AustraliaEast" # Hardcoded because we have to test in a region without availability zones
   node_pools = {
     workload = {
-      name                 = "workloadworkload" #Long name to test the truncate to 12 characters
+      name                 = "workload"
       vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.30"
-      max_count            = 10
+      orchestrator_version = "1.31"
+      max_count            = 110
       min_count            = 2
-      os_sku               = "Ubuntu"
+      os_sku               = "AzureLinux"
       mode                 = "User"
-      os_disk_size_gb      = 128
-    },
-    ingress = {
-      name                 = "ingress"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.30"
-      max_count            = 4
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      mode                 = "User"
-      os_disk_size_gb      = 128
-      labels = {
-        "ingress" = "true"
-      }
     }
   }
 }
 
-resource "azurerm_private_dns_zone" "this" {
-  name                = "privatelink.azurecr.io"
-  resource_group_name = azurerm_resource_group.this.name
-}
-
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.7.1"
+  version = "0.5.0"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -139,7 +109,6 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
@@ -175,7 +144,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 0.7.1
+Version: 0.5.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 

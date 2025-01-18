@@ -25,31 +25,30 @@ resource "azurerm_role_assignment" "acr" {
 }
 
 resource "azurerm_user_assigned_identity" "aks" {
+  # create the user assigned identity if the user_assigned_resource_id is not supplied
   count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 0 : 1
 
   location            = var.location
-  name                = "uami-aks"
+  name                = local.user_assigned_identity_name
   resource_group_name = var.resource_group_name
   tags                = var.tags
 }
 
-data "azurerm_resource_group" "this" {
-  name = var.resource_group_name
-}
-
 data "azurerm_user_assigned_identity" "cluster_identity" {
-  name                = split("/", one(local.managed_identities.user_assigned.this.user_assigned_resource_ids))[8]
-  resource_group_name = data.azurerm_resource_group.this.name
+  name                = split("/", local.user_assigned_identity_resource_id)[8]
+  resource_group_name = var.resource_group_name
 }
 
-resource "azurerm_role_assignment" "network_contributor_on_resource_group" {
+resource "azurerm_role_assignment" "network_contributor_on_aks_vnet" {
+  count = var.vnet_set_rbac_permissions ? 1 : 0
+
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
-  scope                = data.azurerm_resource_group.this.id
+  scope                = join("/", slice(split("/", var.network.node_subnet_id), 0, 9)) # least privilege is Microsoft.Network/virtualNetworks/join/action at the vnet scope?
   role_definition_name = "Network Contributor"
 }
 
 resource "azurerm_role_assignment" "dns_zone_contributor" {
-  count = var.private_dns_zone_id_enabled ? 1 : 0
+  count = var.private_dns_zone_set_rbac_permissions ? 1 : 0
 
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
   scope                = var.private_dns_zone_id
@@ -58,11 +57,13 @@ resource "azurerm_role_assignment" "dns_zone_contributor" {
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
-  name                              = "aks-${var.name}"
+  name                              = var.name
   resource_group_name               = var.resource_group_name
-  automatic_upgrade_channel         = "patch"
+  automatic_upgrade_channel         = var.automatic_upgrade_channel
   azure_policy_enabled              = true
   dns_prefix                        = var.name
+  image_cleaner_enabled             = var.image_cleaner_enabled
+  image_cleaner_interval_hours      = var.image_cleaner_interval_hours
   kubernetes_version                = var.kubernetes_version
   local_account_disabled            = true
   node_os_upgrade_channel           = "NodeImage"
@@ -71,28 +72,37 @@ resource "azurerm_kubernetes_cluster" "this" {
   private_dns_zone_id               = var.private_dns_zone_id
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
+  support_plan                      = "KubernetesOfficial"
   tags                              = var.tags
   workload_identity_enabled         = true
 
   default_node_pool {
-    name                    = "agentpool"
-    vm_size                 = var.default_node_pool_vm_sku
-    auto_scaling_enabled    = true
-    host_encryption_enabled = true
-    max_count               = 9
-    max_pods                = 110
-    min_count               = 3
-    node_labels             = var.node_labels
-    orchestrator_version    = var.orchestrator_version
-    os_sku                  = var.os_sku
-    tags                    = merge(var.tags, var.agents_tags)
-    vnet_subnet_id          = var.network.node_subnet_id
-    zones                   = local.default_node_pool_available_zones
+    name                         = "systempool"
+    vm_size                      = var.default_node_pool_vm_sku
+    auto_scaling_enabled         = true
+    host_encryption_enabled      = true
+    max_count                    = var.max_count_default_node_pool
+    max_pods                     = 110
+    min_count                    = 3
+    node_labels                  = var.node_labels
+    node_public_ip_enabled       = false
+    only_critical_addons_enabled = true
+    orchestrator_version         = var.orchestrator_version
+    os_disk_type                 = "Ephemeral"
+    os_sku                       = var.os_sku
+    tags                         = merge(var.tags, var.agents_tags)
+    temporary_name_for_rotation  = "tempsyspool" # must begin with a lowercase letter, contain only lowercase letters and numbers and be between 1 and 12 characters in length.
+    vnet_subnet_id               = var.network.node_subnet_id
+    zones                        = local.default_node_pool_available_zones
 
     upgrade_settings {
       max_surge = "10%"
     }
   }
+  # currently preview, requires Microsoft.ContainerService/EnableAPIServerVnetIntegrationPreview, not available via AzureRM
+  # api_server_access_profile {
+  #   vnet_integration_enabled = true
+  # }  
   auto_scaler_profile {
     balance_similar_node_groups = true
   }
@@ -101,17 +111,67 @@ resource "azurerm_kubernetes_cluster" "this" {
     azure_rbac_enabled     = var.rbac_aad_azure_rbac_enabled
     tenant_id              = var.rbac_aad_tenant_id
   }
-  ## Resources that only support UserAssigned
-  dynamic "identity" {
-    for_each = local.managed_identities.user_assigned
-
-    content {
-      type         = identity.value.type
-      identity_ids = identity.value.user_assigned_resource_ids
-    }
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [local.user_assigned_identity_resource_id]
   }
   key_vault_secrets_provider {
     secret_rotation_enabled = true
+  }
+  dynamic "maintenance_window_auto_upgrade" {
+    for_each = var.maintenance_window_auto_upgrade == null ? [] : [var.maintenance_window_auto_upgrade]
+
+    content {
+      duration     = maintenance_window_auto_upgrade.value.duration
+      frequency    = maintenance_window_auto_upgrade.value.frequency
+      interval     = maintenance_window_auto_upgrade.value.interval
+      day_of_month = maintenance_window_auto_upgrade.value.day_of_month
+      day_of_week  = maintenance_window_auto_upgrade.value.day_of_week
+      start_date   = maintenance_window_auto_upgrade.value.start_date
+      start_time   = maintenance_window_auto_upgrade.value.start_time
+      utc_offset   = maintenance_window_auto_upgrade.value.utc_offset
+      week_index   = maintenance_window_auto_upgrade.value.week_index
+
+      dynamic "not_allowed" {
+        for_each = maintenance_window_auto_upgrade.value.not_allowed == null ? [] : maintenance_window_auto_upgrade.value.not_allowed
+
+        content {
+          end   = not_allowed.value.end
+          start = not_allowed.value.start
+        }
+      }
+    }
+  }
+  dynamic "maintenance_window_node_os" {
+    for_each = var.maintenance_window_node_os == null ? [] : [var.maintenance_window_node_os]
+
+    content {
+      duration     = maintenance_window_node_os.value.duration
+      frequency    = maintenance_window_node_os.value.frequency
+      interval     = maintenance_window_node_os.value.interval
+      day_of_month = maintenance_window_node_os.value.day_of_month
+      day_of_week  = maintenance_window_node_os.value.day_of_week
+      start_date   = maintenance_window_node_os.value.start_date
+      start_time   = maintenance_window_node_os.value.start_time
+      utc_offset   = maintenance_window_node_os.value.utc_offset
+      week_index   = maintenance_window_node_os.value.week_index
+
+      dynamic "not_allowed" {
+        for_each = maintenance_window_node_os.value.not_allowed == null ? [] : maintenance_window_node_os.value.not_allowed
+
+        content {
+          end   = not_allowed.value.end
+          start = not_allowed.value.start
+        }
+      }
+    }
+  }
+  dynamic "microsoft_defender" {
+    for_each = var.microsoft_defender_log_analytics_resource_id == null ? [] : ["microsoft_defender"]
+
+    content {
+      log_analytics_workspace_id = var.microsoft_defender_log_analytics_resource_id
+    }
   }
   monitor_metrics {
     annotations_allowed = try(var.monitor_metrics.annotations_allowed, null)
@@ -119,19 +179,38 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
   network_profile {
     network_plugin      = "azure"
+    dns_service_ip      = var.network.service_cidr == null ? null : try(cidrhost(var.network.service_cidr, 10), null)
     load_balancer_sku   = "standard"
+    network_data_plane  = var.network_policy == "cilium" ? "cilium" : "azure"
     network_plugin_mode = "overlay"
-    network_policy      = "calico"
+    network_policy      = var.network_policy
     pod_cidr            = var.network.pod_cidr
+    service_cidr        = try(var.network.service_cidr, null)
   }
   oms_agent {
-    log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
+    log_analytics_workspace_id      = local.log_analytics_workspace_resource_id
     msi_auth_for_monitoring_enabled = true
   }
+  storage_profile {
+    blob_driver_enabled         = false
+    disk_driver_enabled         = true
+    file_driver_enabled         = true
+    snapshot_controller_enabled = true
+  }
+  workload_autoscaler_profile {
+    keda_enabled                    = var.keda_enabled
+    vertical_pod_autoscaler_enabled = var.vertical_pod_autoscaler_enabled
+  }
+
+  depends_on = [
+    azurerm_role_assignment.network_contributor_on_aks_vnet[0],
+    azurerm_role_assignment.dns_zone_contributor[0],
+  ]
 
   lifecycle {
     ignore_changes = [
-      kubernetes_version
+      kubernetes_version,
+      web_app_routing
     ]
 
     precondition {
@@ -144,64 +223,103 @@ resource "azurerm_kubernetes_cluster" "this" {
     }
     precondition {
       condition     = var.private_dns_zone_id == null ? true : (anytrue([for r in local.valid_private_dns_zone_regexs : try(regex(r, local.private_dns_zone_name) == local.private_dns_zone_name, false)]))
-      error_message = "According to the [document](https://learn.microsoft.com/en-us/azure/aks/private-clusters?tabs=azure-portal#configure-a-private-dns-zone), the private DNS zone must be in one of the following format: `privatelink.<region>.azmk8s.io`, `<subzone>.privatelink.<region>.azmk8s.io`, `private.<region>.azmk8s.io`, `<subzone>.private.<region>.azmk8s.io`"
-    }
-    precondition {
-      condition     = var.private_dns_zone_id != null ? var.private_dns_zone_id_enabled == true : var.private_dns_zone_id_enabled == false
-      error_message = "private_dns_zone_id must be set if private_dns_zone_id_enabled is true"
+      error_message = "According to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/aks/private-clusters?tabs=azure-portal#configure-a-private-dns-zone), the private DNS zone must be in one of the following format: `privatelink.<region>.azmk8s.io`, `<subzone>.privatelink.<region>.azmk8s.io`, `private.<region>.azmk8s.io`, `<subzone>.private.<region>.azmk8s.io`"
     }
   }
 }
 
-# The following null_resource is used to trigger the update of the AKS cluster when the kubernetes_version changes
+# The following terraform_data is used to trigger the update of the AKS cluster when the kubernetes_version changes
 # This is necessary because the azurerm_kubernetes_cluster resource ignores changes to the kubernetes_version attribute
 # because AKS patch versions are upgraded automatically by Azure
 # The kubernetes_version_keeper and aks_cluster_post_create resources implement a mechanism to force the update
 # when the minor kubernetes version changes in var.kubernetes_version
 
-resource "null_resource" "kubernetes_version_keeper" {
-  triggers = {
-    version = var.kubernetes_version
-  }
+resource "terraform_data" "kubernetes_version_keeper" {
+  input = var.kubernetes_version
 }
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
-  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  type = "Microsoft.ContainerService/managedClusters@2024-09-01"
   body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
     }
   }
   resource_id = azurerm_kubernetes_cluster.this.id
+  locks       = [azurerm_kubernetes_cluster.this.id]
 
   lifecycle {
     ignore_changes       = all
-    replace_triggered_by = [null_resource.kubernetes_version_keeper.id]
+    replace_triggered_by = [terraform_data.kubernetes_version_keeper]
   }
 }
 
+resource "azapi_update_resource" "ingress_profile" {
+  count = var.ingress_profile == null ? 0 : 1
+
+  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
+  body = {
+    properties = {
+      ingressProfile = {
+        webAppRouting = {
+          dnsZoneResourceIds = var.ingress_profile.dns_zone_resource_ids
+          enabled            = try(var.ingress_profile.enabled, true)
+          nginx = {
+            defaultIngressControllerType = var.ingress_profile.nginx.default_ingress_controller_type
+          }
+        }
+      }
+    }
+  }
+  locks                  = [azurerm_kubernetes_cluster.this.id]
+  resource_id            = azurerm_kubernetes_cluster.this.id
+  response_export_values = ["properties.ingressProfile.webAppRouting.identity"]
+}
+
+resource "azapi_update_resource" "safeguard_profile" {
+  count = var.safeguard_profile == null ? 0 : 1
+
+  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
+  body = {
+    properties = {
+      safeguardsProfile = {
+        level              = var.safeguard_profile.level
+        version            = var.safeguard_profile.version,
+        excludedNamespaces = var.safeguard_profile.excluded_namespaces
+      }
+    }
+  }
+  locks       = [azurerm_kubernetes_cluster.this.id]
+  resource_id = azurerm_kubernetes_cluster.this.id
+}
+
 resource "azurerm_log_analytics_workspace" "this" {
+  count = var.log_analytics_workspace_resource_id != null ? 0 : 1
+
   location            = var.location
-  name                = "log-${var.name}-aks"
+  name                = local.log_analytics_workspace_name
   resource_group_name = var.resource_group_name
+  retention_in_days   = 30
   sku                 = "PerGB2018"
   tags                = var.tags
 }
 
-resource "azurerm_log_analytics_workspace_table" "this" {
-  for_each = toset(local.log_analytics_tables)
+# TODO seeing issues with this on subsequent runs after the first deploy, need to investigate
+# appers to relate to retention settings - setting `total_retention_in_days = 30` on later runs works, but then doesn't deploy
+# cleanly because the workspace is not active in time.
+# resource "azurerm_log_analytics_workspace_table" "this" {
+#   for_each = toset(local.log_analytics_tables)
 
-  name                    = each.value
-  workspace_id            = azurerm_log_analytics_workspace.this.id
-  plan                    = "Basic"
-  total_retention_in_days = 30
-}
+#   name                    = each.value
+#   workspace_id            = local.log_analytics_workspace_resource_id
+#   plan                    = "Basic"
+# }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
   name                           = "amds-${var.name}-aks"
   target_resource_id             = azurerm_kubernetes_cluster.this.id
   log_analytics_destination_type = "Dedicated"
-  log_analytics_workspace_id     = azurerm_log_analytics_workspace.this.id
+  log_analytics_workspace_id     = local.log_analytics_workspace_resource_id
 
   # Kubernetes API Server
   enabled_log {
@@ -292,8 +410,21 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   }
 }
 
-# Data source for the current subscription
-data "azurerm_subscription" "current" {}
+resource "azapi_update_resource" "aks_api_server_access_profile" {
+  count = var.enable_api_server_vnet_integration ? 1 : 0
+
+  type = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
+  body = {
+    properties = {
+      apiServerAccessProfile = {
+        enableVnetIntegration = var.enable_api_server_vnet_integration
+        subnetId              = var.network.api_server_subnet_id
+        privateDNSZone        = var.private_dns_zone_id_api_server
+      }
+    }
+  }
+  resource_id = azurerm_kubernetes_cluster.this.id
+}
 
 data "azapi_resource_list" "example" {
   parent_id = data.azurerm_subscription.current.id

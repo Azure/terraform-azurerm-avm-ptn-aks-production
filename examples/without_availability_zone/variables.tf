@@ -8,7 +8,7 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
-variable "kubernetes_cluster_name" {
+variable "name" {
   type        = string
   default     = "myAks"
   description = "The name of the Kubernetes cluster."

@@ -1,4 +1,27 @@
 locals {
+  # Overridable naming conventions - these exist to help reduce the number of required inputs
+  action_group_name               = var.action_group_name != null ? var.action_group_name : "ag-${var.name}"
+  action_group_short_name         = var.action_group_short_name != null ? var.action_group_short_name : "aks"
+  aks_monitor_association_name    = var.aks_monitor_association_name != null ? var.aks_monitor_association_name : "monitor-assoc-${var.name}"
+  aks_monitor_ci_association_name = var.aks_monitor_ci_association_name != null ? var.aks_monitor_ci_association_name : "monitor-ci-assoc-${var.name}"
+  azure_monitor_name              = var.azure_monitor_name != null ? var.azure_monitor_name : "monitor-${var.name}"
+  dcr_insights_linux_rule_name    = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msci-${lower(var.location)}-${var.name}"
+  dcr_prometheus_linux_rule_name  = var.dcr_prometheus_linux_rule_name != null ? var.dcr_prometheus_linux_rule_name : "dcr-msprom-${lower(var.location)}-${var.name}"
+  grafana_dashboard_name          = var.grafana_dashboard_name != null ? var.grafana_dashboard_name : substr(replace("amg${var.name}", "-", ""), 1, 23)
+  log_analytics_workspace_name    = var.log_analytics_workspace_name != null ? var.log_analytics_workspace_name : "law-${var.name}"
+  prometheus_dce_name             = var.prometheus_dce_name != null ? var.prometheus_dce_name : "dce-msprom-${var.name}"
+  user_assigned_identity_name     = var.user_assigned_identity_name != null ? var.user_assigned_identity_name : "uaid-${var.name}"
+}
+
+locals {
+  # the following resources can be supplied to the module, use the resource ID if supplied, otherwise create the resource if the feature flag is enabled
+  azure_monitor_workspace_resource_id = var.azure_monitor_workspace_resource_id != null ? var.azure_monitor_workspace_resource_id : try(azurerm_monitor_workspace.this[0].id, null)
+  grafana_dashboard_resource_id       = var.grafana_dashboard_resource_id != null ? var.grafana_dashboard_resource_id : try(azurerm_dashboard_grafana.this[0].id, null)
+  log_analytics_workspace_resource_id = var.log_analytics_workspace_resource_id != null ? var.log_analytics_workspace_resource_id : azurerm_log_analytics_workspace.this[0].id
+  user_assigned_identity_resource_id  = var.managed_identities.user_assigned_resource_ids != null ? one(var.managed_identities.user_assigned_resource_ids) : azurerm_user_assigned_identity.aks[0].id
+}
+
+locals {
   private_dns_zone_name = try(reverse(split("/", var.private_dns_zone_id))[0], null)
   valid_private_dns_zone_regexs = [
     "private\\.[a-z0-9]+\\.azmk8s\\.io",
@@ -59,24 +82,9 @@ locals {
   ])
 }
 locals {
-  log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
-}
-
-# Helper locals to make the dynamic block more readable
-# There are three attributes here to cater for resources that
-# support both user and system MIs, only system MIs, and only user MIs
-locals {
-  managed_identities = {
-    user_assigned = length(var.managed_identities.user_assigned_resource_ids) > 0 ? {
-      this = {
-        type                       = "UserAssigned"
-        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
-      }
-      } : {
-      this = {
-        type                       = "UserAssigned"
-        user_assigned_resource_ids = azurerm_user_assigned_identity.aks[*].id
-      }
-    }
-  }
+  web_app_routing_identity_outputs = var.ingress_profile != null ? {
+    object_id                 = azapi_update_resource.ingress_profile[0].output.properties.ingressProfile.webAppRouting.identity.objectId
+    client_id                 = azapi_update_resource.ingress_profile[0].output.properties.ingressProfile.webAppRouting.identity.clientId
+    user_assigned_identity_id = azapi_update_resource.ingress_profile[0].output.properties.ingressProfile.webAppRouting.identity.resourceId
+  } : null
 }
