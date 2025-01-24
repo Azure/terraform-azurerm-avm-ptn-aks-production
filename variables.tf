@@ -248,7 +248,7 @@ variable "tags" {
   description = "(Optional) Tags of the resource."
 }
 
-variable "user_assigned_identity_id" {
+variable "user_assigned_identity_name" {
   type        = string
   default     = "uami-aks"
   description = "(Optional) The ID of the User Assigned Identity which should be assigned to the Kubernetes Cluster."

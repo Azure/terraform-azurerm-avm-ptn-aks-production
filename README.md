@@ -344,7 +344,7 @@ Type: `map(string)`
 
 Default: `null`
 
-### <a name="input_user_assigned_identity_id"></a> [user\_assigned\_identity\_id](#input\_user\_assigned\_identity\_id)
+### <a name="input_user_assigned_identity_name"></a> [user\_assigned\_identity\_name](#input\_user\_assigned\_identity\_name)
 
 Description: (Optional) The ID of the User Assigned Identity which should be assigned to the Kubernetes Cluster.
 
