@@ -37,7 +37,7 @@ variable "acr" {
     name                          = string
     private_dns_zone_resource_ids = set(string)
     subnet_resource_id            = string
-
+    zone_redundancy_enabled       = optional(bool)
   })
   default     = null
   description = "(Optional) Parameters for the Azure Container Registry to use with the Kubernetes Cluster."

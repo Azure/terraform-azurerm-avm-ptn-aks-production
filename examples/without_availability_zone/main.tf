@@ -57,6 +57,7 @@ module "test" {
     name                          = module.naming.container_registry.name_unique
     subnet_resource_id            = module.avm_res_network_virtualnetwork.subnets["private_link_subnet"].resource_id
     private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
+    zone_redundancy_enabled       = false
   }
   managed_identities = {
     user_assigned_resource_ids = [
