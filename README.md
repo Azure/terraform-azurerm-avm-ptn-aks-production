@@ -118,7 +118,7 @@ object({
     name                          = string
     private_dns_zone_resource_ids = set(string)
     subnet_resource_id            = string
-
+    zone_redundancy_enabled       = optional(bool)
   })
 ```
 

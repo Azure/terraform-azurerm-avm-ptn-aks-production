@@ -6,6 +6,7 @@ module "avm_res_containerregistry_registry" {
   location                      = var.location
   resource_group_name           = var.resource_group_name
   sku                           = "Premium"
+  zone_redundancy_enabled       = coalesce(var.acr.zone_redundancy_enabled, true)
   public_network_access_enabled = false
   private_endpoints = {
     primary = {
