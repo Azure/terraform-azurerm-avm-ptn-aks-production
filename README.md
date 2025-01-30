@@ -349,13 +349,137 @@ Default: `null`
 
 The following outputs are exported:
 
-### <a name="output_resource"></a> [resource](#output\_resource)
+### <a name="output_current_kubernetes_version"></a> [current\_kubernetes\_version](#output\_current\_kubernetes\_version)
 
-Description: This is the full output for the resource.
+Description: The current version running on the Azure Kubernetes Managed Cluster
+
+### <a name="output_fqdn"></a> [fqdn](#output\_fqdn)
+
+Description: The FQDN of the Azure Kubernetes Managed Cluster
+
+### <a name="output_http_application_routing_zone_name"></a> [http\_application\_routing\_zone\_name](#output\_http\_application\_routing\_zone\_name)
+
+Description: The Zone Name of the HTTP Application Routing
+
+### <a name="output_identity_principal_id"></a> [identity\_principal\_id](#output\_identity\_principal\_id)
+
+Description: The Principal ID associated with this Managed Service Identity
+
+### <a name="output_identity_tenant_id"></a> [identity\_tenant\_id](#output\_identity\_tenant\_id)
+
+Description: The Tenant ID associated with this Managed Service Identity
+
+### <a name="output_ingress_application_gateway_identity_client_id"></a> [ingress\_application\_gateway\_identity\_client\_id](#output\_ingress\_application\_gateway\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity used by the Application Gateway
+
+### <a name="output_ingress_application_gateway_identity_object_id"></a> [ingress\_application\_gateway\_identity\_object\_id](#output\_ingress\_application\_gateway\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity used by the Application Gateway
+
+### <a name="output_ingress_application_gateway_identity_user_assigned_identity_id"></a> [ingress\_application\_gateway\_identity\_user\_assigned\_identity\_id](#output\_ingress\_application\_gateway\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity used by the Application Gateway
+
+### <a name="output_key_vault_secrets_provider_secret_identity_client_id"></a> [key\_vault\_secrets\_provider\_secret\_identity\_client\_id](#output\_key\_vault\_secrets\_provider\_secret\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity used by the Secret Provider
+
+### <a name="output_key_vault_secrets_provider_secret_identity_object_id"></a> [key\_vault\_secrets\_provider\_secret\_identity\_object\_id](#output\_key\_vault\_secrets\_provider\_secret\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity used by the Secret Provider
+
+### <a name="output_key_vault_secrets_provider_secret_identity_user_assigned_identity_id"></a> [key\_vault\_secrets\_provider\_secret\_identity\_user\_assigned\_identity\_id](#output\_key\_vault\_secrets\_provider\_secret\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity used by the Secret Provider
+
+### <a name="output_kube_admin_config"></a> [kube\_admin\_config](#output\_kube\_admin\_config)
+
+Description: The kube\_admin\_config block for the Azure Kubernetes Managed Cluster
+
+### <a name="output_kube_admin_config_raw"></a> [kube\_admin\_config\_raw](#output\_kube\_admin\_config\_raw)
+
+Description: Raw Kubernetes config for the admin account
+
+### <a name="output_kube_config"></a> [kube\_config](#output\_kube\_config)
+
+Description: The kube\_config block for the Azure Kubernetes Managed Cluster
+
+### <a name="output_kube_config_raw"></a> [kube\_config\_raw](#output\_kube\_config\_raw)
+
+Description: Raw Kubernetes config for the user account
+
+### <a name="output_kubelet_identity_client_id"></a> [kubelet\_identity\_client\_id](#output\_kubelet\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity assigned to the Kubelets
+
+### <a name="output_kubelet_identity_object_id"></a> [kubelet\_identity\_object\_id](#output\_kubelet\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity assigned to the Kubelets
+
+### <a name="output_kubelet_identity_user_assigned_identity_id"></a> [kubelet\_identity\_user\_assigned\_identity\_id](#output\_kubelet\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity assigned to the Kubelets
+
+### <a name="output_load_balancer_profile_effective_outbound_ips"></a> [load\_balancer\_profile\_effective\_outbound\_ips](#output\_load\_balancer\_profile\_effective\_outbound\_ips)
+
+Description: The effective outbound IPs for the load balancer profile
+
+### <a name="output_nat_gateway_profile_effective_outbound_ips"></a> [nat\_gateway\_profile\_effective\_outbound\_ips](#output\_nat\_gateway\_profile\_effective\_outbound\_ips)
+
+Description: The effective outbound IPs for the NAT Gateway profile
+
+### <a name="output_network_profile"></a> [network\_profile](#output\_network\_profile)
+
+Description: The network profile block for the Kubernetes cluster
+
+### <a name="output_node_resource_group"></a> [node\_resource\_group](#output\_node\_resource\_group)
+
+Description: The auto-generated Resource Group containing resources for the Managed Kubernetes Cluster
+
+### <a name="output_node_resource_group_id"></a> [node\_resource\_group\_id](#output\_node\_resource\_group\_id)
+
+Description: The ID of the Resource Group containing resources for the Managed Kubernetes Cluster
+
+### <a name="output_oidc_issuer_url"></a> [oidc\_issuer\_url](#output\_oidc\_issuer\_url)
+
+Description: The OIDC issuer URL that is associated with the cluster
+
+### <a name="output_oms_agent_identity_client_id"></a> [oms\_agent\_identity\_client\_id](#output\_oms\_agent\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity used by the OMS Agents
+
+### <a name="output_oms_agent_identity_object_id"></a> [oms\_agent\_identity\_object\_id](#output\_oms\_agent\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity used by the OMS Agents
+
+### <a name="output_oms_agent_identity_user_assigned_identity_id"></a> [oms\_agent\_identity\_user\_assigned\_identity\_id](#output\_oms\_agent\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity used by the OMS Agents
+
+### <a name="output_portal_fqdn"></a> [portal\_fqdn](#output\_portal\_fqdn)
+
+Description: The FQDN for the Azure Portal resources when private link has been enabled
+
+### <a name="output_private_fqdn"></a> [private\_fqdn](#output\_private\_fqdn)
+
+Description: The FQDN for the Kubernetes Cluster when private link has been enabled
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
-Description: The `azurerm_kubernetes_cluster`'s resource id.
+Description: The Kubernetes Managed Cluster ID.
+
+### <a name="output_web_app_routing_web_app_routing_identity_client_id"></a> [web\_app\_routing\_web\_app\_routing\_identity\_client\_id](#output\_web\_app\_routing\_web\_app\_routing\_identity\_client\_id)
+
+Description: The Client ID of the user-defined Managed Identity used for Web App Routing
+
+### <a name="output_web_app_routing_web_app_routing_identity_object_id"></a> [web\_app\_routing\_web\_app\_routing\_identity\_object\_id](#output\_web\_app\_routing\_web\_app\_routing\_identity\_object\_id)
+
+Description: The Object ID of the user-defined Managed Identity used for Web App Routing
+
+### <a name="output_web_app_routing_web_app_routing_identity_user_assigned_identity_id"></a> [web\_app\_routing\_web\_app\_routing\_identity\_user\_assigned\_identity\_id](#output\_web\_app\_routing\_web\_app\_routing\_identity\_user\_assigned\_identity\_id)
+
+Description: The ID of the User Assigned Identity used for Web App Routing
 
 ## Modules
 
