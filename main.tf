@@ -426,7 +426,9 @@ resource "azapi_update_resource" "aks_api_server_access_profile" {
   resource_id = azurerm_kubernetes_cluster.this.id
 }
 
-data "azapi_resource_list" "example" {
+data "azurerm_subscription" "current" {}
+
+data "azapi_resource_list" "vm_skus" {
   parent_id = data.azurerm_subscription.current.id
   type      = "Microsoft.Compute/Skus@2021-07-01"
   query_parameters = {

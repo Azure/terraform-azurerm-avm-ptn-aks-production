@@ -34,7 +34,7 @@ locals {
 locals {
   default_node_pool_available_zones = setsubtract(local.zones, local.restricted_zones)
   filtered_vms = [
-    for sku in data.azapi_resource_list.example.output.value :
+    for sku in data.azapi_resource_list.vm_skus.output.value :
     sku if(sku.resourceType == "virtualMachines" && sku.name == var.default_node_pool_vm_sku)
   ]
   restricted_zones = try(local.filtered_vms[0].restrictions[0].restrictionInfo.zones, [])
@@ -44,7 +44,7 @@ locals {
 locals {
   filtered_vms_by_node_pool = {
     for pool_name, pool in var.node_pools : pool_name => [
-      for sku in data.azapi_resource_list.example.output.value :
+      for sku in data.azapi_resource_list.vm_skus.output.value :
       sku if(sku.resourceType == "virtualMachines" && sku.name == pool.vm_size)
     ]
   }
