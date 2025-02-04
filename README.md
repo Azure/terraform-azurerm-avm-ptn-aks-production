@@ -369,17 +369,23 @@ object({
 
 Default: `null`
 
-### <a name="input_log_analytics_workspace_name"></a> [log\_analytics\_workspace\_name](#input\_log\_analytics\_workspace\_name)
+### <a name="input_log_analytics_workspace"></a> [log\_analytics\_workspace](#input\_log\_analytics\_workspace)
 
-Description: The name of the Log Analytics workspace.
+Description: Optional.  The resource ID of an existing Log Analytics Workspace. If not provided, a new one will be created by the module.
 
-Type: `string`
+Type:
+
+```hcl
+object({
+    resource_id = string
+  })
+```
 
 Default: `null`
 
-### <a name="input_log_analytics_workspace_resource_id"></a> [log\_analytics\_workspace\_resource\_id](#input\_log\_analytics\_workspace\_resource\_id)
+### <a name="input_log_analytics_workspace_name"></a> [log\_analytics\_workspace\_name](#input\_log\_analytics\_workspace\_name)
 
-Description: Optional.  The resource ID of an existing Log Analytics Workspace. If not provided, a new one will be created by the module.
+Description: The name of the Log Analytics workspace.
 
 Type: `string`
 

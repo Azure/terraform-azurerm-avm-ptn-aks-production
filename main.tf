@@ -294,7 +294,7 @@ resource "azapi_update_resource" "safeguard_profile" {
 }
 
 resource "azurerm_log_analytics_workspace" "this" {
-  count = var.log_analytics_workspace_resource_id != null ? 0 : 1
+  count = var.log_analytics_workspace.resource_id != null ? 0 : 1
 
   location            = var.location
   name                = local.log_analytics_workspace_name

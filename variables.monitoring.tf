@@ -86,8 +86,10 @@ variable "aks_monitor_ci_association_name" {
   default     = null
 }
 
-variable "log_analytics_workspace_resource_id" {
-  type        = string
+variable "log_analytics_workspace" {
+  type = object({
+    resource_id = string
+  })
   default     = null
   description = "Optional.  The resource ID of an existing Log Analytics Workspace. If not provided, a new one will be created by the module."
 }

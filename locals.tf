@@ -17,7 +17,7 @@ locals {
   # the following resources can be supplied to the module, use the resource ID if supplied, otherwise create the resource if the feature flag is enabled
   azure_monitor_workspace_resource_id = var.azure_monitor_workspace_resource_id != null ? var.azure_monitor_workspace_resource_id : try(azurerm_monitor_workspace.this[0].id, null)
   grafana_dashboard_resource_id       = var.grafana_dashboard_resource_id != null ? var.grafana_dashboard_resource_id : try(azurerm_dashboard_grafana.this[0].id, null)
-  log_analytics_workspace_resource_id = var.log_analytics_workspace_resource_id != null ? var.log_analytics_workspace_resource_id : azurerm_log_analytics_workspace.this[0].id
+  log_analytics_workspace_resource_id = var.log_analytics_workspace != null ? var.log_analytics_workspace.resource_id : azurerm_log_analytics_workspace.this[0].id
   user_assigned_identity_resource_id  = var.managed_identities.user_assigned_resource_ids != null ? one(var.managed_identities.user_assigned_resource_ids) : azurerm_user_assigned_identity.aks[0].id
 }
 
