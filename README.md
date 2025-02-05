@@ -213,6 +213,14 @@ object({
 
 Default: `null`
 
+### <a name="input_network_policy"></a> [network\_policy](#input\_network\_policy)
+
+Description: (Optional) Sets up network policy to be used with Azure CNI. Network policy allows us to control the traffic flow between pods. Currently supported values are `calico` and `cilium`. Defaults to `cilium`.
+
+Type: `string`
+
+Default: `"cilium"`
+
 ### <a name="input_node_labels"></a> [node\_labels](#input\_node\_labels)
 
 Description: (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.

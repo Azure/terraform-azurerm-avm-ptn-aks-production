@@ -121,6 +121,18 @@ variable "monitor_metrics" {
 EOT
 }
 
+variable "network_policy" {
+  type        = string
+  default     = "cilium"
+  description = "(Optional) Sets up network policy to be used with Azure CNI. Network policy allows us to control the traffic flow between pods. Currently supported values are `calico` and `cilium`. Defaults to `cilium`."
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^(calico|cilium)$", var.network_policy))
+    error_message = "network_policy must be either calico or cilium."
+  }
+}
+
 variable "node_labels" {
   type        = map(string)
   default     = {}
