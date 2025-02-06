@@ -93,7 +93,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     tags                         = merge(var.tags, var.agents_tags)
     temporary_name_for_rotation  = "tempsyspool" # must begin with a lowercase letter, contain only lowercase letters and numbers and be between 1 and 12 characters in length.
     vnet_subnet_id               = var.network.node_subnet_id
-    zones                        = local.default_node_pool_available_zones
+    zones                        = ["1", "2", "3"]
 
     upgrade_settings {
       max_surge = "10%"
@@ -382,9 +382,7 @@ resource "azurerm_management_lock" "this" {
 
 
 resource "azurerm_kubernetes_cluster_node_pool" "this" {
-  for_each = tomap({
-    for pool in local.node_pools : pool.name => pool
-  })
+  for_each = var.node_pools
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
   name                  = each.value.name
@@ -398,7 +396,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   os_sku                = each.value.os_sku
   tags                  = each.value.tags
   vnet_subnet_id        = var.network.node_subnet_id
-  zones                 = each.value.zone
+  zones                 = each.value.zones
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 

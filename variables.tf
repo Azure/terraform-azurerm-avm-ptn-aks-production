@@ -316,6 +316,7 @@ variable "node_pools" {
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
+    zones           = optional(set(string), ["1", "2", "3"])
   }))
   default     = {}
   description = <<-EOT
@@ -332,6 +333,7 @@ map(object({
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
   labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
   node_taints          = (Optional) A list of the taints added to new nodes during node pool create and scale.
+  zones                = (Optional) A list of Availability Zones across which the Node Pool should be spread. Changing this forces a new resource to be created.
 }))
 
 Example input:
