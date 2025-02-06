@@ -70,6 +70,7 @@ module "test" {
   private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
   private_dns_zone_id_enabled = true
   rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
+  network_policy              = "calico"
   network = {
     name                = module.avm_res_network_virtualnetwork.name
     resource_group_name = azurerm_resource_group.this.name
