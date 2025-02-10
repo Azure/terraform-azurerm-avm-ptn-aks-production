@@ -40,7 +40,7 @@ resource "azurerm_role_assignment" "grafana_data_reader" {
 }
 
 resource "azurerm_role_assignment" "grafana_admin" {
-  count = var.grafana_admin_entra_group_id != null ? 1 : 0
+  count = var.grafana_dashboard_enabled && var.grafana_admin_entra_group_id != null ? 1 : 0
 
   principal_id         = var.grafana_admin_entra_group_id
   scope                = local.grafana_dashboard_resource_id
