@@ -80,3 +80,7 @@ locals {
     }
   }
 }
+
+locals {
+  network_resource_group_id = regex("(.*?/resourceGroups/[^/]+)", var.network.node_subnet_id)[0]
+}
