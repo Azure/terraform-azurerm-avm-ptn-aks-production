@@ -71,8 +71,8 @@ module "test" {
     ]
   }
   rbac_aad_tenant_id = data.azurerm_client_config.current.tenant_id
-
-  location = "East US 2" # Hardcoded because we have to test in a region with availability zones
+  os_disk_type       = "Ephemeral"
+  location           = "East US 2" # Hardcoded because we have to test in a region with availability zones
   node_pools = {
     workload = {
       name                 = "workloadworkload" #Long name to test the truncate to 12 characters

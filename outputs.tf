@@ -148,7 +148,7 @@ output "private_fqdn" {
 
 output "resource_id" {
   description = "The Kubernetes Managed Cluster ID."
-  value       = azurerm_kubernetes_cluster.this.id
+  value       = azapi_update_resource.aks_cluster_post_create.id
 }
 
 output "web_app_routing_web_app_routing_identity_client_id" {
