@@ -81,8 +81,8 @@ resource "azurerm_kubernetes_cluster" "this" {
     min_count               = 3
     node_labels             = var.node_labels
     orchestrator_version    = var.orchestrator_version
-    os_sku                  = var.os_sku
     os_disk_type            = var.os_disk_type
+    os_sku                  = var.os_sku
     tags                    = merge(var.tags, var.agents_tags)
     vnet_subnet_id          = var.network.node_subnet_id
     zones                   = local.default_node_pool_available_zones
@@ -121,9 +121,9 @@ resource "azurerm_kubernetes_cluster" "this" {
     network_data_plane  = var.network_policy == "cilium" ? "cilium" : null
     network_plugin_mode = "overlay"
     network_policy      = var.network_policy
+    outbound_type       = var.outbound_type
     pod_cidr            = var.network.pod_cidr
     service_cidr        = var.network.service_cidr
-    outbound_type       = var.outbound_type
   }
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id

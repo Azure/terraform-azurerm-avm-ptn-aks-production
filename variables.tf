@@ -221,7 +221,6 @@ variable "os_disk_type" {
   }
 }
 
-
 variable "os_sku" {
   type        = string
   default     = "AzureLinux"
