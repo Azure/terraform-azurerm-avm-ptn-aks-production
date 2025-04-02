@@ -82,6 +82,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     node_labels             = var.node_labels
     orchestrator_version    = var.orchestrator_version
     os_sku                  = var.os_sku
+    os_disk_type            = var.os_disk_type
     tags                    = merge(var.tags, var.agents_tags)
     vnet_subnet_id          = var.network.node_subnet_id
     zones                   = local.default_node_pool_available_zones
@@ -122,6 +123,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     network_policy      = var.network_policy
     pod_cidr            = var.network.pod_cidr
     service_cidr        = var.network.service_cidr
+    outbound_type       = var.outbound_type
   }
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
@@ -276,6 +278,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   node_labels           = each.value.labels
   orchestrator_version  = each.value.orchestrator_version
   os_disk_size_gb       = each.value.os_disk_size_gb
+  os_disk_type          = each.value.os_disk_type
   os_sku                = each.value.os_sku
   tags                  = each.value.tags
   vnet_subnet_id        = var.network.node_subnet_id

@@ -65,7 +65,7 @@ module "test" {
     ]
   }
   rbac_aad_tenant_id = data.azurerm_client_config.current.tenant_id
-
+  os_disk_type = "Ephemeral"
   location = "East US 2" # Hardcoded because we have to test in a region with availability zones
   node_pools = {
     workload = {

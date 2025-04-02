@@ -51,6 +51,7 @@ locals {
         tags                 = pool.tags
         labels               = pool.labels
         os_sku               = pool.os_sku
+        os_disk_type         = pool.os_disk_type
         mode                 = pool.mode
         os_disk_size_gb      = pool.os_disk_size_gb
         zone                 = [zone]
