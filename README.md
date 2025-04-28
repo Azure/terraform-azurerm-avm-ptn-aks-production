@@ -94,7 +94,6 @@ object({
     pod_cidr            = string
     service_cidr        = optional(string)
     dns_service_ip      = optional(string)
-    docker_bridge_cidr  = optional(string)
   })
 ```
 
