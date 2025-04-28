@@ -88,11 +88,9 @@ Type:
 
 ```hcl
 object({
-    name                = string
-    resource_group_name = string
-    node_subnet_id      = string
-    pod_cidr            = string
-    service_cidr        = optional(string)
+    node_subnet_id = string
+    pod_cidr       = string
+    service_cidr   = optional(string)
   })
 ```
 
