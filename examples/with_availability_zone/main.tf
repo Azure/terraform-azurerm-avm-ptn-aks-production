@@ -49,10 +49,8 @@ module "test" {
   name                = module.naming.kubernetes_cluster.name_unique
   resource_group_name = azurerm_resource_group.this.name
   network = {
-    name                = module.avm_res_network_virtualnetwork.name
-    resource_group_name = azurerm_resource_group.this.name
-    node_subnet_id      = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
-    pod_cidr            = "192.168.0.0/16"
+    node_subnet_id = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
+    pod_cidr       = "192.168.0.0/16"
   }
   acr = {
     name                          = module.naming.container_registry.name_unique
