@@ -70,6 +70,7 @@ module "test" {
     resource_group_name = azurerm_resource_group.this.name
     node_subnet_id      = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
     pod_cidr            = "192.168.0.0/16"
+    service_cidr        = "10.2.0.0/16"
   }
   acr = {
     name                          = module.naming.container_registry.name_unique
