@@ -317,7 +317,8 @@ Default: `"AzureLinux"`
 
 ### <a name="input_outbound_type"></a> [outbound\_type](#input\_outbound\_type)
 
-Description: (Optional) Specifies the outbound type that will be used for cluster outbound (egress) routing. Possible values include: `loadBalancer`,`userDefinedRouting`,`managedNATGateway`,`userAssignedNATGateway`. If not specified, the default is `loadBalancer`. Changing this forces a new resource to be created.
+Description: (Optional) Specifies the outbound type that will be used for cluster outbound (egress) routing. Possible values include: `loadBalancer`,`userDefinedRouting`,`managedNATGateway`,`userAssignedNATGateway`. If not specified, the default is `loadBalancer`.Changing this forces a new resource to be created.
+
 Type: `string`
 
 Default: `"loadBalancer"`
