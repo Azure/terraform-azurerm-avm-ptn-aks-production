@@ -19,6 +19,7 @@ variable "network" {
     node_subnet_id = string
     pod_cidr       = string
     service_cidr   = optional(string)
+    dns_service_ip = optional(string)
   })
   description = "Values for the networking configuration of the AKS cluster"
 }

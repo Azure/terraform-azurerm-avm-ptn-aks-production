@@ -116,6 +116,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
   network_profile {
     network_plugin      = "azure"
+    dns_service_ip      = local.dns_service_ip
     load_balancer_sku   = "standard"
     network_data_plane  = var.network_policy == "cilium" ? "cilium" : null
     network_plugin_mode = "overlay"
