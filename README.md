@@ -237,6 +237,7 @@ map(object({
   max\_count            = (Optional) The maximum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be greater than or equal to `min_count`.  
   min\_count            = (Optional) The minimum number of nodes which should exist within this Node Pool. Valid values are between `0` and `1000` and must be less than or equal to `max_count`.  
   os\_sku               = (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu`or `AzureLinux`. If not specified, the default is `AzureLinux`. Changing this forces a new resource to be created.  
+  os\_disk\_type         = (Optional) Specifies the type of disk which should be used for the Operating System. Possible values include: `Managed`or `Ephemeral`. If not specified, the default is `Managed`. Changing this forces a new resource to be created.  
   mode                 = (Optional) Should this Node Pool be used for System or User resources? Possible values are `System` and `User`. Defaults to `User`.  
   os\_disk\_size\_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.  
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.  
@@ -262,6 +263,7 @@ Example input:
       max_count            = 4
       min_count            = 2
       os_sku               = "Ubuntu"
+      os_disk_type         = "Ephemeral"
       mode                 = "User"
     }
   }
@@ -278,6 +280,7 @@ map(object({
     max_count       = optional(number)
     min_count       = optional(number)
     os_sku          = optional(string, "AzureLinux")
+    os_disk_type    = optional(string, "Managed")
     mode            = optional(string)
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
@@ -295,6 +298,14 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_os_disk_type"></a> [os\_disk\_type](#input\_os\_disk\_type)
+
+Description: (Optional) Specifies the OS Disk Type used by the agent pool. Possible values include: `Managed` or `Ephemeral`. If not specified, the default is `Managed`.Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `"Managed"`
+
 ### <a name="input_os_sku"></a> [os\_sku](#input\_os\_sku)
 
 Description: (Optional) Specifies the OS SKU used by the agent pool. Possible values include: `Ubuntu` or `AzureLinux`. If not specified, the default is `AzureLinux`.Changing this forces a new resource to be created.
@@ -302,6 +313,14 @@ Description: (Optional) Specifies the OS SKU used by the agent pool. Possible va
 Type: `string`
 
 Default: `"AzureLinux"`
+
+### <a name="input_outbound_type"></a> [outbound\_type](#input\_outbound\_type)
+
+Description: (Optional) Specifies the outbound type that will be used for cluster outbound (egress) routing. Possible values include: `loadBalancer`,`userDefinedRouting`,`managedNATGateway`,`userAssignedNATGateway`. If not specified, the default is `loadBalancer`.Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `"loadBalancer"`
 
 ### <a name="input_private_dns_zone_id"></a> [private\_dns\_zone\_id](#input\_private\_dns\_zone\_id)
 
