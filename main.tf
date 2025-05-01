@@ -29,7 +29,7 @@ resource "azurerm_user_assigned_identity" "aks" {
   count = length(var.managed_identities.user_assigned_resource_ids) > 0 ? 0 : 1
 
   location            = var.location
-  name                = "uami-aks"
+  name                = var.user_assigned_identity_name
   resource_group_name = var.resource_group_name
   tags                = var.tags
 }
