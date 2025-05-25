@@ -61,26 +61,27 @@ data "azurerm_client_config" "current" {}
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "test" {
-  source                      = "../../"
-  kubernetes_version          = "1.30"
-  enable_telemetry            = var.enable_telemetry # see variables.tf
-  name                        = module.naming.kubernetes_cluster.name_unique
-  resource_group_name         = azurerm_resource_group.this.name
-  location                    = azurerm_resource_group.this.location
-  private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
-  private_dns_zone_id_enabled = true
-  rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
-  network_policy              = "calico"
+  source = "../../"
+
+  location = azurerm_resource_group.this.location
+  name     = module.naming.kubernetes_cluster.name_unique
   network = {
     node_subnet_id = module.avm_res_network_virtualnetwork.subnets["subnet"].resource_id
     pod_cidr       = "192.168.0.0/16"
     service_cidr   = "10.2.0.0/16"
   }
+  resource_group_name = azurerm_resource_group.this.name
   acr = {
     name                          = module.naming.container_registry.name_unique
     subnet_resource_id            = module.avm_res_network_virtualnetwork.subnets["private_link_subnet"].resource_id
     private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
   }
+  enable_telemetry            = var.enable_telemetry # see variables.tf
+  kubernetes_version          = "1.30"
+  network_policy              = "calico"
+  private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
+  private_dns_zone_id_enabled = true
+  rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
 }
 
 resource "azurerm_private_dns_zone" "this" {
@@ -99,8 +100,8 @@ module "avm_res_network_virtualnetwork" {
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
-  name                = "myvnet"
   resource_group_name = azurerm_resource_group.this.name
+  name                = "myvnet"
   subnets = {
     "subnet" = {
       name             = "nodecidr"
