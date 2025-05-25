@@ -1,19 +1,20 @@
 module "avm_res_containerregistry_registry" {
-  for_each                      = toset(var.acr == null ? [] : ["acr"])
-  source                        = "Azure/avm-res-containerregistry-registry/azurerm"
-  version                       = "0.4.0"
-  name                          = var.acr.name
-  location                      = var.location
-  resource_group_name           = var.resource_group_name
-  sku                           = "Premium"
-  zone_redundancy_enabled       = coalesce(var.acr.zone_redundancy_enabled, true)
-  public_network_access_enabled = false
+  source   = "Azure/avm-res-containerregistry-registry/azurerm"
+  version  = "0.4.0"
+  for_each = toset(var.acr == null ? [] : ["acr"])
+
+  location            = var.location
+  name                = var.acr.name
+  resource_group_name = var.resource_group_name
   private_endpoints = {
     primary = {
       private_dns_zone_resource_ids = var.acr.private_dns_zone_resource_ids
       subnet_resource_id            = var.acr.subnet_resource_id
     }
   }
+  public_network_access_enabled = false
+  sku                           = "Premium"
+  zone_redundancy_enabled       = coalesce(var.acr.zone_redundancy_enabled, true)
 }
 
 resource "azurerm_role_assignment" "acr" {
