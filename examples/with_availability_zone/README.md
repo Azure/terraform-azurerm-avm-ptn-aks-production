@@ -49,8 +49,6 @@ data "azurerm_client_config" "current" {}
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "test" {
-  # source  = "Azure/avm-ptn-aks-production/azurerm"
-  # version = "0.5.0"
   source = "../../"
 
   location = "East US 2" # Hardcoded because we have to test in a region with availability zones
