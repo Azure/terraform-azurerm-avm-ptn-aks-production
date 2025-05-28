@@ -265,11 +265,13 @@ resource "azurerm_management_lock" "this" {
   notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 }
 
+moved {
+  from = azurerm_kubernetes_cluster_node_pool.this
+  to   = azurerm_kubernetes_cluster_node_pool.extra_pool
+}
 
-resource "azurerm_kubernetes_cluster_node_pool" "this" {
-  for_each = tomap({
-    for pool in local.node_pools : pool.name => pool
-  })
+resource "azurerm_kubernetes_cluster_node_pool" "extra_pool" {
+  for_each = local.node_pool_map
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
   name                  = each.value.name
@@ -295,6 +297,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
     }
   }
 }
+
 
 # Data source for the current subscription
 data "azurerm_subscription" "current" {}
