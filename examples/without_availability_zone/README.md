@@ -6,6 +6,7 @@ This deploys the module with a region that has no availability zones.
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
