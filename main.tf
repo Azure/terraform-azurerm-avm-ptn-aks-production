@@ -92,6 +92,9 @@ resource "azurerm_kubernetes_cluster" "this" {
       max_surge = "10%"
     }
   }
+  api_server_access_profile {
+    vnet_integration_enabled = true
+  }
   auto_scaler_profile {
     balance_similar_node_groups = true
   }
