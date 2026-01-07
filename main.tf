@@ -269,9 +269,7 @@ resource "azurerm_management_lock" "this" {
 
 
 resource "azurerm_kubernetes_cluster_node_pool" "this" {
-  for_each = tomap({
-    for pool in local.node_pools : pool.name => pool
-  })
+  for_each = local.node_pools
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
   name                  = each.value.name
@@ -286,7 +284,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   tags                  = each.value.tags
   vm_size               = each.value.vm_size
   vnet_subnet_id        = var.network.node_subnet_id
-  zones                 = each.value.zone
+  zones                 = each.value.zones
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 

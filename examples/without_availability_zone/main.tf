@@ -59,7 +59,7 @@ module "test" {
     zone_redundancy_enabled       = false
   }
   enable_telemetry   = var.enable_telemetry # see variables.tf
-  kubernetes_version = "1.30"
+  kubernetes_version = "1.34"
   managed_identities = {
     user_assigned_resource_ids = [
       azurerm_user_assigned_identity.this.id
@@ -69,7 +69,7 @@ module "test" {
     workload = {
       name                 = "workload"
       vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.30"
+      orchestrator_version = "1.34"
       max_count            = 110
       min_count            = 2
       os_sku               = "AzureLinux"
@@ -78,7 +78,7 @@ module "test" {
     ingress = {
       name                 = "ingress"
       vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.30"
+      orchestrator_version = "1.34"
       max_count            = 4
       min_count            = 2
       os_sku               = "AzureLinux"

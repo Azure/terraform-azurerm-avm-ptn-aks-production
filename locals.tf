@@ -38,27 +38,9 @@ locals {
 
 
 locals {
-  # Flatten a list of var.node_pools and zones
-  node_pools = flatten([
-    for pool in local.zonetagged_node_pools : [
-      for zone in pool.zones : {
-        # concatenate name and zone trim to 12 characters
-        name                 = "${substr(pool.name, 0, 10)}${zone}"
-        vm_size              = pool.vm_size
-        orchestrator_version = pool.orchestrator_version
-        max_count            = pool.max_count
-        min_count            = pool.min_count
-        tags                 = pool.tags
-        labels               = pool.labels
-        os_sku               = pool.os_sku
-        os_disk_type         = pool.os_disk_type
-        mode                 = pool.mode
-        os_disk_size_gb      = pool.os_disk_size_gb
-        zone                 = [zone]
-      }
-    ]
-  ])
+  node_pools = local.zonetagged_node_pools
 }
+
 locals {
   log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
 }
