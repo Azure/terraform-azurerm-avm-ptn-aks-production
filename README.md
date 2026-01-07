@@ -238,13 +238,13 @@ Type:
 
 ```hcl
 object({
-    name                                         = string
+    name                                         = optional(string)
     enabled                                      = optional(bool, true)
     existing_log_analytics_workspace_resource_id = optional(string)
   })
 ```
 
-Default: `null`
+Default: `{}`
 
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 

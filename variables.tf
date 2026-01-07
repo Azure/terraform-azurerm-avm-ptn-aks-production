@@ -150,11 +150,11 @@ variable "lock" {
 
 variable "log_analytics_definition" {
   type = object({
-    name                                         = string
+    name                                         = optional(string)
     enabled                                      = optional(bool, true)
     existing_log_analytics_workspace_resource_id = optional(string)
   })
-  default     = null
+  default     = {}
   description = <<DESCRIPTION
   (Optional) Configuration for Log Analytics workspace integration.
 
