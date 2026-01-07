@@ -56,7 +56,7 @@ resource "azurerm_role_assignment" "dns_zone_contributor" {
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
-  name                              = "aks-${var.name}"
+  name                              = var.name
   resource_group_name               = var.resource_group_name
   automatic_upgrade_channel         = "patch"
   azure_policy_enabled              = true
@@ -112,6 +112,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   key_vault_secrets_provider {
     secret_rotation_enabled = true
   }
+
   monitor_metrics {
     annotations_allowed = try(var.monitor_metrics.annotations_allowed, null)
     labels_allowed      = try(var.monitor_metrics.labels_allowed, null)
