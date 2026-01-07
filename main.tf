@@ -112,7 +112,13 @@ resource "azurerm_kubernetes_cluster" "this" {
   key_vault_secrets_provider {
     secret_rotation_enabled = true
   }
+  dynamic "microsoft_defender" {
+    for_each = var.defender_configuration.enabled ? ["microsoft_defender"] : []
 
+    content {
+      log_analytics_workspace_id = var.defender_configuration.log_analytics_workspace_id != null ? var.defender_configuration.log_analytics_workspace_id : local.log_analytics_workspace_id
+    }
+  }
   monitor_metrics {
     annotations_allowed = try(var.monitor_metrics.annotations_allowed, null)
     labels_allowed      = try(var.monitor_metrics.labels_allowed, null)

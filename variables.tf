@@ -54,6 +54,19 @@ variable "default_node_pool_vm_sku" {
   description = "The VM SKU to use for the default node pool. A minimum of three nodes of 8 vCPUs or two nodes of at least 16 vCPUs is recommended. Do not use SKUs with less than 4 CPUs and 4Gb of memory."
 }
 
+variable "defender_configuration" {
+  type = object({
+    enabled                    = optional(bool, true)
+    log_analytics_workspace_id = optional(string, null)
+  })
+  default     = {}
+  description = <<DESCRIPTION
+(Optional) Configuration for Defender for Cloud integration.
+- `enabled` - (Optional) Whether Defender for Cloud integration is enabled. Defaults to `true`.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for Defender for Cloud. If not specified, and enabled the module will use the LAW settings from the diagnostic configuration.
+DESCRIPTION
+}
+
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)

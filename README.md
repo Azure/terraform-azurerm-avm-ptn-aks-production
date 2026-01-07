@@ -139,6 +139,23 @@ Type: `string`
 
 Default: `"Standard_D4d_v5"`
 
+### <a name="input_defender_configuration"></a> [defender\_configuration](#input\_defender\_configuration)
+
+Description: (Optional) Configuration for Defender for Cloud integration.
+- `enabled` - (Optional) Whether Defender for Cloud integration is enabled. Defaults to `true`.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for Defender for Cloud. If not specified, and enabled the module will use the LAW settings from the diagnostic configuration.
+
+Type:
+
+```hcl
+object({
+    enabled                    = optional(bool, true)
+    log_analytics_workspace_id = optional(string, null)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
 Description: A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
