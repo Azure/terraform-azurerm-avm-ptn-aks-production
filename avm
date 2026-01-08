@@ -96,6 +96,19 @@ if [ -n "${AVM_PORCH_BASE_URL}" ]; then
   PORCH_BASE_URL_MAKE_ADD="PORCH_BASE_URL=${AVM_PORCH_BASE_URL}"
 fi
 
+# Get the repo specific environment variables from avm.config if it exists
+LOCAL_ENVIRONMENT_VARIABLES=""
+if [ -f "avm.config.json" ]; then
+  declare -A variables
+  eval "$(cat "avm.config.json" | jq -r 'to_entries[] | @sh "variables[\(.key|tostring)]=\(.value|tostring)"')"
+
+  for key in "${!variables[@]}"; do
+    export "$key"="${variables[$key]}"
+    LOCAL_ENVIRONMENT_VARIABLES="${LOCAL_ENVIRONMENT_VARIABLES}-e $key "
+    echo "Set environment variable: $key"="${variables[$key]}"
+  done
+fi
+
 # Check if we are running in a container
 # If we are then just run make directly
 if [ -z "${AVM_IN_CONTAINER}" ]; then
@@ -120,11 +133,13 @@ if [ -z "${AVM_IN_CONTAINER}" ]; then
     -e NO_COLOR \
     -e PORCH_LOG_LEVEL \
     -e TF_IN_AUTOMATION=1 \
+    ${LOCAL_ENVIRONMENT_VARIABLES} \
     --env-file <(env | grep '^TF_VAR_') \
     --env-file <(env | grep '^AVM_') \
     "${CONTAINER_IMAGE}" \
     make \
     TUI="${TUI}" \
+    AVM_PORCH_STDOUT="${AVM_PORCH_STDOUT}" \
     AVM_MAKEFILE_REF="${AVM_MAKEFILE_REF}" \
     "${PORCH_BASE_URL_MAKE_ADD}" \
     AVM_PORCH_REF="${AVM_PORCH_REF}" \

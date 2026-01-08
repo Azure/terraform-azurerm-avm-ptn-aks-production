@@ -116,7 +116,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     for_each = var.defender_configuration.enabled ? ["microsoft_defender"] : []
 
     content {
-      log_analytics_workspace_id = var.defender_configuration.log_analytics_workspace_id != null ? var.defender_configuration.log_analytics_workspace_id : local.log_analytics_workspace_id
+      log_analytics_workspace_id = var.defender_configuration.log_analytics_workspace_id != null ? var.defender_configuration.log_analytics_workspace_id : azurerm_log_analytics_workspace.this[0].id
     }
   }
   monitor_metrics {
@@ -135,10 +135,10 @@ resource "azurerm_kubernetes_cluster" "this" {
     service_cidr        = var.network.service_cidr
   }
   dynamic "oms_agent" {
-    for_each = var.log_analytics_definition != null && var.log_analytics_definition.enabled ? [1] : []
+    for_each = var.oms_agent.enabled ? ["oms_agent"] : []
 
     content {
-      log_analytics_workspace_id      = local.log_analytics_workspace_id
+      log_analytics_workspace_id      = try(var.oms_agent.log_analytics_workspace_id, null) != null ? var.oms_agent.log_analytics_workspace_id : azurerm_log_analytics_workspace.this[0].id
       msi_auth_for_monitoring_enabled = true
     }
   }
@@ -195,22 +195,52 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
     replace_triggered_by = [null_resource.kubernetes_version_keeper.id]
   }
 }
-
+#create a workspace if one is not provided and defender or oms_agent is enabled
 resource "azurerm_log_analytics_workspace" "this" {
-  count = var.log_analytics_definition != null && var.log_analytics_definition.existing_log_analytics_workspace_resource_id == null ? 1 : 0
+  count = local.create_log_analytics_workspace ? 1 : 0
 
   location            = var.location
-  name                = coalesce(try(var.log_analytics_definition.name, null), "log-${var.name}-aks")
+  name                = coalesce(try(var.log_analytics_workspace_definition.name, null), "log-${var.name}-aks")
   resource_group_name = var.resource_group_name
+  daily_quota_gb      = var.log_analytics_workspace_definition.daily_quota_gb
+  retention_in_days   = var.log_analytics_workspace_definition.retention_in_days
   sku                 = "PerGB2018"
   tags                = var.tags
 }
 
-resource "azurerm_log_analytics_workspace_table" "this" {
-  for_each = local.log_analytics_workspace_id != null ? toset(local.log_analytics_tables) : []
+#Create tables in any workspace that is provided or used
+resource "azurerm_log_analytics_workspace_table" "this_defender" {
+  for_each = try(var.defender_configuration.log_analytics_workspace_id, null) != null ? toset(local.log_analytics_tables) : []
 
   name                    = each.value
-  workspace_id            = local.log_analytics_workspace_id
+  workspace_id            = try(var.defender_configuration.log_analytics_workspace_id, null)
+  plan                    = "Basic"
+  total_retention_in_days = 30
+}
+
+resource "azurerm_log_analytics_workspace_table" "this_oms_agent" {
+  for_each = try(var.oms_agent.log_analytics_workspace_id, null) != null ? toset(local.log_analytics_tables) : []
+
+  name                    = each.value
+  workspace_id            = try(var.oms_agent.log_analytics_workspace_id, null)
+  plan                    = "Basic"
+  total_retention_in_days = 30
+}
+
+resource "azurerm_log_analytics_workspace_table" "this_diagnostic_setting" {
+  for_each = try(var.diagnostic_settings.workspace_resource_id, null) != null ? toset(local.log_analytics_tables) : []
+
+  name                    = each.value
+  workspace_id            = try(var.diagnostic_settings.workspace_resource_id, null)
+  plan                    = "Basic"
+  total_retention_in_days = 30
+}
+
+resource "azurerm_log_analytics_workspace_table" "this_module_created_law" {
+  for_each = length(azurerm_log_analytics_workspace.this) > 0 ? toset(local.log_analytics_tables) : []
+
+  name                    = each.value
+  workspace_id            = azurerm_log_analytics_workspace.this[0].id
   plan                    = "Basic"
   total_retention_in_days = 30
 }

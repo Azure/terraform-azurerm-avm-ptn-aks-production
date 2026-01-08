@@ -72,7 +72,7 @@ module "test" {
     private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
   }
   enable_telemetry            = var.enable_telemetry # see variables.tf
-  kubernetes_version          = "1.30"
+  kubernetes_version          = "1.34"
   network_policy              = "calico"
   private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
   private_dns_zone_id_enabled = true

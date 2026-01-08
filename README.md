@@ -48,7 +48,10 @@ The following resources are used by this module:
 - [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
 - [azurerm_kubernetes_cluster_node_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
 - [azurerm_log_analytics_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
-- [azurerm_log_analytics_workspace_table.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
+- [azurerm_log_analytics_workspace_table.this_defender](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
+- [azurerm_log_analytics_workspace_table.this_diagnostic_setting](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
+- [azurerm_log_analytics_workspace_table.this_module_created_law](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
+- [azurerm_log_analytics_workspace_table.this_oms_agent](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_role_assignment.acr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
@@ -143,7 +146,7 @@ Default: `"Standard_D4d_v5"`
 
 Description: (Optional) Configuration for Defender for Cloud integration.
 - `enabled` - (Optional) Whether Defender for Cloud integration is enabled. Defaults to `true`.
-- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for Defender for Cloud. If not specified, and enabled the module will use the LAW settings from the diagnostic configuration.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for Defender for Cloud. If not specified, and enabled the module will create a Log Analytics workspace.
 
 Type:
 
@@ -210,10 +213,10 @@ Default: `null`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description:   Controls the Resource Lock configuration for this resource. The following properties can be specified:
+Description: Controls the Resource Lock configuration for this resource. The following properties can be specified:
 
-  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
-  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+- `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+- `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
 
 Type:
 
@@ -226,21 +229,23 @@ object({
 
 Default: `null`
 
-### <a name="input_log_analytics_definition"></a> [log\_analytics\_definition](#input\_log\_analytics\_definition)
+### <a name="input_log_analytics_workspace_definition"></a> [log\_analytics\_workspace\_definition](#input\_log\_analytics\_workspace\_definition)
 
-Description:   (Optional) Configuration for Log Analytics workspace integration.
+Description: (Optional) Configuration for Log Analytics workspace integration. If not specified, no Log Analytics workspace will be created or used.
 
-  - `name` - (Required) The name of the Log Analytics workspace.
-  - `enabled` - (Optional) Whether Log Analytics integration is enabled. Defaults to `true`.
-  - `existing_log_analytics_workspace_resource_id` - (Optional) The resource ID of an existing Log Analytics workspace to use.. If not specified, and enabled is true then a new workspace will be created. This workspace will also be used for diagnostic settings if a workspace ID is not provided in the diagnostic\_settings variable.
+- `name` - (Optional) The name of the Log Analytics workspace to create. If not specified, defaults to `log-<var.name>-aks`. Only used when creating a new workspace.
+- `retention_in_days` - (Optional) The workspace data retention in days. Defaults to `30`. Only used when creating a new workspace.
+- `daily_quota_gb` - (Optional) The workspace daily quota for ingestion in GB. Only used when creating a new workspace.
+
+Note: If you want to use an existing Log Analytics workspace, use the `oms_agent` variable's `log_analytics_workspace_id` attribute instead.
 
 Type:
 
 ```hcl
 object({
-    name                                         = optional(string)
-    enabled                                      = optional(bool, true)
-    existing_log_analytics_workspace_resource_id = optional(string)
+    name              = optional(string)
+    retention_in_days = optional(number, 30)
+    daily_quota_gb    = optional(number)
   })
 ```
 
@@ -248,10 +253,10 @@ Default: `{}`
 
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
-Description:   Controls the Managed Identity configuration on this resource. The following properties can be specified:
+Description: Controls the Managed Identity configuration on this resource. The following properties can be specified:
 
-  - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
-  - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
+- `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
+- `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
 
 Type:
 
@@ -318,27 +323,27 @@ map(object({
 
 Example input:
 ```terraform
-  node_pools = {
-    workload = {
-      name                 = "workload"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
-      max_count            = 110
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      mode                 = "User"
-    },
-    ingress = {
-      name                 = "ingress"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
-      max_count            = 4
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      os_disk_type         = "Ephemeral"
-      mode                 = "User"
-    }
+node_pools = {
+  workload = {
+    name                 = "workload"
+    vm_size              = "Standard_D2d_v5"
+    orchestrator_version = "1.28"
+    max_count            = 110
+    min_count            = 2
+    os_sku               = "Ubuntu"
+    mode                 = "User"
+  },
+  ingress = {
+    name                 = "ingress"
+    vm_size              = "Standard_D2d_v5"
+    orchestrator_version = "1.28"
+    max_count            = 4
+    min_count            = 2
+    os_sku               = "Ubuntu"
+    os_disk_type         = "Ephemeral"
+    mode                 = "User"
   }
+}
 ```
 
 Type:
@@ -358,6 +363,23 @@ map(object({
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
   }))
+```
+
+Default: `{}`
+
+### <a name="input_oms_agent"></a> [oms\_agent](#input\_oms\_agent)
+
+Description: (Optional) Configuration for AKS OMS Agent.
+- `enabled` - (Optional) Whether AKS OMS Agent is enabled. Defaults to `true`.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for AKS OMS Agent. If not specified, and enabled the module will create a Log Analytics workspace.
+
+Type:
+
+```hcl
+object({
+    enabled                    = optional(bool, true)
+    log_analytics_workspace_id = optional(string, null)
+  })
 ```
 
 Default: `{}`

@@ -63,7 +63,7 @@ variable "defender_configuration" {
   description = <<DESCRIPTION
 (Optional) Configuration for Defender for Cloud integration.
 - `enabled` - (Optional) Whether Defender for Cloud integration is enabled. Defaults to `true`.
-- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for Defender for Cloud. If not specified, and enabled the module will use the LAW settings from the diagnostic configuration.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for Defender for Cloud. If not specified, and enabled the module will create a Log Analytics workspace.
 DESCRIPTION
 }
 
@@ -136,11 +136,11 @@ variable "lock" {
   })
   default     = null
   description = <<DESCRIPTION
-  Controls the Resource Lock configuration for this resource. The following properties can be specified:
+Controls the Resource Lock configuration for this resource. The following properties can be specified:
 
-  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
-  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
-  DESCRIPTION
+- `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+- `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+DESCRIPTION
 
   validation {
     condition     = var.lock != null ? contains(["CanNotDelete", "ReadOnly"], var.lock.kind) : true
@@ -148,20 +148,22 @@ variable "lock" {
   }
 }
 
-variable "log_analytics_definition" {
+variable "log_analytics_workspace_definition" {
   type = object({
-    name                                         = optional(string)
-    enabled                                      = optional(bool, true)
-    existing_log_analytics_workspace_resource_id = optional(string)
+    name              = optional(string)
+    retention_in_days = optional(number, 30)
+    daily_quota_gb    = optional(number)
   })
   default     = {}
   description = <<DESCRIPTION
-  (Optional) Configuration for Log Analytics workspace integration.
+(Optional) Configuration for Log Analytics workspace integration. If not specified, no Log Analytics workspace will be created or used.
 
-  - `name` - (Required) The name of the Log Analytics workspace.
-  - `enabled` - (Optional) Whether Log Analytics integration is enabled. Defaults to `true`.
-  - `existing_log_analytics_workspace_resource_id` - (Optional) The resource ID of an existing Log Analytics workspace to use.. If not specified, and enabled is true then a new workspace will be created. This workspace will also be used for diagnostic settings if a workspace ID is not provided in the diagnostic_settings variable.
-  DESCRIPTION
+- `name` - (Optional) The name of the Log Analytics workspace to create. If not specified, defaults to `log-<var.name>-aks`. Only used when creating a new workspace.
+- `retention_in_days` - (Optional) The workspace data retention in days. Defaults to `30`. Only used when creating a new workspace.
+- `daily_quota_gb` - (Optional) The workspace daily quota for ingestion in GB. Only used when creating a new workspace.
+
+Note: If you want to use an existing Log Analytics workspace, use the `oms_agent` variable's `log_analytics_workspace_id` attribute instead.
+DESCRIPTION
 }
 
 # tflint-ignore: terraform_unused_declarations
@@ -172,11 +174,11 @@ variable "managed_identities" {
   })
   default     = {}
   description = <<DESCRIPTION
-  Controls the Managed Identity configuration on this resource. The following properties can be specified:
+Controls the Managed Identity configuration on this resource. The following properties can be specified:
 
-  - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
-  - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
-  DESCRIPTION
+- `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
+- `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
+DESCRIPTION
   nullable    = false
 }
 
@@ -187,11 +189,11 @@ variable "monitor_metrics" {
   })
   default     = null
   description = <<-EOT
-  (Optional) Specifies a Prometheus add-on profile for the Kubernetes Cluster
-  object({
-    annotations_allowed = "(Optional) Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric."
-    labels_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
-  })
+(Optional) Specifies a Prometheus add-on profile for the Kubernetes Cluster
+object({
+  annotations_allowed = "(Optional) Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric."
+  labels_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
+})
 EOT
 }
 
@@ -247,28 +249,28 @@ map(object({
 
 Example input:
 ```terraform
-  node_pools = {
-    workload = {
-      name                 = "workload"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
-      max_count            = 110
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      mode                 = "User"
-    },
-    ingress = {
-      name                 = "ingress"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
-      max_count            = 4
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      os_disk_type         = "Ephemeral"
-      mode                 = "User"
-    }
+node_pools = {
+  workload = {
+    name                 = "workload"
+    vm_size              = "Standard_D2d_v5"
+    orchestrator_version = "1.28"
+    max_count            = 110
+    min_count            = 2
+    os_sku               = "Ubuntu"
+    mode                 = "User"
+  },
+  ingress = {
+    name                 = "ingress"
+    vm_size              = "Standard_D2d_v5"
+    orchestrator_version = "1.28"
+    max_count            = 4
+    min_count            = 2
+    os_sku               = "Ubuntu"
+    os_disk_type         = "Ephemeral"
+    mode                 = "User"
   }
-  ```
+}
+```
 EOT
   nullable    = false
 
@@ -276,6 +278,19 @@ EOT
     condition     = alltrue([for pool in var.node_pools : contains(["Ubuntu", "AzureLinux"], pool.os_sku)])
     error_message = "os_sku must be either Ubuntu or AzureLinux"
   }
+}
+
+variable "oms_agent" {
+  type = object({
+    enabled                    = optional(bool, true)
+    log_analytics_workspace_id = optional(string, null)
+  })
+  default     = {}
+  description = <<DESCRIPTION
+(Optional) Configuration for AKS OMS Agent.
+- `enabled` - (Optional) Whether AKS OMS Agent is enabled. Defaults to `true`.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for AKS OMS Agent. If not specified, and enabled the module will create a Log Analytics workspace.
+DESCRIPTION
 }
 
 variable "orchestrator_version" {

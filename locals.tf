@@ -74,6 +74,12 @@ locals {
 }
 
 locals {
+  #if any of these conditions are true, create the log analytics workspace.
+  create_log_analytics_workspace = (
+    (var.defender_configuration.enabled && var.defender_configuration.log_analytics_workspace_id == null) ||
+    (var.oms_agent.enabled && var.oms_agent.log_analytics_workspace_id == null) ||
+    (count(var.diagnostic_settings) > 0 && var.diagnostic_settings.workspace_resource_id == null)
+  )
   diagnostic_settings = { for key, value in var.diagnostic_settings : key => {
     name                                     = value.name
     log_categories                           = value.log_categories
@@ -84,11 +90,6 @@ locals {
     event_hub_authorization_rule_resource_id = value.event_hub_authorization_rule_resource_id
     event_hub_name                           = value.event_hub_name
     marketplace_partner_resource_id          = value.marketplace_partner_resource_id
-    workspace_resource_id                    = value.workspace_resource_id != null ? value.workspace_resource_id : local.log_analytics_workspace_id
+    workspace_resource_id                    = value.workspace_resource_id != null ? value.workspace_resource_id : azurerm_log_analytics_workspace.this[0].id
   } }
-  log_analytics_workspace_id = var.log_analytics_definition != null ? (
-    var.log_analytics_definition.existing_log_analytics_workspace_resource_id != null ?
-    var.log_analytics_definition.existing_log_analytics_workspace_resource_id :
-    azurerm_log_analytics_workspace.this[0].id
-  ) : null
 }
