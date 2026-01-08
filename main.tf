@@ -368,6 +368,14 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   vnet_subnet_id        = var.network.node_subnet_id
   zones                 = each.value.zones
 
+  upgrade_settings {
+    max_surge                     = try(each.value.upgrade_settings.max_surge, null)
+    drain_timeout_in_minutes      = try(each.value.upgrade_settings.drain_timeout_in_minutes, null)
+    max_unavailable               = try(each.value.upgrade_settings.max_unavailable, null)
+    node_soak_duration_in_minutes = try(each.value.upgrade_settings.node_soak_duration_in_minutes, null)
+    undrainable_node_behavior     = try(each.value.upgrade_settings.undrainable_node_behavior, null)
+  }
+
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 
   lifecycle {

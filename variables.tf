@@ -50,7 +50,7 @@ variable "agents_tags" {
 
 variable "default_node_pool_vm_sku" {
   type        = string
-  default     = "Standard_D4d_v5"
+  default     = "Standard_D2ds_v6"
   description = "The VM SKU to use for the default node pool. A minimum of three nodes of 8 vCPUs or two nodes of at least 16 vCPUs is recommended. Do not use SKUs with less than 4 CPUs and 4Gb of memory."
 }
 
@@ -229,6 +229,13 @@ variable "node_pools" {
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
+    upgrade_settings = optional(object({
+      max_surge                     = optional(string, "10%")
+      drain_timeout_in_minutes      = optional(number, 0)
+      node_soak_duration_in_minutes = optional(number, 0)
+      max_unavailable               = optional(string)
+      undrainable_node_behavior     = optional(string)
+    }), {})
   }))
   default     = {}
   description = <<-EOT
@@ -245,7 +252,12 @@ map(object({
   os_disk_size_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
   labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
-}))
+  upgrade_settings = (Optional) An object specifying upgrade settings for the node pool, including max surge, drain timeout, node soak duration, and max unavailable.
+    - max_surge - (Optional) The maximum number or percentage of nodes that can be simultaneously upgraded. Defaults to `10%`.
+    - drain_timeout_in_minutes - (Optional) The drain timeout in minutes for the node pool. Defaults to `0`.
+    - node_soak_duration_in_minutes - (Optional) The node soak duration in minutes for the node pool. Defaults to `0`.
+    - max_unavailable - (Optional) The maximum number or percentage of nodes that can be unavailable during the upgrade.
+    - undrainable_node_behavior - (Optional) The behavior for undrainable nodes during the upgrade.
 
 Example input:
 ```terraform

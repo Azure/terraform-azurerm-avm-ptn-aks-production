@@ -140,7 +140,7 @@ Description: The VM SKU to use for the default node pool. A minimum of three nod
 
 Type: `string`
 
-Default: `"Standard_D4d_v5"`
+Default: `"Standard_D2ds_v6"`
 
 ### <a name="input_defender_configuration"></a> [defender\_configuration](#input\_defender\_configuration)
 
@@ -318,8 +318,13 @@ map(object({
   mode                 = (Optional) Should this Node Pool be used for System or User resources? Possible values are `System` and `User`. Defaults to `User`.  
   os\_disk\_size\_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.  
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.  
-  labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
-}))
+  labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.  
+  upgrade\_settings = (Optional) An object specifying upgrade settings for the node pool, including max surge, drain timeout, node soak duration, and max unavailable.
+    - max\_surge - (Optional) The maximum number or percentage of nodes that can be simultaneously upgraded. Defaults to `10%`.
+    - drain\_timeout\_in\_minutes - (Optional) The drain timeout in minutes for the node pool. Defaults to `0`.
+    - node\_soak\_duration\_in\_minutes - (Optional) The node soak duration in minutes for the node pool. Defaults to `0`.
+    - max\_unavailable - (Optional) The maximum number or percentage of nodes that can be unavailable during the upgrade.
+    - undrainable\_node\_behavior - (Optional) The behavior for undrainable nodes during the upgrade.
 
 Example input:
 ```terraform
@@ -362,6 +367,13 @@ map(object({
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
+    upgrade_settings = optional(object({
+      max_surge                     = optional(string, "10%")
+      drain_timeout_in_minutes      = optional(number, 0)
+      node_soak_duration_in_minutes = optional(number, 0)
+      max_unavailable               = optional(string)
+      undrainable_node_behavior     = optional(string)
+    }), {})
   }))
 ```
 
