@@ -81,6 +81,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     min_count               = 3
     node_labels             = var.node_labels
     orchestrator_version    = var.orchestrator_version
+    os_disk_size_gb         = var.os_disk_size_gb
     os_disk_type            = var.os_disk_type
     os_sku                  = var.os_sku
     tags                    = merge(var.tags, var.agents_tags)

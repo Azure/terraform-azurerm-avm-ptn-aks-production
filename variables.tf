@@ -311,6 +311,17 @@ variable "orchestrator_version" {
   description = "Specify which Kubernetes release to use. Specify only minor version, such as '1.28'."
 }
 
+variable "os_disk_size_gb" {
+  type        = number
+  default     = 75
+  description = "(Optional) The Operating System disk size in GB for the default pool. Changing this forces a new resource to be created."
+
+  validation {
+    condition     = var.os_disk_size_gb >= 0
+    error_message = "os_disk_size_gb must be greater than or equal to 0"
+  }
+}
+
 variable "os_disk_type" {
   type        = string
   default     = "Managed"

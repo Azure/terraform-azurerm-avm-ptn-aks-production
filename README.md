@@ -404,6 +404,14 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_os_disk_size_gb"></a> [os\_disk\_size\_gb](#input\_os\_disk\_size\_gb)
+
+Description: (Optional) The Operating System disk size in GB for the default pool. Changing this forces a new resource to be created.
+
+Type: `number`
+
+Default: `75`
+
 ### <a name="input_os_disk_type"></a> [os\_disk\_type](#input\_os\_disk\_type)
 
 Description: (Optional) Specifies the OS Disk Type used by the agent pool. Possible values include: `Managed` or `Ephemeral`. If not specified, the default is `Managed`.Changing this forces a new resource to be created.

@@ -68,7 +68,7 @@ module "test" {
   node_pools = {
     workload = {
       name                 = "workload" #Long name to test the truncate to 12 characters
-      vm_size              = "Standard_D2d_v5"
+      vm_size              = "Standard_D2ds_v6"
       orchestrator_version = "1.34"
       max_count            = 10
       min_count            = 2
@@ -78,7 +78,7 @@ module "test" {
     },
     ingress = {
       name                 = "ingress"
-      vm_size              = "Standard_D2d_v5"
+      vm_size              = "Standard_D2ds_v6"
       orchestrator_version = "1.34"
       max_count            = 4
       min_count            = 2

@@ -17,6 +17,10 @@ terraform {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.9.0"
+    }
   }
 }
 
@@ -86,6 +90,11 @@ module "test" {
   rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
 }
 
+# Wait for VNET links to be cleaned up before deleting the private DNS zone
+resource "time_sleep" "wait_for_vnet_link_cleanup" {
+  destroy_duration = "60s"
+}
+
 resource "azurerm_private_dns_zone" "this" {
   name                = "privatelink.azurecr.io"
   resource_group_name = azurerm_resource_group.this.name
@@ -94,6 +103,8 @@ resource "azurerm_private_dns_zone" "this" {
 resource "azurerm_private_dns_zone" "mydomain" {
   name                = "privatelink.eastus2.azmk8s.io"
   resource_group_name = azurerm_resource_group.this.name
+
+  depends_on = [time_sleep.wait_for_vnet_link_cleanup]
 }
 
 module "avm_res_network_virtualnetwork" {
@@ -128,6 +139,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
 
+- <a name="requirement_time"></a> [time](#requirement\_time) (>= 0.9.0)
+
 ## Resources
 
 The following resources are used by this module:
@@ -136,6 +149,7 @@ The following resources are used by this module:
 - [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [time_sleep.wait_for_vnet_link_cleanup](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->

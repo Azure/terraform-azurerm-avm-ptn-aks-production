@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.9.0"
+    }
   }
 }
 
@@ -79,6 +83,11 @@ module "test" {
   rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
 }
 
+# Wait for VNET links to be cleaned up before deleting the private DNS zone
+resource "time_sleep" "wait_for_vnet_link_cleanup" {
+  destroy_duration = "60s"
+}
+
 resource "azurerm_private_dns_zone" "this" {
   name                = "privatelink.azurecr.io"
   resource_group_name = azurerm_resource_group.this.name
@@ -87,6 +96,8 @@ resource "azurerm_private_dns_zone" "this" {
 resource "azurerm_private_dns_zone" "mydomain" {
   name                = "privatelink.eastus2.azmk8s.io"
   resource_group_name = azurerm_resource_group.this.name
+
+  depends_on = [time_sleep.wait_for_vnet_link_cleanup]
 }
 
 module "avm_res_network_virtualnetwork" {
