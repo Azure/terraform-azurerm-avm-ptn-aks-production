@@ -38,27 +38,9 @@ locals {
 
 
 locals {
-  # Flatten a list of var.node_pools and zones
-  node_pools = flatten([
-    for pool in local.zonetagged_node_pools : [
-      for zone in pool.zones : {
-        # concatenate name and zone trim to 12 characters
-        name                 = "${substr(pool.name, 0, 10)}${zone}"
-        vm_size              = pool.vm_size
-        orchestrator_version = pool.orchestrator_version
-        max_count            = pool.max_count
-        min_count            = pool.min_count
-        tags                 = pool.tags
-        labels               = pool.labels
-        os_sku               = pool.os_sku
-        os_disk_type         = pool.os_disk_type
-        mode                 = pool.mode
-        os_disk_size_gb      = pool.os_disk_size_gb
-        zone                 = [zone]
-      }
-    ]
-  ])
+  node_pools = local.zonetagged_node_pools
 }
+
 locals {
   log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
 }
@@ -89,4 +71,25 @@ locals {
 locals {
   dns_service_ip           = local.has_network_service_cidr ? (try(var.network.dns_service_ip, null) != null ? var.network.dns_service_ip : cidrhost(var.network.service_cidr, 10)) : null
   has_network_service_cidr = try(var.network.service_cidr, null) != null
+}
+
+locals {
+  #if any of these conditions are true, create the log analytics workspace.
+  create_log_analytics_workspace = (
+    (var.defender_configuration.enabled && var.defender_configuration.log_analytics_workspace_id == null) ||
+    (var.oms_agent.enabled && var.oms_agent.log_analytics_workspace_id == null) ||
+    (count(var.diagnostic_settings) > 0 && var.diagnostic_settings.workspace_resource_id == null)
+  )
+  diagnostic_settings = { for key, value in var.diagnostic_settings : key => {
+    name                                     = value.name
+    log_categories                           = value.log_categories
+    log_groups                               = value.log_groups
+    metric_categories                        = value.metric_categories
+    log_analytics_destination_type           = value.log_analytics_destination_type
+    storage_account_resource_id              = value.storage_account_resource_id
+    event_hub_authorization_rule_resource_id = value.event_hub_authorization_rule_resource_id
+    event_hub_name                           = value.event_hub_name
+    marketplace_partner_resource_id          = value.marketplace_partner_resource_id
+    workspace_resource_id                    = value.workspace_resource_id != null ? value.workspace_resource_id : azurerm_log_analytics_workspace.this[0].id
+  } }
 }

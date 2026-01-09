@@ -27,7 +27,7 @@ provider "azurerm" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = ">= 0.3.0"
+  version = "0.4.3"
 }
 
 # This is required for resource modules
@@ -66,7 +66,7 @@ module "test" {
     zone_redundancy_enabled       = false
   }
   enable_telemetry   = var.enable_telemetry # see variables.tf
-  kubernetes_version = "1.30"
+  kubernetes_version = "1.34"
   managed_identities = {
     user_assigned_resource_ids = [
       azurerm_user_assigned_identity.this.id
@@ -75,21 +75,23 @@ module "test" {
   node_pools = {
     workload = {
       name                 = "workload"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.30"
+      vm_size              = "Standard_D2ds_v6"
+      orchestrator_version = "1.34"
       max_count            = 110
       min_count            = 2
       os_sku               = "AzureLinux"
       mode                 = "User"
+      os_disk_size_gb      = 75
     },
     ingress = {
       name                 = "ingress"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.30"
+      vm_size              = "Standard_D2ds_v6"
+      orchestrator_version = "1.34"
       max_count            = 4
       min_count            = 2
       os_sku               = "AzureLinux"
       mode                 = "User"
+      os_disk_size_gb      = 75
       labels = {
         "ingress" = "true"
       }
@@ -187,7 +189,7 @@ Version: 0.7.1
 
 Source: Azure/naming/azurerm
 
-Version: >= 0.3.0
+Version: 0.4.3
 
 ### <a name="module_test"></a> [test](#module\_test)
 

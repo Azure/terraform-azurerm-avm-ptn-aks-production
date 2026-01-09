@@ -40,6 +40,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0)
 
+- <a name="requirement_time"></a> [time](#requirement\_time) (>= 0.9.0)
+
 ## Resources
 
 The following resources are used by this module:
@@ -48,9 +50,12 @@ The following resources are used by this module:
 - [azurerm_kubernetes_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) (resource)
 - [azurerm_kubernetes_cluster_node_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) (resource)
 - [azurerm_log_analytics_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
-- [azurerm_log_analytics_workspace_table.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
+- [azurerm_log_analytics_workspace_table.this_defender](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
+- [azurerm_log_analytics_workspace_table.this_diagnostic_setting](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
+- [azurerm_log_analytics_workspace_table.this_module_created_law](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
+- [azurerm_log_analytics_workspace_table.this_oms_agent](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace_table) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
-- [azurerm_monitor_diagnostic_setting.aks](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
+- [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_role_assignment.acr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.network_contributor_on_resource_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
@@ -58,6 +63,7 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
 - [null_resource.kubernetes_version_keeper](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [time_sleep.wait_for_vnet_link_cleanup](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azapi_resource_list.example](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
@@ -137,7 +143,58 @@ Description: The VM SKU to use for the default node pool. A minimum of three nod
 
 Type: `string`
 
-Default: `"Standard_D4d_v5"`
+Default: `"Standard_D2ds_v6"`
+
+### <a name="input_defender_configuration"></a> [defender\_configuration](#input\_defender\_configuration)
+
+Description: (Optional) Configuration for Defender for Cloud integration.
+- `enabled` - (Optional) Whether Defender for Cloud integration is enabled. Defaults to `true`.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for Defender for Cloud. If not specified, and enabled the module will create a Log Analytics workspace.
+
+Type:
+
+```hcl
+object({
+    enabled                    = optional(bool, true)
+    log_analytics_workspace_id = optional(string, null)
+  })
+```
+
+Default: `{}`
+
+### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
+
+Description: A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+- `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+- `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+- `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+- `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+- `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+- `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+- `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+- `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+- `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+- `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
+
+Type:
+
+```hcl
+map(object({
+    name                                     = optional(string, null)
+    log_categories                           = optional(set(string), [])
+    log_groups                               = optional(set(string), ["allLogs"])
+    metric_categories                        = optional(set(string), ["AllMetrics"])
+    log_analytics_destination_type           = optional(string, "Dedicated")
+    workspace_resource_id                    = optional(string, null)
+    storage_account_resource_id              = optional(string, null)
+    event_hub_authorization_rule_resource_id = optional(string, null)
+    event_hub_name                           = optional(string, null)
+    marketplace_partner_resource_id          = optional(string, null)
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
@@ -159,10 +216,10 @@ Default: `null`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description:   Controls the Resource Lock configuration for this resource. The following properties can be specified:
+Description: Controls the Resource Lock configuration for this resource. The following properties can be specified:
 
-  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
-  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+- `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+- `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
 
 Type:
 
@@ -175,12 +232,34 @@ object({
 
 Default: `null`
 
+### <a name="input_log_analytics_workspace_definition"></a> [log\_analytics\_workspace\_definition](#input\_log\_analytics\_workspace\_definition)
+
+Description: (Optional) Configuration for Log Analytics workspace integration. If not specified, no Log Analytics workspace will be created or used.
+
+- `name` - (Optional) The name of the Log Analytics workspace to create. If not specified, defaults to `log-<var.name>-aks`. Only used when creating a new workspace.
+- `retention_in_days` - (Optional) The workspace data retention in days. Defaults to `30`. Only used when creating a new workspace.
+- `daily_quota_gb` - (Optional) The workspace daily quota for ingestion in GB. Only used when creating a new workspace.
+
+Note: If you want to use an existing Log Analytics workspace, use the `oms_agent` variable's `log_analytics_workspace_id` attribute instead.
+
+Type:
+
+```hcl
+object({
+    name              = optional(string)
+    retention_in_days = optional(number, 30)
+    daily_quota_gb    = optional(number)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
-Description:   Controls the Managed Identity configuration on this resource. The following properties can be specified:
+Description: Controls the Managed Identity configuration on this resource. The following properties can be specified:
 
-  - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
-  - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
+- `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
+- `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
 
 Type:
 
@@ -242,32 +321,37 @@ map(object({
   mode                 = (Optional) Should this Node Pool be used for System or User resources? Possible values are `System` and `User`. Defaults to `User`.  
   os\_disk\_size\_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.  
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.  
-  labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
-}))
+  labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.  
+  upgrade\_settings = (Optional) An object specifying upgrade settings for the node pool, including max surge, drain timeout, node soak duration, and max unavailable.
+    - max\_surge - (Optional) The maximum number or percentage of nodes that can be simultaneously upgraded. Defaults to `10%`.
+    - drain\_timeout\_in\_minutes - (Optional) The drain timeout in minutes for the node pool. Defaults to `0`.
+    - node\_soak\_duration\_in\_minutes - (Optional) The node soak duration in minutes for the node pool. Defaults to `0`.
+    - max\_unavailable - (Optional) The maximum number or percentage of nodes that can be unavailable during the upgrade.
+    - undrainable\_node\_behavior - (Optional) The behavior for undrainable nodes during the upgrade.
 
 Example input:
 ```terraform
-  node_pools = {
-    workload = {
-      name                 = "workload"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
-      max_count            = 110
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      mode                 = "User"
-    },
-    ingress = {
-      name                 = "ingress"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
-      max_count            = 4
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      os_disk_type         = "Ephemeral"
-      mode                 = "User"
-    }
+node_pools = {
+  workload = {
+    name                 = "workload"
+    vm_size              = "Standard_D2d_v5"
+    orchestrator_version = "1.28"
+    max_count            = 110
+    min_count            = 2
+    os_sku               = "Ubuntu"
+    mode                 = "User"
+  },
+  ingress = {
+    name                 = "ingress"
+    vm_size              = "Standard_D2d_v5"
+    orchestrator_version = "1.28"
+    max_count            = 4
+    min_count            = 2
+    os_sku               = "Ubuntu"
+    os_disk_type         = "Ephemeral"
+    mode                 = "User"
   }
+}
 ```
 
 Type:
@@ -286,7 +370,31 @@ map(object({
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
+    upgrade_settings = optional(object({
+      max_surge                     = optional(string, "10%")
+      drain_timeout_in_minutes      = optional(number, 0)
+      node_soak_duration_in_minutes = optional(number, 0)
+      max_unavailable               = optional(string)
+      undrainable_node_behavior     = optional(string)
+    }), {})
   }))
+```
+
+Default: `{}`
+
+### <a name="input_oms_agent"></a> [oms\_agent](#input\_oms\_agent)
+
+Description: (Optional) Configuration for AKS OMS Agent.
+- `enabled` - (Optional) Whether AKS OMS Agent is enabled. Defaults to `true`.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for AKS OMS Agent. If not specified, and enabled the module will create a Log Analytics workspace.
+
+Type:
+
+```hcl
+object({
+    enabled                    = optional(bool, true)
+    log_analytics_workspace_id = optional(string, null)
+  })
 ```
 
 Default: `{}`
@@ -298,6 +406,14 @@ Description: Specify which Kubernetes release to use. Specify only minor version
 Type: `string`
 
 Default: `null`
+
+### <a name="input_os_disk_size_gb"></a> [os\_disk\_size\_gb](#input\_os\_disk\_size\_gb)
+
+Description: (Optional) The Operating System disk size in GB for the default pool. Changing this forces a new resource to be created.
+
+Type: `number`
+
+Default: `75`
 
 ### <a name="input_os_disk_type"></a> [os\_disk\_type](#input\_os\_disk\_type)
 

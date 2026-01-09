@@ -39,7 +39,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = ">= 0.3.0"
+  version = "0.4.3"
 }
 
 # This is required for resource modules
@@ -72,11 +72,13 @@ module "test" {
     private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
   }
   enable_telemetry            = var.enable_telemetry # see variables.tf
-  kubernetes_version          = "1.30"
+  kubernetes_version          = "1.34"
   network_policy              = "calico"
   private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
   private_dns_zone_id_enabled = true
   rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
+
+  depends_on = [azurerm_private_dns_zone.mydomain]
 }
 
 resource "azurerm_private_dns_zone" "this" {

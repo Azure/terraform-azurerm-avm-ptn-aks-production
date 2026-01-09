@@ -50,8 +50,66 @@ variable "agents_tags" {
 
 variable "default_node_pool_vm_sku" {
   type        = string
-  default     = "Standard_D4d_v5"
+  default     = "Standard_D2ds_v6"
   description = "The VM SKU to use for the default node pool. A minimum of three nodes of 8 vCPUs or two nodes of at least 16 vCPUs is recommended. Do not use SKUs with less than 4 CPUs and 4Gb of memory."
+}
+
+variable "defender_configuration" {
+  type = object({
+    enabled                    = optional(bool, true)
+    log_analytics_workspace_id = optional(string, null)
+  })
+  default     = {}
+  description = <<DESCRIPTION
+(Optional) Configuration for Defender for Cloud integration.
+- `enabled` - (Optional) Whether Defender for Cloud integration is enabled. Defaults to `true`.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for Defender for Cloud. If not specified, and enabled the module will create a Log Analytics workspace.
+DESCRIPTION
+}
+
+variable "diagnostic_settings" {
+  type = map(object({
+    name                                     = optional(string, null)
+    log_categories                           = optional(set(string), [])
+    log_groups                               = optional(set(string), ["allLogs"])
+    metric_categories                        = optional(set(string), ["AllMetrics"])
+    log_analytics_destination_type           = optional(string, "Dedicated")
+    workspace_resource_id                    = optional(string, null)
+    storage_account_resource_id              = optional(string, null)
+    event_hub_authorization_rule_resource_id = optional(string, null)
+    event_hub_name                           = optional(string, null)
+    marketplace_partner_resource_id          = optional(string, null)
+  }))
+  default     = {}
+  description = <<DESCRIPTION
+A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+- `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+- `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+- `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+- `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+- `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+- `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+- `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+- `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+- `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+- `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
+DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
+    error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
+  }
+  validation {
+    condition = alltrue(
+      [
+        for _, v in var.diagnostic_settings :
+        v.workspace_resource_id != null || v.storage_account_resource_id != null || v.event_hub_authorization_rule_resource_id != null || v.marketplace_partner_resource_id != null
+      ]
+    )
+    error_message = "At least one of `workspace_resource_id`, `storage_account_resource_id`, `marketplace_partner_resource_id`, or `event_hub_authorization_rule_resource_id`, must be set."
+  }
 }
 
 variable "enable_telemetry" {
@@ -78,16 +136,34 @@ variable "lock" {
   })
   default     = null
   description = <<DESCRIPTION
-  Controls the Resource Lock configuration for this resource. The following properties can be specified:
+Controls the Resource Lock configuration for this resource. The following properties can be specified:
 
-  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
-  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
-  DESCRIPTION
+- `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+- `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+DESCRIPTION
 
   validation {
     condition     = var.lock != null ? contains(["CanNotDelete", "ReadOnly"], var.lock.kind) : true
     error_message = "Lock kind must be either `\"CanNotDelete\"` or `\"ReadOnly\"`."
   }
+}
+
+variable "log_analytics_workspace_definition" {
+  type = object({
+    name              = optional(string)
+    retention_in_days = optional(number, 30)
+    daily_quota_gb    = optional(number)
+  })
+  default     = {}
+  description = <<DESCRIPTION
+(Optional) Configuration for Log Analytics workspace integration. If not specified, no Log Analytics workspace will be created or used.
+
+- `name` - (Optional) The name of the Log Analytics workspace to create. If not specified, defaults to `log-<var.name>-aks`. Only used when creating a new workspace.
+- `retention_in_days` - (Optional) The workspace data retention in days. Defaults to `30`. Only used when creating a new workspace.
+- `daily_quota_gb` - (Optional) The workspace daily quota for ingestion in GB. Only used when creating a new workspace.
+
+Note: If you want to use an existing Log Analytics workspace, use the `oms_agent` variable's `log_analytics_workspace_id` attribute instead.
+DESCRIPTION
 }
 
 # tflint-ignore: terraform_unused_declarations
@@ -98,11 +174,11 @@ variable "managed_identities" {
   })
   default     = {}
   description = <<DESCRIPTION
-  Controls the Managed Identity configuration on this resource. The following properties can be specified:
+Controls the Managed Identity configuration on this resource. The following properties can be specified:
 
-  - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
-  - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
-  DESCRIPTION
+- `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
+- `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
+DESCRIPTION
   nullable    = false
 }
 
@@ -113,11 +189,11 @@ variable "monitor_metrics" {
   })
   default     = null
   description = <<-EOT
-  (Optional) Specifies a Prometheus add-on profile for the Kubernetes Cluster
-  object({
-    annotations_allowed = "(Optional) Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric."
-    labels_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
-  })
+(Optional) Specifies a Prometheus add-on profile for the Kubernetes Cluster
+object({
+  annotations_allowed = "(Optional) Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric."
+  labels_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
+})
 EOT
 }
 
@@ -153,6 +229,13 @@ variable "node_pools" {
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
+    upgrade_settings = optional(object({
+      max_surge                     = optional(string, "10%")
+      drain_timeout_in_minutes      = optional(number, 0)
+      node_soak_duration_in_minutes = optional(number, 0)
+      max_unavailable               = optional(string)
+      undrainable_node_behavior     = optional(string)
+    }), {})
   }))
   default     = {}
   description = <<-EOT
@@ -169,32 +252,37 @@ map(object({
   os_disk_size_gb      = (Optional) The Agent Operating System disk size in GB. Changing this forces a new resource to be created.
   tags                 = (Optional) A mapping of tags to assign to the resource. At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changess) until this is fixed in the AKS API.
   labels               = (Optional) A map of Kubernetes labels which should be applied to nodes in this Node Pool.
-}))
+  upgrade_settings = (Optional) An object specifying upgrade settings for the node pool, including max surge, drain timeout, node soak duration, and max unavailable.
+    - max_surge - (Optional) The maximum number or percentage of nodes that can be simultaneously upgraded. Defaults to `10%`.
+    - drain_timeout_in_minutes - (Optional) The drain timeout in minutes for the node pool. Defaults to `0`.
+    - node_soak_duration_in_minutes - (Optional) The node soak duration in minutes for the node pool. Defaults to `0`.
+    - max_unavailable - (Optional) The maximum number or percentage of nodes that can be unavailable during the upgrade.
+    - undrainable_node_behavior - (Optional) The behavior for undrainable nodes during the upgrade.
 
 Example input:
 ```terraform
-  node_pools = {
-    workload = {
-      name                 = "workload"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
-      max_count            = 110
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      mode                 = "User"
-    },
-    ingress = {
-      name                 = "ingress"
-      vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.28"
-      max_count            = 4
-      min_count            = 2
-      os_sku               = "Ubuntu"
-      os_disk_type         = "Ephemeral"
-      mode                 = "User"
-    }
+node_pools = {
+  workload = {
+    name                 = "workload"
+    vm_size              = "Standard_D2d_v5"
+    orchestrator_version = "1.28"
+    max_count            = 110
+    min_count            = 2
+    os_sku               = "Ubuntu"
+    mode                 = "User"
+  },
+  ingress = {
+    name                 = "ingress"
+    vm_size              = "Standard_D2d_v5"
+    orchestrator_version = "1.28"
+    max_count            = 4
+    min_count            = 2
+    os_sku               = "Ubuntu"
+    os_disk_type         = "Ephemeral"
+    mode                 = "User"
   }
-  ```
+}
+```
 EOT
   nullable    = false
 
@@ -204,10 +292,34 @@ EOT
   }
 }
 
+variable "oms_agent" {
+  type = object({
+    enabled                    = optional(bool, true)
+    log_analytics_workspace_id = optional(string, null)
+  })
+  default     = {}
+  description = <<DESCRIPTION
+(Optional) Configuration for AKS OMS Agent.
+- `enabled` - (Optional) Whether AKS OMS Agent is enabled. Defaults to `true`.
+- `log_analytics_workspace_id` - (Optional) The resource ID of an existing Log Analytics workspace to use for AKS OMS Agent. If not specified, and enabled the module will create a Log Analytics workspace.
+DESCRIPTION
+}
+
 variable "orchestrator_version" {
   type        = string
   default     = null
   description = "Specify which Kubernetes release to use. Specify only minor version, such as '1.28'."
+}
+
+variable "os_disk_size_gb" {
+  type        = number
+  default     = 75
+  description = "(Optional) The Operating System disk size in GB for the default pool. Changing this forces a new resource to be created."
+
+  validation {
+    condition     = var.os_disk_size_gb >= 0
+    error_message = "os_disk_size_gb must be greater than or equal to 0"
+  }
 }
 
 variable "os_disk_type" {

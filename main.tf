@@ -56,7 +56,7 @@ resource "azurerm_role_assignment" "dns_zone_contributor" {
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
-  name                              = "aks-${var.name}"
+  name                              = var.name
   resource_group_name               = var.resource_group_name
   automatic_upgrade_channel         = "patch"
   azure_policy_enabled              = true
@@ -81,6 +81,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     min_count               = 3
     node_labels             = var.node_labels
     orchestrator_version    = var.orchestrator_version
+    os_disk_size_gb         = var.os_disk_size_gb
     os_disk_type            = var.os_disk_type
     os_sku                  = var.os_sku
     tags                    = merge(var.tags, var.agents_tags)
@@ -112,6 +113,13 @@ resource "azurerm_kubernetes_cluster" "this" {
   key_vault_secrets_provider {
     secret_rotation_enabled = true
   }
+  dynamic "microsoft_defender" {
+    for_each = var.defender_configuration.enabled ? ["microsoft_defender"] : []
+
+    content {
+      log_analytics_workspace_id = var.defender_configuration.log_analytics_workspace_id != null ? var.defender_configuration.log_analytics_workspace_id : azurerm_log_analytics_workspace.this[0].id
+    }
+  }
   monitor_metrics {
     annotations_allowed = try(var.monitor_metrics.annotations_allowed, null)
     labels_allowed      = try(var.monitor_metrics.labels_allowed, null)
@@ -127,10 +135,16 @@ resource "azurerm_kubernetes_cluster" "this" {
     pod_cidr            = var.network.pod_cidr
     service_cidr        = var.network.service_cidr
   }
-  oms_agent {
-    log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
-    msi_auth_for_monitoring_enabled = true
+  dynamic "oms_agent" {
+    for_each = var.oms_agent.enabled ? ["oms_agent"] : []
+
+    content {
+      log_analytics_workspace_id      = try(var.oms_agent.log_analytics_workspace_id, null) != null ? var.oms_agent.log_analytics_workspace_id : azurerm_log_analytics_workspace.this[0].id
+      msi_auth_for_monitoring_enabled = true
+    }
   }
+
+  depends_on = [time_sleep.wait_for_vnet_link_cleanup]
 
   lifecycle {
     ignore_changes = [
@@ -154,6 +168,11 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "private_dns_zone_id must be set if private_dns_zone_id_enabled is true"
     }
   }
+}
+
+# Wait for VNET links to be cleaned up before deleting the private DNS zone
+resource "time_sleep" "wait_for_vnet_link_cleanup" {
+  destroy_duration = "90s"
 }
 
 # The following null_resource is used to trigger the update of the AKS cluster when the kubernetes_version changes
@@ -184,29 +203,99 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
     replace_triggered_by = [null_resource.kubernetes_version_keeper.id]
   }
 }
-
+#create a workspace if one is not provided and defender or oms_agent is enabled
 resource "azurerm_log_analytics_workspace" "this" {
+  count = local.create_log_analytics_workspace ? 1 : 0
+
   location            = var.location
-  name                = "log-${var.name}-aks"
+  name                = coalesce(try(var.log_analytics_workspace_definition.name, null), "log-${var.name}-aks")
   resource_group_name = var.resource_group_name
+  daily_quota_gb      = var.log_analytics_workspace_definition.daily_quota_gb
+  retention_in_days   = var.log_analytics_workspace_definition.retention_in_days
   sku                 = "PerGB2018"
   tags                = var.tags
 }
 
-resource "azurerm_log_analytics_workspace_table" "this" {
-  for_each = toset(local.log_analytics_tables)
+#Create tables in any workspace that is provided or used
+resource "azurerm_log_analytics_workspace_table" "this_defender" {
+  for_each = try(var.defender_configuration.log_analytics_workspace_id, null) != null ? toset(local.log_analytics_tables) : []
 
   name                    = each.value
-  workspace_id            = azurerm_log_analytics_workspace.this.id
+  workspace_id            = try(var.defender_configuration.log_analytics_workspace_id, null)
   plan                    = "Basic"
   total_retention_in_days = 30
 }
 
+resource "azurerm_log_analytics_workspace_table" "this_oms_agent" {
+  for_each = try(var.oms_agent.log_analytics_workspace_id, null) != null ? toset(local.log_analytics_tables) : []
+
+  name                    = each.value
+  workspace_id            = try(var.oms_agent.log_analytics_workspace_id, null)
+  plan                    = "Basic"
+  total_retention_in_days = 30
+}
+
+resource "azurerm_log_analytics_workspace_table" "this_diagnostic_setting" {
+  for_each = try(var.diagnostic_settings.workspace_resource_id, null) != null ? toset(local.log_analytics_tables) : []
+
+  name                    = each.value
+  workspace_id            = try(var.diagnostic_settings.workspace_resource_id, null)
+  plan                    = "Basic"
+  total_retention_in_days = 30
+}
+
+resource "azurerm_log_analytics_workspace_table" "this_module_created_law" {
+  for_each = length(azurerm_log_analytics_workspace.this) > 0 ? toset(local.log_analytics_tables) : []
+
+  name                    = each.value
+  workspace_id            = azurerm_log_analytics_workspace.this[0].id
+  plan                    = "Basic"
+  total_retention_in_days = 30
+}
+
+resource "azurerm_monitor_diagnostic_setting" "this" {
+  for_each = local.diagnostic_settings
+
+  name                           = each.value.name != null ? each.value.name : "diag-${var.name}"
+  target_resource_id             = azurerm_kubernetes_cluster.this.id
+  eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id
+  eventhub_name                  = each.value.event_hub_name
+  log_analytics_destination_type = each.value.log_analytics_destination_type
+  log_analytics_workspace_id     = each.value.workspace_resource_id
+  partner_solution_id            = each.value.marketplace_partner_resource_id
+  storage_account_id             = each.value.storage_account_resource_id
+
+  dynamic "enabled_log" {
+    for_each = each.value.log_categories
+
+    content {
+      category = enabled_log.value
+    }
+  }
+  dynamic "enabled_log" {
+    for_each = each.value.log_groups
+
+    content {
+      category_group = enabled_log.value
+    }
+  }
+  dynamic "enabled_metric" {
+    for_each = each.value.metric_categories
+
+    content {
+      category = enabled_metric.value
+    }
+  }
+}
+
+/*
 resource "azurerm_monitor_diagnostic_setting" "aks" {
+  count = var.log_analytics_definition != null && var.log_analytics_definition.enabled ? 1 : 0
+
   name                           = "amds-${var.name}-aks"
   target_resource_id             = azurerm_kubernetes_cluster.this.id
   log_analytics_destination_type = "Dedicated"
-  log_analytics_workspace_id     = azurerm_log_analytics_workspace.this.id
+  log_analytics_workspace_id     = local.log_analytics_workspace_id
 
   # Kubernetes API Server
   enabled_log {
@@ -256,6 +345,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks" {
     category = "AllMetrics"
   }
 }
+*/
 
 # required AVM resources interfaces
 resource "azurerm_management_lock" "this" {
@@ -269,9 +359,7 @@ resource "azurerm_management_lock" "this" {
 
 
 resource "azurerm_kubernetes_cluster_node_pool" "this" {
-  for_each = tomap({
-    for pool in local.node_pools : pool.name => pool
-  })
+  for_each = local.node_pools
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
   name                  = each.value.name
@@ -286,7 +374,15 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   tags                  = each.value.tags
   vm_size               = each.value.vm_size
   vnet_subnet_id        = var.network.node_subnet_id
-  zones                 = each.value.zone
+  zones                 = each.value.zones
+
+  upgrade_settings {
+    max_surge                     = try(each.value.upgrade_settings.max_surge, null)
+    drain_timeout_in_minutes      = try(each.value.upgrade_settings.drain_timeout_in_minutes, null)
+    max_unavailable               = try(each.value.upgrade_settings.max_unavailable, null)
+    node_soak_duration_in_minutes = try(each.value.upgrade_settings.node_soak_duration_in_minutes, null)
+    undrainable_node_behavior     = try(each.value.upgrade_settings.undrainable_node_behavior, null)
+  }
 
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 
