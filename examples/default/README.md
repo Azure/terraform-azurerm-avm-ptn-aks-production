@@ -88,11 +88,8 @@ module "test" {
   private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
   private_dns_zone_id_enabled = true
   rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
-}
 
-# Wait for VNET links to be cleaned up before deleting the private DNS zone
-resource "time_sleep" "wait_for_vnet_link_cleanup" {
-  destroy_duration = "60s"
+  depends_on = [azurerm_private_dns_zone.mydomain]
 }
 
 resource "azurerm_private_dns_zone" "this" {
@@ -103,8 +100,6 @@ resource "azurerm_private_dns_zone" "this" {
 resource "azurerm_private_dns_zone" "mydomain" {
   name                = "privatelink.eastus2.azmk8s.io"
   resource_group_name = azurerm_resource_group.this.name
-
-  depends_on = [time_sleep.wait_for_vnet_link_cleanup]
 }
 
 module "avm_res_network_virtualnetwork" {
@@ -149,7 +144,6 @@ The following resources are used by this module:
 - [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [time_sleep.wait_for_vnet_link_cleanup](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->

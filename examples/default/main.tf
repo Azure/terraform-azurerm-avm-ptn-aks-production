@@ -81,11 +81,8 @@ module "test" {
   private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
   private_dns_zone_id_enabled = true
   rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
-}
 
-# Wait for VNET links to be cleaned up before deleting the private DNS zone
-resource "time_sleep" "wait_for_vnet_link_cleanup" {
-  destroy_duration = "60s"
+  depends_on = [azurerm_private_dns_zone.mydomain]
 }
 
 resource "azurerm_private_dns_zone" "this" {
@@ -96,8 +93,6 @@ resource "azurerm_private_dns_zone" "this" {
 resource "azurerm_private_dns_zone" "mydomain" {
   name                = "privatelink.eastus2.azmk8s.io"
   resource_group_name = azurerm_resource_group.this.name
-
-  depends_on = [time_sleep.wait_for_vnet_link_cleanup]
 }
 
 module "avm_res_network_virtualnetwork" {

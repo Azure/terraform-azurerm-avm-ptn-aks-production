@@ -144,6 +144,8 @@ resource "azurerm_kubernetes_cluster" "this" {
     }
   }
 
+  depends_on = [time_sleep.wait_for_vnet_link_cleanup]
+
   lifecycle {
     ignore_changes = [
       kubernetes_version
@@ -166,6 +168,11 @@ resource "azurerm_kubernetes_cluster" "this" {
       error_message = "private_dns_zone_id must be set if private_dns_zone_id_enabled is true"
     }
   }
+}
+
+# Wait for VNET links to be cleaned up before deleting the private DNS zone
+resource "time_sleep" "wait_for_vnet_link_cleanup" {
+  destroy_duration = "90s"
 }
 
 # The following null_resource is used to trigger the update of the AKS cluster when the kubernetes_version changes
