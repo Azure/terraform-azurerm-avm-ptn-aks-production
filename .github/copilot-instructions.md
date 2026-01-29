@@ -146,6 +146,7 @@ terraform validate
 # AVM-specific validation (MANDATORY)
 export PORCH_NO_TUI=1
 ./avm pre-commit
+<commit any changes>
 ./avm pr-check
 ```
 
