@@ -126,10 +126,10 @@ if (-not $env:AVM_IN_CONTAINER) {
     "CONFTEST_EXCEPTIONS_URL",
     "FORCE_COLOR",
     "GITHUB_TOKEN",
-    "GREPT_URL",
     "MPTF_URL",
     "NO_COLOR",
     "PORCH_LOG_LEVEL",
+    "AVM_PORCH_STDOUT",
     "TEST_TYPE",
     "TFLINT_CONFIG_URL"
   )
@@ -149,9 +149,26 @@ if (-not $env:AVM_IN_CONTAINER) {
     $dockerArgs += @("-e", "$($_.Name)=$($_.Value)")
   }
 
-  # Add AVM_ environment variables
-  Get-ChildItem env: | Where-Object { $_.Name -like "AVM_*" } | ForEach-Object {
+  # Add AVM_ environment variables (excluding AVM_BARE_* which are forwarded with the prefix stripped)
+  Get-ChildItem env: | Where-Object { $_.Name -like "AVM_*" -and $_.Name -notlike "AVM_BARE_*" } | ForEach-Object {
     $dockerArgs += @("-e", "$($_.Name)=$($_.Value)")
+  }
+
+  # Forward AVM_BARE_* environment variables to the container with the prefix stripped
+  Get-ChildItem env: | Where-Object { $_.Name -like "AVM_BARE_*" } | ForEach-Object {
+    $strippedName = $_.Name -replace '^AVM_BARE_', ''
+    $dockerArgs += @("-e", "$strippedName=$($_.Value)")
+    Write-Host "Forwarding AVM bare variable to container as: $strippedName"
+  }
+
+  # Add local environment variables from avm.config.json
+  if (Test-Path "avm.config.json") {
+    $jsonContent = Get-Content "avm.config.json" -Raw | ConvertFrom-Json -AsHashtable
+
+    foreach ($key in $jsonContent.Keys) {
+      [System.Environment]::SetEnvironmentVariable($key, $jsonContent[$key])
+      $dockerArgs += @("-e", "$key")
+    }
   }
 
   $dockerArgs += $CONTAINER_IMAGE
@@ -159,6 +176,10 @@ if (-not $env:AVM_IN_CONTAINER) {
 
   if ($TUI) {
     $dockerArgs += "TUI=$TUI"
+  }
+
+  if($env:AVM_PORCH_STDOUT) {
+    $dockerArgs += "AVM_PORCH_STDOUT=$($env:AVM_PORCH_STDOUT)"
   }
 
   $dockerArgs += "MAKEFILE_REF=$MAKEFILE_REF"
