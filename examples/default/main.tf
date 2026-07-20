@@ -26,7 +26,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.3.0"
+  version = "0.12.0"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -91,7 +91,7 @@ resource "azurerm_private_dns_zone" "mydomain" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.7.1"
+  version = "0.19.0"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
