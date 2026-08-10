@@ -36,7 +36,6 @@ locals {
   }
 }
 
-
 locals {
   # Flatten a list of var.node_pools and zones
   node_pools = flatten([
@@ -59,6 +58,7 @@ locals {
     ]
   ])
 }
+
 locals {
   log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
 }
