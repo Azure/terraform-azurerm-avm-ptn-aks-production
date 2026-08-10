@@ -92,14 +92,17 @@ resource "azurerm_kubernetes_cluster" "this" {
       max_surge = "10%"
     }
   }
+
   auto_scaler_profile {
     balance_similar_node_groups = true
   }
+
   azure_active_directory_role_based_access_control {
     admin_group_object_ids = var.rbac_aad_admin_group_object_ids
     azure_rbac_enabled     = var.rbac_aad_azure_rbac_enabled
     tenant_id              = var.rbac_aad_tenant_id
   }
+
   ## Resources that only support UserAssigned
   dynamic "identity" {
     for_each = local.managed_identities.user_assigned
@@ -109,13 +112,16 @@ resource "azurerm_kubernetes_cluster" "this" {
       identity_ids = identity.value.user_assigned_resource_ids
     }
   }
+
   key_vault_secrets_provider {
     secret_rotation_enabled = true
   }
+
   monitor_metrics {
     annotations_allowed = try(var.monitor_metrics.annotations_allowed, null)
     labels_allowed      = try(var.monitor_metrics.labels_allowed, null)
   }
+
   network_profile {
     network_plugin      = "azure"
     dns_service_ip      = local.dns_service_ip
@@ -127,6 +133,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     pod_cidr            = var.network.pod_cidr
     service_cidr        = var.network.service_cidr
   }
+
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
     msi_auth_for_monitoring_enabled = true
@@ -252,6 +259,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks" {
   enabled_log {
     category = "csi-snapshot-controller"
   }
+
   metric {
     category = "AllMetrics"
   }
@@ -266,7 +274,6 @@ resource "azurerm_management_lock" "this" {
   scope      = azurerm_kubernetes_cluster.this.id
   notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 }
-
 
 resource "azurerm_kubernetes_cluster_node_pool" "this" {
   for_each = tomap({
@@ -288,14 +295,13 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   vnet_subnet_id        = var.network.node_subnet_id
   zones                 = each.value.zone
 
-  depends_on = [azapi_update_resource.aks_cluster_post_create]
-
   lifecycle {
     precondition {
       condition     = can(regex("^[a-z][a-z0-9]{0,11}$", each.value.name))
       error_message = "The name must begin with a lowercase letter, contain only lowercase letters and numbers, and be between 1 and 12 characters in length."
     }
   }
+  depends_on = [azapi_update_resource.aks_cluster_post_create]
 }
 
 # Data source for the current subscription
@@ -303,9 +309,9 @@ data "azurerm_subscription" "current" {}
 
 data "azapi_resource_list" "example" {
   parent_id = data.azurerm_subscription.current.id
-  type      = "Microsoft.Compute/Skus@2021-07-01"
   query_parameters = {
     "$filter" = [format("location eq '%s'", var.location)]
   }
+  type                   = "Microsoft.Compute/Skus@2021-07-01"
   response_export_values = ["*"]
 }
