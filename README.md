@@ -32,7 +32,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, <5)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, < 6)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (>= 0.3, < 1.0)
 
@@ -515,7 +515,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-containerregistry-registry/azurerm
 
-Version: 0.4.0
+Version: 0.7.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
