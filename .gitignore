@@ -51,4 +51,4 @@ avm.tflint_module.hcl
 avm.tflint_module.merged.hcl
 examples/*/policy
 *.mptfbackup
-.avm
+.avm/managed-files.json
