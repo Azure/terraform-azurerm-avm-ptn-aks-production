@@ -11,7 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4, <5"
+      version = ">= 4, < 6"
     }
     random = {
       source  = "hashicorp/random"
@@ -33,7 +33,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.3.0"
+  version = "0.12.0"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -98,7 +98,7 @@ resource "azurerm_private_dns_zone" "mydomain" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.7.1"
+  version = "0.20.0"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -124,7 +124,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, <5)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, < 6)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
 
@@ -169,7 +169,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 0.7.1
+Version: 0.20.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
@@ -181,7 +181,7 @@ Version: >= 0.3.0
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.3.0
+Version: 0.12.0
 
 ### <a name="module_test"></a> [test](#module\_test)
 
