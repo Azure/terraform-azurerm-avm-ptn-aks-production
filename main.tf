@@ -73,20 +73,22 @@ resource "azurerm_kubernetes_cluster" "this" {
   workload_identity_enabled         = true
 
   default_node_pool {
-    name                    = "agentpool"
-    auto_scaling_enabled    = true
-    host_encryption_enabled = true
-    max_count               = 9
-    max_pods                = 110
-    min_count               = 3
-    node_labels             = var.node_labels
-    orchestrator_version    = var.orchestrator_version
-    os_disk_type            = var.os_disk_type
-    os_sku                  = var.os_sku
-    tags                    = merge(var.tags, var.agents_tags)
-    vm_size                 = var.default_node_pool_vm_sku
-    vnet_subnet_id          = var.network.node_subnet_id
-    zones                   = local.default_node_pool_available_zones
+    name                         = "agentpool"
+    auto_scaling_enabled         = var.default_node_pool.auto_scaling_enabled
+    host_encryption_enabled      = true
+    max_count                    = var.default_node_pool.max_count
+    max_pods                     = var.default_node_pool.max_pods
+    min_count                    = var.default_node_pool.min_count
+    node_labels                  = var.node_labels
+    only_critical_addons_enabled = var.default_node_pool.only_critical_addons_enabled
+    orchestrator_version         = var.orchestrator_version
+    os_disk_type                 = var.os_disk_type
+    os_sku                       = var.os_sku
+    tags                         = merge(var.tags, var.agents_tags)
+    temporary_name_for_rotation  = "agentpooltmp"
+    vm_size                      = var.default_node_pool_vm_sku
+    vnet_subnet_id               = var.network.node_subnet_id
+    zones                        = local.default_node_pool_available_zones
 
     upgrade_settings {
       max_surge = "10%"
@@ -141,7 +143,8 @@ resource "azurerm_kubernetes_cluster" "this" {
 
   lifecycle {
     ignore_changes = [
-      kubernetes_version
+      kubernetes_version,
+      default_node_pool[0].upgrade_settings
     ]
 
     precondition {
@@ -260,7 +263,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks" {
     category = "csi-snapshot-controller"
   }
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
   }
 }
@@ -295,12 +298,27 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   vnet_subnet_id        = var.network.node_subnet_id
   zones                 = each.value.zone
 
+  dynamic "upgrade_settings" {
+    for_each = each.value.upgrade_settings == null ? [] : [each.value.upgrade_settings]
+
+    content {
+      drain_timeout_in_minutes = upgrade_settings.value.drain_timeout_in_minutes
+      max_surge                = upgrade_settings.value.max_surge
+      max_unavailable          = upgrade_settings.value.max_unavailable
+    }
+  }
+
   lifecycle {
+    ignore_changes = [
+      upgrade_settings
+    ]
+
     precondition {
       condition     = can(regex("^[a-z][a-z0-9]{0,11}$", each.value.name))
       error_message = "The name must begin with a lowercase letter, contain only lowercase letters and numbers, and be between 1 and 12 characters in length."
     }
   }
+
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 }
 
