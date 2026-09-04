@@ -183,8 +183,6 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
       kubernetesVersion = var.kubernetes_version
     }
   }
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   lifecycle {
     ignore_changes       = all
