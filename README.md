@@ -131,6 +131,30 @@ Type: `map(string)`
 
 Default: `{}`
 
+### <a name="input_default_node_pool"></a> [default\_node\_pool](#input\_default\_node\_pool)
+
+Description: (Optional) Default (system) node pool configuration. The defaults reproduce the values that were previously hardcoded.
+
+- `auto_scaling_enabled` - (Optional) Enable the cluster autoscaler for the default node pool. Defaults to `true`.
+- `max_count` - (Optional) Maximum number of nodes the default node pool scales up to. Defaults to `9`.
+- `max_pods` - (Optional) Maximum number of pods that can run on each node. Defaults to `110`.
+- `min_count` - (Optional) Minimum number of nodes the default node pool scales down to. Defaults to `3`.
+- `only_critical_addons_enabled` - (Optional) Taint the default node pool with `CriticalAddonsOnly` so only system pods are scheduled on it. Defaults to `false`.
+
+Type:
+
+```hcl
+object({
+    auto_scaling_enabled         = optional(bool, true)
+    max_count                    = optional(number, 9)
+    max_pods                     = optional(number, 110)
+    min_count                    = optional(number, 3)
+    only_critical_addons_enabled = optional(bool, false)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_default_node_pool_vm_sku"></a> [default\_node\_pool\_vm\_sku](#input\_default\_node\_pool\_vm\_sku)
 
 Description: The VM SKU to use for the default node pool. A minimum of three nodes of 8 vCPUs or two nodes of at least 16 vCPUs is recommended. Do not use SKUs with less than 4 CPUs and 4Gb of memory.
@@ -286,6 +310,11 @@ map(object({
     os_disk_size_gb = optional(number, null)
     tags            = optional(map(string), {})
     labels          = optional(map(string), {})
+    upgrade_settings = optional(object({
+      drain_timeout_in_minutes = optional(number, 30)
+      max_surge                = optional(string, "10%")
+      max_unavailable          = optional(string, "0")
+    }), null)
   }))
 ```
 
@@ -370,6 +399,14 @@ Description: (Optional) Tags of the resource.
 Type: `map(string)`
 
 Default: `null`
+
+### <a name="input_zone_redundancy_enabled"></a> [zone\_redundancy\_enabled](#input\_zone\_redundancy\_enabled)
+
+Description: (Optional) Enable zone redundancy for the AKS cluster nodes. Defaults to true, which creates one node pool per available zone for each entry in `var.node_pools`. If set to false, a single node pool is created per entry, spanning every available zone. Note that `min_count` and `max_count` then apply once to that pool rather than once per zone, so the same input yields fewer nodes.
+
+Type: `bool`
+
+Default: `true`
 
 ## Outputs
 
