@@ -29,6 +29,7 @@ network:
 # conclusion jobs and their failure reports. Discriminating by issue number
 # gives each dispatched run its own group. Stripped from the compiled lock.
 concurrency:
+  group: "gh-aw-${{ github.workflow }}-${{ github.event.inputs.issue_number || github.event.issue.number || github.run_id }}"
   job-discriminator: ${{ github.event.inputs.issue_number || github.event.issue.number || github.run_id }}
 # Read-only permissions for triage
 permissions:
@@ -136,29 +137,49 @@ steps:
     # Comparing the newest release tag against the default branch yields exactly
     # the commits that are merged but not yet released. Membership in that set is
     # the whole released/unreleased question, decided here rather than inferred.
+    #
+    # The newest release is picked by sorting on published_at rather than asking
+    # /releases/latest, which does not always agree: on
+    # terraform-azurerm-avm-res-netapp-netappaccount it answers 0.2.0 (May 2025)
+    # while v0.3.0 (Dec 2025) is the real newest. Comparing against a stale tag
+    # makes already-released fixes look unreleased, which is the wrong direction
+    # to be wrong in — it would label an issue as awaiting a release that exists.
     LATEST=$(mktemp)
-    if ! gh api "repos/${GH_AW_GITHUB_REPOSITORY}/releases/latest" > "${LATEST}" 2>/dev/null; then
-      printf '%s\n' '{"loaded":true,"has_release":false,"latest_tag":null,"latest_published_at":null,"ahead_by":0,"unreleased_shas":[],"unreleased_pr_numbers":[]}' > "${OUT}"
+    if ! gh api --paginate "repos/${GH_AW_GITHUB_REPOSITORY}/releases?per_page=100" > "${LATEST}" 2>/dev/null; then
+      printf '%s\n' '{"loaded":false,"has_release":null,"latest_tag":null,"latest_published_at":null,"ahead_by":0,"unreleased_pr_numbers":[]}' > "${OUT}"
       rm -f "${LATEST}"
       exit 0
     fi
-    TAG=$(jq -r '.tag_name // empty' "${LATEST}" | tr -d '\r' | head -n 1)
-    PUB=$(jq -r '.published_at // empty' "${LATEST}" | tr -d '\r' | head -n 1)
+    # --paginate concatenates one array per page, so flatten before sorting.
+    NEWEST=$(jq -s -r '
+      [ .[][]? | select((.draft | not) and (.prerelease | not)) ]
+      | sort_by(.published_at)
+      | last
+      | if . == null then "" else "\(.tag_name)\t\(.published_at)" end
+    ' "${LATEST}" 2>/dev/null | tr -d '\r' | head -n 1)
     rm -f "${LATEST}"
+    TAG=${NEWEST%%$'\t'*}
+    PUB=${NEWEST#*$'\t'}
+    if [ "${PUB}" = "${TAG}" ]; then PUB=""; fi
     if [ -z "${TAG}" ]; then
-      printf '%s\n' '{"loaded":true,"has_release":false,"latest_tag":null,"latest_published_at":null,"ahead_by":0,"unreleased_shas":[],"unreleased_pr_numbers":[]}' > "${OUT}"
+      printf '%s\n' '{"loaded":true,"has_release":false,"latest_tag":null,"latest_published_at":null,"ahead_by":0,"unreleased_pr_numbers":[]}' > "${OUT}"
       exit 0
     fi
     CMP=$(mktemp)
     if gh api "repos/${GH_AW_GITHUB_REPOSITORY}/compare/${TAG}...${DEFAULT_BRANCH}" > "${CMP}" 2>/dev/null &&
        jq -e 'type == "object" and has("commits")' "${CMP}" > /dev/null 2>&1; then
+      # Commit SHAs are deliberately not published here. Two runs picked a SHA
+      # out of that list and asserted it introduced the feature under triage,
+      # both citing a `chore: run avm pre-commit` commit that touched only
+      # workflow files. A SHA carries no clue about what it changed, so any SHA
+      # in the list reads as evidence. A PR number can be checked by reading the
+      # PR, so that is the only identifier the agent is given.
       jq --arg tag "${TAG}" --arg pub "${PUB}" '{
         loaded: true,
         has_release: true,
         latest_tag: $tag,
         latest_published_at: $pub,
         ahead_by: (.ahead_by // 0),
-        unreleased_shas: [.commits[]?.sha],
         unreleased_pr_numbers: ([.commits[]?.commit.message | scan("#([0-9]+)") | .[0] | tonumber] | unique)
       }' "${CMP}" > "${OUT}" ||
         printf '%s\n' "{\"loaded\":false,\"has_release\":true,\"latest_tag\":\"${TAG}\"}" > "${OUT}"
@@ -1159,7 +1180,18 @@ Classify every issue as exactly one of these GitHub issue types and use the `set
 
 - **Bug** — Unexpected or incorrect behavior, regressions, errors, failed deployments, or behavior that does not match the documented contract.
 - **Feature** — Feature requests for new user-facing capabilities, resources, variables, outputs, integrations, or enhancements to existing behavior.
-- **Task** — Concrete maintenance, documentation, testing, CI, refactoring, investigation, or other actionable work that is neither a defect nor a feature request.
+- **Task** — Concrete maintenance, documentation, testing, CI, refactoring, investigation, or other actionable work that is neither a defect nor a feature request. **This is also where usage questions, feedback, and clarification requests go** — there is no `Question` issue type.
+
+**These three are the only values `set-issue-type` accepts.** Emitting anything else — `Question`, `Documentation`, `Security`, `Enhancement` — is rejected with *"Issue type X is not in the allowed list"* and the run fails with no type applied.
+
+The repository's **labels** are a richer taxonomy than the issue types, and they do not map one-to-one. A repo carries `Type: Question/Feedback :raising_hand:`, `Type: Documentation :page_facing_up:`, `Type: Security Bug :lock:` and more, but none of those is an issue type. Label such an issue with whichever `Type: …` label fits **and** give it the closest of the three issue types:
+
+| The issue is | Label | Issue type |
+|---|---|---|
+| a usage question or feedback | `Type: Question/Feedback` | **Task** |
+| a documentation gap | `Type: Documentation` | **Task** |
+| a security defect | `Type: Security Bug` | **Bug** |
+| a CI or workflow problem | `Type: CI` | **Task** |
 
 Choose the single best fit from the issue's primary intent. Do not create or use any other issue type.
 
@@ -1198,8 +1230,8 @@ AVM tracks where a fix has got to with three labels. Apply the one that matches 
 | State you established | Label to match |
 |---|---|
 | A fix for this issue exists in an **open, unmerged** PR | the "Status: In PR" label |
-| A fix is **merged to the default branch but not in any release** — its PR number or merge commit appears in `release-status.json` | the "Status: Awaiting Release To Be Cut" label |
-| A fix is **merged and carried by a published release** | the "Status: Fixed" label, alongside closing the issue |
+| A fix is **merged to the default branch but not in any release** — the fixing PR number **appears in** `unreleased_pr_numbers` | the "Status: Awaiting Release To Be Cut" label |
+| A fix is **merged and carried by a published release** — the fixing PR number is **not in** `unreleased_pr_numbers` | the "Status: Fixed" label, alongside closing the issue |
 
 AVM defines "Status: Awaiting Release To Be Cut" as *"This is fixed in the main branch but not in the latest release, will be fixed with next release cut"*. It is the state that keeps an issue open and visible to whoever cuts the next release, which is why an unreleased fix is labelled rather than closed.
 
@@ -1329,10 +1361,23 @@ Do not judge release state from a PR body, a changelog, an earlier comment, or t
 | `loaded` | `false` means the lookup failed — treat every fix as unreleased |
 | `has_release` | `false` means the module has never been released |
 | `latest_tag` / `latest_published_at` | the newest release |
-| `unreleased_shas` | merge commits on the default branch that no release contains |
-| `unreleased_pr_numbers` | the PR numbers those commits reference |
+| `unreleased_pr_numbers` | **the deciding list** — PR numbers merged to the default branch that no release contains |
 
-**A merged fix is released when its PR number is absent from `unreleased_pr_numbers` and its merge commit is absent from `unreleased_shas`.** Present in either list means merged but not yet released.
+The file carries no commit SHAs, by design. Two runs reached into a SHA list, picked one, and asserted it introduced the feature under triage — both naming `262cb246`, a `chore: run avm pre-commit` commit that touched only workflow files. A SHA says nothing about what it changed, so any SHA reads as evidence. A PR number can be checked: you can read PR #229 and see whether it added the thing.
+
+**Run this exact test on your fixing PR, and do not substitute judgement for it:**
+
+> Is the fixing PR's number in `unreleased_pr_numbers`?
+> **Yes → not released.** Apply `Status: Awaiting Release To Be Cut` and leave the issue open.
+> **No → released.** Close as `completed`.
+
+Identify the fixing PR before you run the test, and identify it from its contents. Find the PR whose diff actually adds the behaviour the issue asks for. Do not work backwards from `unreleased_pr_numbers` by asking which of those PRs might plausibly be responsible — the fixing PR is frequently not in that list, because a released fix by definition is not.
+
+There is no third answer, and nothing else is evidence. **Merge and release dates in particular are not evidence.** A PR merged seconds before a release is in that release; a PR merged months ago may still be unreleased. `avm-ptn-example-repo` PR #227 merged at `21:30:59` and `v0.1.2` was published at `21:31:32` — 33 seconds later, from that very commit. Reasoning from the timestamps would call it unreleased; the list correctly does not contain it.
+
+State the result of this test in the triage comment: name the PR number and say whether it appears in `unreleased_pr_numbers`. A conclusion about release state that does not cite that list is a conclusion you guessed.
+
+Getting this backwards is not symmetric. Calling a released fix "awaiting release" tells a maintainer to go and cut a release that already exists, which wastes their time on a non-existent task; that is the error to avoid.
 
 Close the issue as `completed` only when the fix is **confirmed**, the Human Reopen Override is not active, the **Incomplete or Failed Evidence Load or Screening** veto is not active, **and the fix is released** by the test above.
 
@@ -1343,7 +1388,17 @@ When the fix is confirmed but **not yet released**, do all of this and nothing m
 - In the triage comment, name the fixing PR, state that the fix is on the default branch, and name `latest_tag` as the most recent release that does **not** contain it.
 - Do not ask a maintainer to cut a release in the comment. The label is the signal AVM already uses for this; a second request in prose is noise.
 
-Before closing a released fix, post the Step 6 triage comment identifying the PR, the commit, and the release that first carried it, and recommend that version. Then use `close-issue` with `state_reason: completed`, naming the fixing PR in the body. Do not set `duplicate_of` on a fix-confirmed closure — that reason is only for duplicates.
+Before closing a released fix, post the Step 6 triage comment identifying the PR, the commit, and the release that first carried it, and recommend that version. Then use `close-issue` with `state_reason: completed`. Do not set `duplicate_of` on a fix-confirmed closure — that reason is only for duplicates.
+
+**The `close-issue` body is posted as its own comment, directly beneath your triage comment, and it is what the reporter reads as the reason their issue closed.** Give it two sentences and nothing more: what fixed the issue and in which release, then the reopen invitation.
+
+```
+Fixed by PR #270, which migrated diagnostic settings to `azapi_resource` and removed the deprecated `metric` attribute. Released in v0.8.2.
+
+If this is still happening on v0.8.2 or later, please reopen with your module version and a configuration snippet.
+```
+
+That second sentence is not a courtesy. A reopen by a human is the only trigger for the **Human Reopen Override**, which permanently blocks this workflow from closing the issue again. Omit it and the reporter has no way of knowing that route exists, so the one safeguard against a wrong closure never engages. A `close-issue` body without it is incomplete.
 
 Do **not** close for an open or draft PR, an unmerged branch, a merely likely match, a partial fix, conflicting evidence, a fix whose default-branch inclusion cannot be verified, or a fix that is merged but unreleased. When uncertain, leave the issue open and explain what a maintainer should verify.
 
@@ -1436,7 +1491,7 @@ The bullet points should include:
 - **PR linked:** If you appended `Fixes #<issue-number>` to a confirmed-fix PR, identify the PR and state that it is now linked. Do not claim an ambiguous candidate was linked.
 - **Related or partial PRs:** Always report any PR you classified as **likely related fix** or **related-only** in Step 4, with a link and a one-line reason, even though you deliberately did not link or close against it. Do not omit these just because no write action was taken on them — surfacing them is the point, so a maintainer can judge candidates you intentionally left out of the automated decision. Every candidate named as lexically plausible in the rendered screening-status line must appear here unless you reported it as a confirmed fix; if you judged one irrelevant, say so and why, rather than leaving it unmentioned.
 - **PR-evidence and screening status:** This line is rendered for you, and it belongs **inside the collapsed accordion**, not in the visible bullets — it is machine evidence for auditing a run, not a finding a maintainer needs to read. Handling rules are under the accordion bullet below.
-- **Closure:** Required on any run that emits `close-issue`, with no exception — a closure whose comment never mentions being closed reads to the reporter as an unexplained state change. State the evidence, name the release that carries the fix (or the canonical issue, for a duplicate), and end with a sentence inviting the reporter to reopen if the closure is wrong. That sentence is load-bearing: a human reopening is the only thing that triggers the Human Reopen Override, which is the one veto protecting a reporter from a wrong closure. Two of the first six real closures shipped without this bullet, so before emitting `close-issue`, confirm the comment carries it.
+- **Closure:** Required on any run that emits `close-issue`, with no exception. One line: that you are closing, and the evidence — the release that carries the fix, or the canonical issue for a duplicate. The reopen invitation does **not** go here; for a fix-confirmed closure it belongs in the `close-issue` body, and for a duplicate it is the `> **Note:**` blockquote below. Worked examples for both are in Step 6.
 - **Awaiting release:** If a confirmed fix is merged but not yet released, say so here instead of under Closure — name the fixing PR, state that it is on the default branch, name `latest_tag` as the newest release that does not contain it, and note that the issue stays open until a release carries the fix.
 - **Human reopen override:** If this workflow previously closed the issue and a person later reopened it, state that the issue will remain open for human review even if the agent found a duplicate or an existing fix.
 - **What this triage looked at (collapsed accordion):** At the very bottom of the comment, include a collapsed `<details>` block containing, in order: the verbatim contents of `/tmp/gh-aw/agent/triage-audit-block.md`; the verbatim contents of `/tmp/gh-aw/agent/triage-screening-status.md`; one line accounting for any `.must_compare` candidates you judged not related; the deterministic PR-evidence sources that fired (e.g. timeline cross-reference, exact issue-number match in a title/body/comment, commit-message reference, commit-body `Refs #N`); and the key sources you inspected. This is the run's audit trail — keeping it here is what lets the visible summary stay short.
@@ -1552,6 +1607,37 @@ When you are **highly confident** an issue is a confirmed duplicate of another (
 </details>
 ```
 
+**Example — closing an issue a released fix already resolved.** This is the shape that was missing, and closures without it were omitting the `Closure:` bullet roughly one run in four. Both calls are shown, because the reopen invitation lives in the `close-issue` body rather than the comment:
+
+`add-comment`:
+
+```
+## 🤖 GitHub Agentic Workflow Automated Triage 🤖
+
+> ⚠️ _This triage was generated automatically by an AI agent and may be incomplete or inaccurate._
+
+- **Duplicate check:** No duplicates found. Compared #612 — same resource, different root cause.
+- **Issue type:** Set to `Bug` (previously `NONE`).
+- **Labels applied:** None new — the issue already carries `Type: Bug :bug:`.
+- **Already fixed:** PR #270 replaced the deprecated `metric` attribute with `enabled_metric`, merged to `main` and carried by release `v0.8.2`. `#270` is not in `unreleased_pr_numbers`, so the fix is released.
+- **Closure:** Closing as completed — the fix is released in `v0.8.2`, so upgrading resolves this.
+
+<details>
+<summary><b>🔎 What this triage looked at</b></summary>
+
+<the rendered audit block, the rendered screening line, then the sources you opened>
+
+</details>
+```
+
+`close-issue` with `state_reason: completed`:
+
+```
+Fixed by PR #270, which replaced the deprecated `metric` attribute with `enabled_metric`. Released in v0.8.2.
+
+If this is still happening on v0.8.2 or later, please reopen with your module version and a configuration snippet.
+```
+
 ---
 
 ## Safe Outputs
@@ -1575,7 +1661,7 @@ Every issue safe output carries it, in every combination — never only the firs
 - If you **close the issue** because it is conclusively fixed: Use `add-comment` for the triage summary **first**, then use `close-issue` with `state_reason: completed` and a body naming the fixing PR. Do not set `duplicate_of` on this path.
 - If the **Human Reopen Override** is active: Never use `close-issue`, regardless of duplicate or fix confidence. Continue with any non-closing outputs and explain the veto in the triage comment.
 - If you find an unlinked **confirmed-fix PR**: Use `update-pull-request` with `pull_request_number`, `operation: append`, and a body of exactly `Fixes #<issue-number>`. Do not update likely or merely related candidates.
-- Use `set-issue-type` with `issue_number` and exactly one of `Bug`, `Feature`, or `Task` on **every** run. Emit it unconditionally — never skip it on the grounds that the type looks already correct.
+- Use `set-issue-type` with `issue_number` and exactly one of `Bug`, `Feature`, or `Task` on **every** run. Emit it unconditionally — never skip it on the grounds that the type looks already correct. Those three strings are the entire allowed list; a usage question is `Task`, not `Question`.
 - If you find a **possible duplicate** but are **not highly confident** it is the same root cause: do **NOT** use `close-issue`. Use `add-comment` to flag `Possible duplicate of #N` (with the link) and leave the issue open; apply labels with `add-labels` as usual (but not `duplicate`). Reserve `close-issue` for confirmed duplicates only.
 - If you **add labels AND post a comment** (most common case): Call **both** `add-labels` (to apply labels to the issue) AND `add-comment` (for the triage summary), and put `item_number` on **both** — the observed failure mode is a run that attaches the number to the comment and omits it from the labels, which loses the labels while the comment still publishes. ⚠️ Listing label names inside the comment body does NOT apply them — you MUST call `add-labels` as a separate action.
 - If you **only post a comment** (no labels to add, no close): Use `add-comment` alone. Do not also emit `add-labels` with an empty list to signal "nothing to add" — omit the call entirely. The unconditional rule above applies to `set-issue-type` only.
