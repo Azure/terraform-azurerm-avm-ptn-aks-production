@@ -11,7 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4, <5"
+      version = ">= 4, < 6"
     }
   }
 }
@@ -105,7 +105,7 @@ resource "azurerm_private_dns_zone" "this" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.7.1"
+  version = "0.20.0"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -131,7 +131,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, <5)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, < 6)
 
 ## Resources
 
@@ -181,7 +181,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 0.7.1
+Version: 0.20.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
