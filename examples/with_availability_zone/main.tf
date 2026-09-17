@@ -57,7 +57,7 @@ module "test" {
     subnet_resource_id            = module.avm_res_network_virtualnetwork.subnets["private_link_subnet"].resource_id
     private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
   }
-  enable_telemetry   = var.enable_telemetry # see variables.tf
+  enable_telemetry   = false # see variables.tf
   kubernetes_version = "1.30"
   managed_identities = {
     user_assigned_resource_ids = [
@@ -105,6 +105,7 @@ module "avm_res_network_virtualnetwork" {
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = false
   name                = "myvnet"
   subnets = {
     "subnet" = {
