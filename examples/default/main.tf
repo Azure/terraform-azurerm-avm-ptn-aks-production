@@ -25,7 +25,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.3.0"
+  version = "0.12.0"
 
   enable_telemetry = var.enable_telemetry
 }
@@ -93,13 +93,12 @@ resource "azurerm_private_dns_zone" "mydomain" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.7.1"
+  version = "0.22.2"
 
-  address_space       = ["10.31.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "myvnet"
+  location         = azurerm_resource_group.this.location
+  address_space    = ["10.31.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "myvnet"
   subnets = {
     "subnet" = {
       name             = "nodecidr"
@@ -110,4 +109,5 @@ module "avm_res_network_virtualnetwork" {
       address_prefixes = ["10.31.129.0/24"]
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
