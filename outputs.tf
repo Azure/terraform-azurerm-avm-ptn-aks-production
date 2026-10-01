@@ -1,6 +1,7 @@
 # Authors SHOULD NOT output entire resource objects as these may contain sensitive outputs and the schema can change with API or provider versions
 # https://azure.github.io/Azure-Verified-Modules/specs/tf/res/#id-tffr2---category-outputs---additional-terraform-outputs
 
+
 output "current_kubernetes_version" {
   description = "The current version running on the Azure Kubernetes Managed Cluster"
   value       = azurerm_kubernetes_cluster.this.current_kubernetes_version

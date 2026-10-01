@@ -1,5 +1,6 @@
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -102,6 +103,7 @@ module "avm_res_network_virtualnetwork" {
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = var.enable_telemetry
   name                = "myvnet"
   subnets = {
     "subnet" = {

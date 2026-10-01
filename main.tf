@@ -74,7 +74,6 @@ resource "azurerm_kubernetes_cluster" "this" {
 
   default_node_pool {
     name                    = "agentpool"
-    vm_size                 = var.default_node_pool_vm_sku
     auto_scaling_enabled    = true
     host_encryption_enabled = true
     max_count               = 9
@@ -85,6 +84,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     os_disk_type            = var.os_disk_type
     os_sku                  = var.os_sku
     tags                    = merge(var.tags, var.agents_tags)
+    vm_size                 = var.default_node_pool_vm_sku
     vnet_subnet_id          = var.network.node_subnet_id
     zones                   = local.default_node_pool_available_zones
 
@@ -92,14 +92,17 @@ resource "azurerm_kubernetes_cluster" "this" {
       max_surge = "10%"
     }
   }
+
   auto_scaler_profile {
     balance_similar_node_groups = true
   }
+
   azure_active_directory_role_based_access_control {
     admin_group_object_ids = var.rbac_aad_admin_group_object_ids
     azure_rbac_enabled     = var.rbac_aad_azure_rbac_enabled
     tenant_id              = var.rbac_aad_tenant_id
   }
+
   ## Resources that only support UserAssigned
   dynamic "identity" {
     for_each = local.managed_identities.user_assigned
@@ -109,13 +112,16 @@ resource "azurerm_kubernetes_cluster" "this" {
       identity_ids = identity.value.user_assigned_resource_ids
     }
   }
+
   key_vault_secrets_provider {
     secret_rotation_enabled = true
   }
+
   monitor_metrics {
     annotations_allowed = try(var.monitor_metrics.annotations_allowed, null)
     labels_allowed      = try(var.monitor_metrics.labels_allowed, null)
   }
+
   network_profile {
     network_plugin      = "azure"
     dns_service_ip      = local.dns_service_ip
@@ -127,6 +133,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     pod_cidr            = var.network.pod_cidr
     service_cidr        = var.network.service_cidr
   }
+
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
     msi_auth_for_monitoring_enabled = true
@@ -169,13 +176,13 @@ resource "null_resource" "kubernetes_version_keeper" {
 }
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
-  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  resource_id = azurerm_kubernetes_cluster.this.id
+  type        = "Microsoft.ContainerService/managedClusters@2024-02-01"
   body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
     }
   }
-  resource_id = azurerm_kubernetes_cluster.this.id
 
   lifecycle {
     ignore_changes       = all
@@ -250,6 +257,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks" {
   enabled_log {
     category = "csi-snapshot-controller"
   }
+
   metric {
     category = "AllMetrics"
   }
@@ -275,7 +283,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "extra_pool" {
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
   name                  = each.value.name
-  vm_size               = each.value.vm_size
   auto_scaling_enabled  = true
   max_count             = each.value.max_count
   min_count             = each.value.min_count
@@ -285,10 +292,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "extra_pool" {
   os_disk_type          = each.value.os_disk_type
   os_sku                = each.value.os_sku
   tags                  = each.value.tags
+  vm_size               = each.value.vm_size
   vnet_subnet_id        = var.network.node_subnet_id
   zones                 = each.value.zone
-
-  depends_on = [azapi_update_resource.aks_cluster_post_create]
 
   lifecycle {
     precondition {
@@ -296,17 +302,17 @@ resource "azurerm_kubernetes_cluster_node_pool" "extra_pool" {
       error_message = "The name must begin with a lowercase letter, contain only lowercase letters and numbers, and be between 1 and 12 characters in length."
     }
   }
+  depends_on = [azapi_update_resource.aks_cluster_post_create]
 }
-
 
 # Data source for the current subscription
 data "azurerm_subscription" "current" {}
 
 data "azapi_resource_list" "example" {
   parent_id = data.azurerm_subscription.current.id
-  type      = "Microsoft.Compute/Skus@2021-07-01"
   query_parameters = {
     "$filter" = [format("location eq '%s'", var.location)]
   }
+  type                   = "Microsoft.Compute/Skus@2021-07-01"
   response_export_values = ["*"]
 }

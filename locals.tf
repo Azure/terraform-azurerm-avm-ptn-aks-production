@@ -36,7 +36,6 @@ locals {
   }
 }
 
-
 locals {
   node_pool_map = {
     for pool in local.node_pools : pool.key => {
@@ -76,6 +75,7 @@ locals {
     ]
   ])
 }
+
 locals {
   log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
 }

@@ -1,32 +1,17 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-usage () {
-  echo "Usage: avm <make target>"
-}
+cat >&2 <<'EOF'
+avm: this launcher is no longer supported.
 
-CONTAINER_RUNTIME=${CONTAINER_RUNTIME:-docker}
+The container/make based AVM toolchain has been replaced by the Avm.Authoring
+PowerShell module. Install it from the PowerShell Gallery and run avm from
+PowerShell instead:
 
-if [ ! "$(command -v "$CONTAINER_RUNTIME")" ]; then
-    echo "Error: $CONTAINER_RUNTIME is not installed. Please install $CONTAINER_RUNTIME first."
-    exit 1
-fi
+    Install-PSResource -Name Avm.Authoring -Scope CurrentUser -TrustRepository
+    Import-Module Avm.Authoring
+    avm --help
 
-if [ -z "$1" ]; then
-    echo "Error: Please provide a make target. See https://github.com/Azure/tfmod-scaffold/blob/main/avmmakefile for available targets."
-    echo
-    usage
-    exit 1
-fi
+See https://github.com/Azure/azure-verified-modules-tools for details.
+EOF
 
-# Check if AZURE_CONFIG_DIR is set, if not, set it to ~/.azure
-if [ -z "$AZURE_CONFIG_DIR" ]; then
-  AZURE_CONFIG_DIR="$HOME/.azure"
-fi
-
-# Check if we are running in a container
-# If we are then just run make directly
-if [ -z "$AVM_IN_CONTAINER" ]; then
-  $CONTAINER_RUNTIME run --pull always --user "$(id -u):$(id -g)" --rm -v "$(pwd)":/src -w /src -v $AZURE_CONFIG_DIR:/azureconfig -e AZURE_CONFIG_DIR=/azureconfig -e GITHUB_TOKEN -e GITHUB_REPOSITORY -e ARM_SUBSCRIPTION_ID -e ARM_TENANT_ID -e ARM_CLIENT_ID -e GITHUB_REPOSITORY_OWNER mcr.microsoft.com/azterraform make "$1"
-else
-  make "$1"
-fi
+exit 1
