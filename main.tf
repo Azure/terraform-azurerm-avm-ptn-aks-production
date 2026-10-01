@@ -1,18 +1,20 @@
 module "avm_res_containerregistry_registry" {
-  for_each                      = toset(var.acr == null ? [] : ["acr"])
-  source                        = "Azure/avm-res-containerregistry-registry/azurerm"
-  version                       = "0.3.1"
-  name                          = var.acr.name
-  location                      = var.location
-  resource_group_name           = var.resource_group_name
-  sku                           = "Premium"
-  public_network_access_enabled = false
+  source   = "Azure/avm-res-containerregistry-registry/azurerm"
+  version  = "0.4.0"
+  for_each = toset(var.acr == null ? [] : ["acr"])
+
+  location            = var.location
+  name                = var.acr.name
+  resource_group_name = var.resource_group_name
   private_endpoints = {
     primary = {
       private_dns_zone_resource_ids = var.acr.private_dns_zone_resource_ids
       subnet_resource_id            = var.acr.subnet_resource_id
     }
   }
+  public_network_access_enabled = false
+  sku                           = "Premium"
+  zone_redundancy_enabled       = coalesce(var.acr.zone_redundancy_enabled, true)
 }
 
 resource "azurerm_role_assignment" "acr" {
@@ -33,66 +35,74 @@ resource "azurerm_user_assigned_identity" "aks" {
   tags                = var.tags
 }
 
-data "azurerm_resource_group" "this" {
-  name = var.resource_group_name
-}
-
 data "azurerm_user_assigned_identity" "cluster_identity" {
-  name                = split("/", one(azurerm_kubernetes_cluster.this.identity[0].identity_ids))[8]
-  resource_group_name = data.azurerm_resource_group.this.name
+  name                = split("/", one(local.managed_identities.user_assigned.this.user_assigned_resource_ids))[8]
+  resource_group_name = var.resource_group_name
 }
 
 resource "azurerm_role_assignment" "network_contributor_on_resource_group" {
   principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
-  scope                = data.azurerm_resource_group.this.id
+  scope                = local.network_resource_group_id
   role_definition_name = "Network Contributor"
+}
+
+resource "azurerm_role_assignment" "dns_zone_contributor" {
+  count = var.private_dns_zone_id_enabled ? 1 : 0
+
+  principal_id         = data.azurerm_user_assigned_identity.cluster_identity.principal_id
+  scope                = var.private_dns_zone_id
+  role_definition_name = "Private DNS Zone Contributor"
 }
 
 resource "azurerm_kubernetes_cluster" "this" {
   location                          = var.location
   name                              = "aks-${var.name}"
   resource_group_name               = var.resource_group_name
-  automatic_channel_upgrade         = "patch"
+  automatic_upgrade_channel         = "patch"
   azure_policy_enabled              = true
   dns_prefix                        = var.name
   kubernetes_version                = var.kubernetes_version
   local_account_disabled            = true
-  node_os_channel_upgrade           = "NodeImage"
+  node_os_upgrade_channel           = "NodeImage"
   oidc_issuer_enabled               = true
   private_cluster_enabled           = true
+  private_dns_zone_id               = var.private_dns_zone_id
   role_based_access_control_enabled = true
   sku_tier                          = "Standard"
   tags                              = var.tags
   workload_identity_enabled         = true
 
   default_node_pool {
-    name                   = "agentpool"
-    vm_size                = "Standard_D4d_v5"
-    enable_auto_scaling    = true
-    enable_host_encryption = true
-    max_count              = 9
-    max_pods               = 110
-    min_count              = 3
-    node_labels            = var.node_labels
-    orchestrator_version   = var.orchestrator_version
-    os_sku                 = var.os_sku
-    tags                   = merge(var.tags, var.agents_tags)
-    vnet_subnet_id         = var.network.node_subnet_id
-    zones                  = try([for zone in local.regions_by_name_or_display_name[var.location].zones : zone], null)
+    name                    = "agentpool"
+    auto_scaling_enabled    = true
+    host_encryption_enabled = true
+    max_count               = 9
+    max_pods                = 110
+    min_count               = 3
+    node_labels             = var.node_labels
+    orchestrator_version    = var.orchestrator_version
+    os_disk_type            = var.os_disk_type
+    os_sku                  = var.os_sku
+    tags                    = merge(var.tags, var.agents_tags)
+    vm_size                 = var.default_node_pool_vm_sku
+    vnet_subnet_id          = var.network.node_subnet_id
+    zones                   = local.default_node_pool_available_zones
 
     upgrade_settings {
       max_surge = "10%"
     }
   }
+
   auto_scaler_profile {
     balance_similar_node_groups = true
   }
+
   azure_active_directory_role_based_access_control {
     admin_group_object_ids = var.rbac_aad_admin_group_object_ids
     azure_rbac_enabled     = var.rbac_aad_azure_rbac_enabled
-    managed                = true
     tenant_id              = var.rbac_aad_tenant_id
   }
+
   ## Resources that only support UserAssigned
   dynamic "identity" {
     for_each = local.managed_identities.user_assigned
@@ -102,20 +112,28 @@ resource "azurerm_kubernetes_cluster" "this" {
       identity_ids = identity.value.user_assigned_resource_ids
     }
   }
+
   key_vault_secrets_provider {
     secret_rotation_enabled = true
   }
+
   monitor_metrics {
     annotations_allowed = try(var.monitor_metrics.annotations_allowed, null)
     labels_allowed      = try(var.monitor_metrics.labels_allowed, null)
   }
+
   network_profile {
     network_plugin      = "azure"
+    dns_service_ip      = local.dns_service_ip
     load_balancer_sku   = "standard"
+    network_data_plane  = var.network_policy == "cilium" ? "cilium" : null
     network_plugin_mode = "overlay"
-    network_policy      = "calico"
+    network_policy      = var.network_policy
+    outbound_type       = var.outbound_type
     pod_cidr            = var.network.pod_cidr
+    service_cidr        = var.network.service_cidr
   }
+
   oms_agent {
     log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
     msi_auth_for_monitoring_enabled = true
@@ -134,6 +152,14 @@ resource "azurerm_kubernetes_cluster" "this" {
       condition     = var.orchestrator_version == null || try(can(regex("^[0-9]+\\.[0-9]+$", var.orchestrator_version)), false)
       error_message = "Ensure that orchestrator_version does not specify a patch version"
     }
+    precondition {
+      condition     = var.private_dns_zone_id == null ? true : (anytrue([for r in local.valid_private_dns_zone_regexs : try(regex(r, local.private_dns_zone_name) == local.private_dns_zone_name, false)]))
+      error_message = "According to the [document](https://learn.microsoft.com/en-us/azure/aks/private-clusters?tabs=azure-portal#configure-a-private-dns-zone), the private DNS zone must be in one of the following format: `privatelink.<region>.azmk8s.io`, `<subzone>.privatelink.<region>.azmk8s.io`, `private.<region>.azmk8s.io`, `<subzone>.private.<region>.azmk8s.io`"
+    }
+    precondition {
+      condition     = var.private_dns_zone_id != null ? var.private_dns_zone_id_enabled == true : var.private_dns_zone_id_enabled == false
+      error_message = "private_dns_zone_id must be set if private_dns_zone_id_enabled is true"
+    }
   }
 }
 
@@ -150,13 +176,13 @@ resource "null_resource" "kubernetes_version_keeper" {
 }
 
 resource "azapi_update_resource" "aks_cluster_post_create" {
-  type = "Microsoft.ContainerService/managedClusters@2024-02-01"
-  body = jsonencode({
+  resource_id = azurerm_kubernetes_cluster.this.id
+  type        = "Microsoft.ContainerService/managedClusters@2024-02-01"
+  body = {
     properties = {
       kubernetesVersion = var.kubernetes_version
     }
-  })
-  resource_id = azurerm_kubernetes_cluster.this.id
+  }
 
   lifecycle {
     ignore_changes       = all
@@ -175,9 +201,10 @@ resource "azurerm_log_analytics_workspace" "this" {
 resource "azurerm_log_analytics_workspace_table" "this" {
   for_each = toset(local.log_analytics_tables)
 
-  name         = each.value
-  workspace_id = azurerm_log_analytics_workspace.this.id
-  plan         = "Basic"
+  name                    = each.value
+  workspace_id            = azurerm_log_analytics_workspace.this.id
+  plan                    = "Basic"
+  total_retention_in_days = 30
 }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
@@ -230,6 +257,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks" {
   enabled_log {
     category = "csi-snapshot-controller"
   }
+
   metric {
     category = "AllMetrics"
   }
@@ -245,7 +273,6 @@ resource "azurerm_management_lock" "this" {
   notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 }
 
-
 resource "azurerm_kubernetes_cluster_node_pool" "this" {
   for_each = tomap({
     for pool in local.node_pools : pool.name => pool
@@ -253,19 +280,18 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
   name                  = each.value.name
-  vm_size               = each.value.vm_size
-  enable_auto_scaling   = true
+  auto_scaling_enabled  = true
   max_count             = each.value.max_count
   min_count             = each.value.min_count
   node_labels           = each.value.labels
   orchestrator_version  = each.value.orchestrator_version
   os_disk_size_gb       = each.value.os_disk_size_gb
+  os_disk_type          = each.value.os_disk_type
   os_sku                = each.value.os_sku
-  tags                  = var.tags
+  tags                  = each.value.tags
+  vm_size               = each.value.vm_size
   vnet_subnet_id        = var.network.node_subnet_id
-  zones                 = each.value.zone == "" ? null : [each.value.zone]
-
-  depends_on = [azapi_update_resource.aks_cluster_post_create]
+  zones                 = each.value.zone
 
   lifecycle {
     precondition {
@@ -273,14 +299,17 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
       error_message = "The name must begin with a lowercase letter, contain only lowercase letters and numbers, and be between 1 and 12 characters in length."
     }
   }
+  depends_on = [azapi_update_resource.aks_cluster_post_create]
 }
 
+# Data source for the current subscription
+data "azurerm_subscription" "current" {}
 
-# These resources allow the use of consistent local data files, and semver versioning
-data "local_file" "compute_provider" {
-  filename = "${path.module}/data/microsoft.compute_resourceTypes.json"
-}
-
-data "local_file" "locations" {
-  filename = "${path.module}/data/locations.json"
+data "azapi_resource_list" "example" {
+  parent_id = data.azurerm_subscription.current.id
+  query_parameters = {
+    "$filter" = [format("location eq '%s'", var.location)]
+  }
+  type                   = "Microsoft.Compute/Skus@2021-07-01"
+  response_export_values = ["*"]
 }

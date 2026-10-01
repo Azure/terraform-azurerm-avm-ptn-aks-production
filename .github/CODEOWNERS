@@ -1,3 +1,6 @@
-# AVM core team owns key files
-.github/policies/ @Azure/avm-core-team-technical-terraform
-.github/CODEOWNERS @Azure/avm-core-team-technical-terraform
+# This file is managed by azure-verified-modules-tools. Do not edit manually.
+# Template: https://github.com/Azure/azure-verified-modules-tools/blob/main/repository-management/repository-sync/CODEOWNERS.template
+
+.github/CODEOWNERS @Azure/azure-verified-modules-engineering-owners
+
+metadata.json @Azure/azure-verified-modules-engineering-owners @Azure/azure-verified-modules-module-owners

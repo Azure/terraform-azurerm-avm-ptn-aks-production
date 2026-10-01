@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "Azure Kubernetes Service",
+  "moduleDescription": "AVM Pattern Module for Azure Kubernetes Service",
+  "canonicalType": "aks-production",
+  "owners": [
+    "chanakanissanka"
+  ],
+  "telemetryIdPrefix": "46d3xtrf.ptn.79eeb3e"
+}
