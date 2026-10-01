@@ -1,48 +1,21 @@
 ---
 description: " Azure Verified Modules (AVM) and Terraform"
-applyTo: "**/*.terraform, **/*.tf, **/*.tfvars, **/*.tfstate, **/*.tflint.hcl, **/*.tf.json, **/*.tfvars.json"
+applyTo: "**/*.terraform, **/*.tf, **/*.tfvars, **/*.tfstate, **/*.hcl, **/*.rego, **/*.tf.json, **/*.tfvars.json"
 ---
 
 # Azure Verified Modules (AVM) Terraform
 
-This repository uses Azure Verified Modules (AVM) for Terraform.
-For detailed module guidance, use the [AVM Terraform agent](.github/agents/avm-tf.agent.md) and load only the relevant skills under [.github/skills](.github/skills/).
+The authoritative repository instructions are [`.github/copilot-instructions.md`](.github/copilot-instructions.md). Read that file completely before analyzing or modifying this repository, then load the relevant skill from `.github/skills`.
 
-## AVM Specifications
+Use the [AVM Terraform agent](.github/agents/avm-tf.agent.md) for specification-driven module development. When these instructions conflict with a current published AVM specification, the specification takes precedence.
 
-The authoritative source for every AVM rule (Bicep, Terraform, shared) is the spec index:
+## Safety-critical fallback
 
-- **Index of all specs and docs (raw markdown URLs):** `https://azure.github.io/Azure-Verified-Modules/llms.txt`
-- **Rendered docs site:** `https://azure.github.io/Azure-Verified-Modules/`
+- Fetch <https://azure.github.io/Azure-Verified-Modules/llms.txt> and read the current raw page for every relevant specification. Do not cite AVM requirements from memory.
+- New AVM Terraform modules use `Azure/azapi` for every control-plane resource and every supported direct Azure operation. Do not use `hashicorp/azurerm` for convenience, supporting infrastructure, examples, tests, or fixtures.
+- Permit AzureRM only for a specifically documented data-plane or non-ARM operation that AzAPI cannot perform. Independently justify each block and follow `avm-tf-azapi` and `avm-tf-tflint`.
+- Do not hand-edit generated `README.md` files. Edit `_header.md` and `_footer.md`, then use `avm docs` or `avm pre-commit`.
+- Use PowerShell 7.4 or later and `Avm.Authoring`; do not substitute retired Make, Porch, container, or repository-launcher workflows.
+- Run the smallest relevant test tier, run `avm pre-commit`, commit the complete worktree, then run `avm pr-check`.
 
-When a spec ID is mentioned (e.g. `TFFR3`, `RMFR4`, `SNFR1`), fetch `llms.txt` once, look up the raw markdown URL for that ID, and read the current text. Do not cite a spec from memory.
-
-## Module Discovery
-
-- **Terraform Registry**: Search for "avm" + resource name, filter by "Partner" tag
-- **Terraform Resource Modules Index**: `https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-resource-modules/`
-- **Terraform Pattern Modules Index**: `https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-pattern-modules/`
-
-## Module Naming Conventions
-
-- **Resource Modules**: `Azure/avm-res-{service}-{resource}/azurerm`
-- **Pattern Modules**: `Azure/avm-ptn-{pattern}/azurerm`
-- **Utility Modules**: `Azure/avm-utl-{utility}/azurerm`
-- Use kebab-case for services and resources
-- Follow Azure service names (e.g., `storage-storageaccount`, `network-virtualnetwork`)
-
-## Module Usage
-
-When using AVM modules:
-
-1. Pin to a specific version: `version = "1.2.3"`
-2. Map enable telemetry to root variable: `enable_telemetry = var.enable_telemetry`
-3. For providers, use pessimistic constraints: `version = "~> 1.0"`
-4. Start from official examples in the module documentation
-5. Replace `source = "../../"` with the registry source when copying examples
-
-## Module Sources
-
-- **Registry**: `https://registry.terraform.io/modules/Azure/{module}/azurerm/latest`
-- **GitHub**: `https://github.com/Azure/terraform-azurerm-avm-{type}-{service}-{resource}`
-- **Versions API**: `https://registry.terraform.io/v1/modules/Azure/{module}/[azurerm|azure]/versions`
+The canonical file contains the complete module discovery, tooling, quality, and skill index guidance. Do not duplicate or independently extend those sections here.

@@ -21,12 +21,13 @@ provider "azurerm" {
   }
 }
 
-
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.3.0"
+
+  enable_telemetry = var.enable_telemetry
 }
 
 # This allows us to randomize the region for the resource group.
@@ -34,6 +35,7 @@ resource "random_integer" "region_index" {
   max = length(module.regions.regions) - 1
   min = 0
 }
+
 ## End of section to provide a random Azure region for the resource group
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -96,6 +98,7 @@ module "avm_res_network_virtualnetwork" {
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = var.enable_telemetry
   name                = "myvnet"
   subnets = {
     "subnet" = {
