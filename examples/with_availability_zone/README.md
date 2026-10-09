@@ -72,7 +72,7 @@ module "test" {
     ]
   }
   node_pools = {
-    workload = {
+    workloadworkload = {
       name                 = "workloadworkload" #Long name to test the truncate to 12 characters
       vm_size              = "Standard_D2d_v5"
       orchestrator_version = "1.30"
