@@ -515,7 +515,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-containerregistry-registry/azurerm
 
-Version: 0.4.0
+Version: 0.8.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
