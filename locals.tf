@@ -25,14 +25,26 @@ locals {
       sku if(sku.resourceType == "virtualMachines" && sku.name == pool.vm_size)
     ]
   }
-  my_node_pool_zones_by_pool = {
-    for pool_name, pool in var.node_pools : pool_name => setsubtract(
+  # Zones each pool's own VM size can be placed in, with the zones that are
+  # restricted for this subscription removed. Sorted so the result is stable
+  # regardless of the order the SKU API returns them in.
+  node_pool_available_zones = {
+    for pool_name, pool in var.node_pools : pool_name => sort(setsubtract(
       local.filtered_vms_by_node_pool[pool_name][0].locationInfo[0].zones,
       try(local.filtered_vms_by_node_pool[pool_name][0].restrictions[0].restrictionInfo.zones, [])
+    ))
+  }
+  # One node pool is created per group of zones below. With zone redundancy every
+  # zone gets a group, and therefore a dedicated pool; without it all zones form a
+  # single group, so one pool spans them and AKS spreads its nodes across them.
+  # A pool whose VM size has no available zone gets no group, and so no pool.
+  node_pool_zone_groups = {
+    for pool_name, zones in local.node_pool_available_zones : pool_name => (
+      var.zone_redundancy_enabled ? [for zone in zones : [zone]] : (length(zones) == 0 ? [] : [zones])
     )
   }
   zonetagged_node_pools = {
-    for pool_name, pool in var.node_pools : pool_name => merge(pool, { zones = local.my_node_pool_zones_by_pool[pool_name] })
+    for pool_name, pool in var.node_pools : pool_name => merge(pool, { zone_groups = local.node_pool_zone_groups[pool_name] })
   }
 }
 
@@ -40,9 +52,10 @@ locals {
   # Flatten a list of var.node_pools and zones
   node_pools = flatten([
     for pool in local.zonetagged_node_pools : [
-      for zone in pool.zones : {
-        # concatenate name and zone trim to 12 characters
-        name                 = "${substr(pool.name, 0, 10)}${zone}"
+      for zones in pool.zone_groups : {
+        # one pool per zone needs the zone concatenated to keep the names unique; a single pool
+        # spanning every zone keeps the name as given. Both are trimmed to the 12 character limit.
+        name                 = var.zone_redundancy_enabled ? "${substr(pool.name, 0, 10)}${zones[0]}" : substr(pool.name, 0, 12)
         vm_size              = pool.vm_size
         orchestrator_version = pool.orchestrator_version
         max_count            = pool.max_count
@@ -53,7 +66,8 @@ locals {
         os_disk_type         = pool.os_disk_type
         mode                 = pool.mode
         os_disk_size_gb      = pool.os_disk_size_gb
-        zone                 = [zone]
+        upgrade_settings     = pool.upgrade_settings
+        zone                 = zones
       }
     ]
   ])
