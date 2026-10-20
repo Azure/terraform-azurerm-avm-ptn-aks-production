@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4, <5"
     }
+    modtm = {
+      source  = "registry.terraform.io/azure/modtm"
+      version = "~> 0.3"
+    }
     null = {
       source  = "hashicorp/null"
       version = ">= 3.0"

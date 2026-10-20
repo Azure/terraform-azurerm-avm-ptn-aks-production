@@ -1,7 +1,8 @@
 module "avm_res_containerregistry_registry" {
-  source   = "Azure/avm-res-containerregistry-registry/azurerm"
-  version  = "0.4.0"
-  for_each = toset(var.acr == null ? [] : ["acr"])
+  source    = "Azure/avm-res-containerregistry-registry/azurerm"
+  version   = "0.4.0"
+  providers = { modtm = modtm }
+  for_each  = toset(var.acr == null ? [] : ["acr"])
 
   location            = var.location
   name                = var.acr.name

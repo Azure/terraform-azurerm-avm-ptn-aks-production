@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4, <5"
     }
+    modtm = {
+      source  = "registry.terraform.io/azure/modtm"
+      version = "~> 0.3"
+    }
   }
 }
 
@@ -19,8 +23,8 @@ provider "azurerm" {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.4"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 # This is required for resource modules
@@ -43,7 +47,8 @@ data "azurerm_client_config" "current" {}
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "test" {
-  source = "../../"
+  source    = "../../"
+  providers = { modtm = modtm }
 
   location = "West US" # Hardcoded because we have to test in a region without availability zones
   name     = module.naming.kubernetes_cluster.name_unique
@@ -97,8 +102,9 @@ resource "azurerm_private_dns_zone" "this" {
 }
 
 module "avm_res_network_virtualnetwork" {
-  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.7.1"
+  source    = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version   = "0.7.1"
+  providers = { modtm = modtm }
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
