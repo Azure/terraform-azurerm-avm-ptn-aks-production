@@ -2,10 +2,6 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 2.12"
-    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = ">= 4, <5"
@@ -34,9 +30,6 @@ provider "azurerm" {
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.13.0"
-  providers = {
-    azapi = azapi
-  }
 
   location         = var.location
   enable_telemetry = var.enable_telemetry
