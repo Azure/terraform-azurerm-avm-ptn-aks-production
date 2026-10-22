@@ -6,6 +6,11 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4, <5"
     }
+    # tflint-ignore: terraform_unused_required_providers
+    modtm = {
+      source  = "registry.terraform.io/azure/modtm"
+      version = "~> 0.3"
+    }
   }
 }
 
@@ -19,8 +24,8 @@ provider "azurerm" {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = ">= 0.3.0"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 # This is required for resource modules
