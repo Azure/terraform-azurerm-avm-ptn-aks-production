@@ -6,6 +6,7 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4, <5"
     }
+    # tflint-ignore: terraform_unused_required_providers
     modtm = {
       source  = "registry.terraform.io/azure/modtm"
       version = "~> 0.3"
@@ -63,8 +64,7 @@ data "azurerm_client_config" "current" {}
 # Leaving location as `null` will cause the module to use the resource group location
 # with a data source.
 module "test" {
-  source    = "../../"
-  providers = { modtm = modtm }
+  source = "../../"
 
   location = azurerm_resource_group.this.location
   name     = module.naming.kubernetes_cluster.name_unique
@@ -98,9 +98,8 @@ resource "azurerm_private_dns_zone" "mydomain" {
 }
 
 module "avm_res_network_virtualnetwork" {
-  source    = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version   = "0.7.1"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "0.7.1"
 
   address_space       = ["10.31.0.0/16"]
   location            = azurerm_resource_group.this.location
