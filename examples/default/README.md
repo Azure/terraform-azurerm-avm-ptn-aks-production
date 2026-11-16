@@ -13,11 +13,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4, <5"
     }
-    # tflint-ignore: terraform_unused_required_providers
-    modtm = {
-      source  = "registry.terraform.io/azure/modtm"
-      version = "~> 0.3"
-    }
     random = {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
@@ -37,7 +32,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.0"
+  version = "0.13.2"
 
   location         = var.location
   enable_telemetry = var.enable_telemetry
@@ -54,7 +49,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 # This is required for resource modules
@@ -106,13 +101,13 @@ resource "azurerm_private_dns_zone" "mydomain" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.7.1"
+  version = "0.23.0"
 
-  address_space       = ["10.31.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "myvnet"
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.31.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "myvnet"
   subnets = {
     "subnet" = {
       name             = "nodecidr"
@@ -134,8 +129,6 @@ The following requirements are needed by this module:
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4, <5)
-
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
 
@@ -188,19 +181,19 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 0.7.1
+Version: 0.23.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
 Source: Azure/avm-utl-naming/azure
 
-Version: 0.2.0
+Version: 0.3.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.13.0
+Version: 0.13.2
 
 ### <a name="module_test"></a> [test](#module\_test)
 

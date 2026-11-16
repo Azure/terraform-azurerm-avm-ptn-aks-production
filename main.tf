@@ -6,6 +6,7 @@ module "avm_res_containerregistry_registry" {
   location            = var.location
   name                = var.acr.name
   resource_group_name = var.resource_group_name
+  enable_telemetry    = var.enable_telemetry
   private_endpoints = {
     primary = {
       private_dns_zone_resource_ids = var.acr.private_dns_zone_resource_ids
