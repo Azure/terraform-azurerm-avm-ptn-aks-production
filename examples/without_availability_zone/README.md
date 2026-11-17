@@ -26,8 +26,8 @@ provider "azurerm" {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = ">= 0.3.0"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.3.0"
 }
 
 # This is required for resource modules
@@ -105,13 +105,13 @@ resource "azurerm_private_dns_zone" "this" {
 
 module "avm_res_network_virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.7.1"
+  version = "0.23.0"
 
-  address_space       = ["10.31.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "myvnet"
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.31.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "myvnet"
   subnets = {
     "subnet" = {
       name             = "nodecidr"
@@ -182,13 +182,13 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 0.7.1
+Version: 0.23.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
-Source: Azure/naming/azurerm
+Source: Azure/avm-utl-naming/azure
 
-Version: >= 0.3.0
+Version: 0.3.0
 
 ### <a name="module_test"></a> [test](#module\_test)
 
