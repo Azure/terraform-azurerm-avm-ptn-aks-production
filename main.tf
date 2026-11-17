@@ -317,7 +317,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
       error_message = "The name must begin with a lowercase letter, contain only lowercase letters and numbers, and be between 1 and 12 characters in length."
     }
   }
-
   depends_on = [azapi_update_resource.aks_cluster_post_create]
 }
 
