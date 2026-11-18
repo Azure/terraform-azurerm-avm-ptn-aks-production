@@ -65,7 +65,7 @@ module "test" {
     private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
   }
   enable_telemetry   = var.enable_telemetry # see variables.tf
-  kubernetes_version = "1.30"
+  kubernetes_version = "1.36"
   managed_identities = {
     user_assigned_resource_ids = [
       azurerm_user_assigned_identity.this.id
@@ -75,7 +75,7 @@ module "test" {
     workload = {
       name                 = "workloadworkload" #Long name to test the truncate to 12 characters
       vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.30"
+      orchestrator_version = "1.36"
       max_count            = 10
       min_count            = 2
       os_sku               = "Ubuntu"
@@ -85,7 +85,7 @@ module "test" {
     ingress = {
       name                 = "ingress"
       vm_size              = "Standard_D2d_v5"
-      orchestrator_version = "1.30"
+      orchestrator_version = "1.36"
       max_count            = 4
       min_count            = 2
       os_sku               = "Ubuntu"
