@@ -65,9 +65,9 @@ module "test" {
     private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
     zone_redundancy_enabled       = false
   }
-  enable_telemetry = var.enable_telemetry # see variables.tf
   # West US test subscriptions block Dv5 SKUs (including the module default Standard_D4d_v5), so use the Ddsv6 equivalents.
   default_node_pool_vm_sku = "Standard_D4ds_v6"
+  enable_telemetry         = var.enable_telemetry # see variables.tf
   kubernetes_version       = "1.36"
   managed_identities = {
     user_assigned_resource_ids = [
