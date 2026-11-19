@@ -295,6 +295,10 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   zones                 = each.value.zone
 
   lifecycle {
+    ignore_changes = [
+      upgrade_settings
+    ]
+
     precondition {
       condition     = can(regex("^[a-z][a-z0-9]{0,11}$", each.value.name))
       error_message = "The name must begin with a lowercase letter, contain only lowercase letters and numbers, and be between 1 and 12 characters in length."
