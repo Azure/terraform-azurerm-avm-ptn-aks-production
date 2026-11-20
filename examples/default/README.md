@@ -81,10 +81,11 @@ module "test" {
     subnet_resource_id            = module.avm_res_network_virtualnetwork.subnets["private_link_subnet"].resource_id
     private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
   }
-  enable_telemetry            = var.enable_telemetry # see variables.tf
-  kubernetes_version          = "1.36"
-  network_policy              = "calico"
-  private_dns_zone_id         = azurerm_private_dns_zone.mydomain.id
+  enable_telemetry   = var.enable_telemetry # see variables.tf
+  kubernetes_version = "1.36"
+  network_policy     = "calico"
+  # Derive the zone ID from the VNet link so the link exists before the cluster is created and outlives it on destroy.
+  private_dns_zone_id         = split("/virtualNetworkLinks/", azurerm_private_dns_zone_virtual_network_link.mydomain.id)[0]
   private_dns_zone_id_enabled = true
   rbac_aad_tenant_id          = data.azurerm_client_config.current.tenant_id
 }
@@ -97,6 +98,15 @@ resource "azurerm_private_dns_zone" "this" {
 resource "azurerm_private_dns_zone" "mydomain" {
   name                = "privatelink.eastus2.azmk8s.io"
   resource_group_name = azurerm_resource_group.this.name
+}
+
+# Link the custom zone to the cluster VNet in Terraform. A VNet can be linked to a zone only once, so AKS reuses this link instead of creating its own.
+# An AKS-created link is left behind on destroy because the cluster loses its zone permissions first, and the zone can't be deleted while it has links.
+resource "azurerm_private_dns_zone_virtual_network_link" "mydomain" {
+  name                  = "aks-vnet-link"
+  private_dns_zone_name = azurerm_private_dns_zone.mydomain.name
+  resource_group_name   = azurerm_resource_group.this.name
+  virtual_network_id    = module.avm_res_network_virtualnetwork.resource_id
 }
 
 module "avm_res_network_virtualnetwork" {
@@ -138,6 +148,7 @@ The following resources are used by this module:
 
 - [azurerm_private_dns_zone.mydomain](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
 - [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
+- [azurerm_private_dns_zone_virtual_network_link.mydomain](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)

@@ -65,8 +65,10 @@ module "test" {
     private_dns_zone_resource_ids = [azurerm_private_dns_zone.this.id]
     zone_redundancy_enabled       = false
   }
-  enable_telemetry   = var.enable_telemetry # see variables.tf
-  kubernetes_version = "1.36"
+  # West US test subscriptions block Dv5 SKUs (including the module default Standard_D4d_v5), so use the Ddsv6 equivalents.
+  default_node_pool_vm_sku = "Standard_D4ds_v6"
+  enable_telemetry         = var.enable_telemetry # see variables.tf
+  kubernetes_version       = "1.36"
   managed_identities = {
     user_assigned_resource_ids = [
       azurerm_user_assigned_identity.this.id
@@ -75,7 +77,7 @@ module "test" {
   node_pools = {
     workload = {
       name                 = "workload"
-      vm_size              = "Standard_D2d_v5"
+      vm_size              = "Standard_D2ds_v6"
       orchestrator_version = "1.36"
       max_count            = 110
       min_count            = 2
@@ -84,7 +86,7 @@ module "test" {
     },
     ingress = {
       name                 = "ingress"
-      vm_size              = "Standard_D2d_v5"
+      vm_size              = "Standard_D2ds_v6"
       orchestrator_version = "1.36"
       max_count            = 4
       min_count            = 2
