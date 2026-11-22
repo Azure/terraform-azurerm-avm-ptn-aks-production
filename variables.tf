@@ -110,6 +110,21 @@ variable "lock" {
   }
 }
 
+variable "log_analytics_workspace_id" {
+  type        = string
+  default     = null
+  description = <<DESCRIPTION
+(Optional) The resource ID of an existing Log Analytics workspace that AKS container insights, the cluster diagnostic setting and the cluster log tables send data to. Format: `/subscriptions/<subscription-id>/resourceGroups/<resource-group-name>/providers/Microsoft.OperationalInsights/workspaces/<workspace-name>`.
+
+When `null` (the default), the module creates a Log Analytics workspace and its `ContainerLogV2`, `AKSAudit`, `AKSAuditAdmin` and `AKSControlPlane` tables. When set, the module uses the supplied workspace and creates neither the workspace nor those tables, so the supplied workspace must already contain the tables that the logs are written to.
+DESCRIPTION
+
+  validation {
+    condition     = var.log_analytics_workspace_id == null ? true : can(provider::azapi::parse_resource_id("Microsoft.OperationalInsights/workspaces", var.log_analytics_workspace_id))
+    error_message = "log_analytics_workspace_id must be a Log Analytics workspace resource ID in the form /subscriptions/<subscription-id>/resourceGroups/<resource-group-name>/providers/Microsoft.OperationalInsights/workspaces/<workspace-name>, or null."
+  }
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "managed_identities" {
   type = object({

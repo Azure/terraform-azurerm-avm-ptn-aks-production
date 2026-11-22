@@ -138,7 +138,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
 
   oms_agent {
-    log_analytics_workspace_id      = azurerm_log_analytics_workspace.this.id
+    log_analytics_workspace_id      = local.log_analytics_workspace_id
     msi_auth_for_monitoring_enabled = true
   }
 
@@ -195,6 +195,8 @@ resource "azapi_update_resource" "aks_cluster_post_create" {
 }
 
 resource "azurerm_log_analytics_workspace" "this" {
+  count = local.create_log_analytics_workspace ? 1 : 0
+
   location            = var.location
   name                = "log-${var.name}-aks"
   resource_group_name = var.resource_group_name
@@ -203,10 +205,10 @@ resource "azurerm_log_analytics_workspace" "this" {
 }
 
 resource "azurerm_log_analytics_workspace_table" "this" {
-  for_each = toset(local.log_analytics_tables)
+  for_each = local.create_log_analytics_workspace ? toset(local.log_analytics_tables) : toset([])
 
   name                    = each.value
-  workspace_id            = azurerm_log_analytics_workspace.this.id
+  workspace_id            = local.log_analytics_workspace_id
   plan                    = "Basic"
   total_retention_in_days = 30
 }
@@ -215,7 +217,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks" {
   name                           = "amds-${var.name}-aks"
   target_resource_id             = azurerm_kubernetes_cluster.this.id
   log_analytics_destination_type = "Dedicated"
-  log_analytics_workspace_id     = azurerm_log_analytics_workspace.this.id
+  log_analytics_workspace_id     = local.log_analytics_workspace_id
 
   # Kubernetes API Server
   enabled_log {

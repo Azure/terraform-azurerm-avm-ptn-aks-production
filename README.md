@@ -194,6 +194,16 @@ object({
 
 Default: `null`
 
+### <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id)
+
+Description: (Optional) The resource ID of an existing Log Analytics workspace that AKS container insights, the cluster diagnostic setting and the cluster log tables send data to. Format: `/subscriptions/<subscription-id>/resourceGroups/<resource-group-name>/providers/Microsoft.OperationalInsights/workspaces/<workspace-name>`.
+
+When `null` (the default), the module creates a Log Analytics workspace and its `ContainerLogV2`, `AKSAudit`, `AKSAuditAdmin` and `AKSControlPlane` tables. When set, the module uses the supplied workspace and creates neither the workspace nor those tables, so the supplied workspace must already contain the tables that the logs are written to.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
 Description:   Controls the Managed Identity configuration on this resource. The following properties can be specified:
