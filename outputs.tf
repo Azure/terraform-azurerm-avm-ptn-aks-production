@@ -49,47 +49,51 @@ output "key_vault_secrets_provider_secret_identity_client_id" {
 
 output "key_vault_secrets_provider_secret_identity_object_id" {
   description = "The Object ID of the user-defined Managed Identity used by the Secret Provider"
-  value       = azurerm_kubernetes_cluster.this.key_vault_secrets_provider[0].secret_identity[0].object_id
+  value       = try(azurerm_kubernetes_cluster.this.key_vault_secrets_provider[0].secret_identity[0].object_id, null)
 }
 
 output "key_vault_secrets_provider_secret_identity_user_assigned_identity_id" {
   description = "The ID of the User Assigned Identity used by the Secret Provider"
-  value       = azurerm_kubernetes_cluster.this.key_vault_secrets_provider[0].secret_identity[0].user_assigned_identity_id
+  value       = try(azurerm_kubernetes_cluster.this.key_vault_secrets_provider[0].secret_identity[0].user_assigned_identity_id, null)
 }
 
 output "kube_admin_config" {
   description = "The kube_admin_config block for the Azure Kubernetes Managed Cluster"
+  sensitive   = true
   value       = azurerm_kubernetes_cluster.this.kube_admin_config
 }
 
 output "kube_admin_config_raw" {
   description = "Raw Kubernetes config for the admin account"
+  sensitive   = true
   value       = azurerm_kubernetes_cluster.this.kube_admin_config_raw
 }
 
 output "kube_config" {
   description = "The kube_config block for the Azure Kubernetes Managed Cluster"
+  sensitive   = true
   value       = azurerm_kubernetes_cluster.this.kube_config
 }
 
 output "kube_config_raw" {
   description = "Raw Kubernetes config for the user account"
+  sensitive   = true
   value       = azurerm_kubernetes_cluster.this.kube_config_raw
 }
 
 output "kubelet_identity_client_id" {
   description = "The Client ID of the user-defined Managed Identity assigned to the Kubelets"
-  value       = azurerm_kubernetes_cluster.this.kubelet_identity[0].client_id
+  value       = try(azurerm_kubernetes_cluster.this.kubelet_identity[0].client_id, null)
 }
 
 output "kubelet_identity_object_id" {
   description = "The Object ID of the user-defined Managed Identity assigned to the Kubelets"
-  value       = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
+  value       = try(azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id, null)
 }
 
 output "kubelet_identity_user_assigned_identity_id" {
   description = "The ID of the User Assigned Identity assigned to the Kubelets"
-  value       = azurerm_kubernetes_cluster.this.kubelet_identity[0].user_assigned_identity_id
+  value       = try(azurerm_kubernetes_cluster.this.kubelet_identity[0].user_assigned_identity_id, null)
 }
 
 output "load_balancer_profile_effective_outbound_ips" {
