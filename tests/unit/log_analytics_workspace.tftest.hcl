@@ -1,4 +1,4 @@
-// Provider-mocked tests for the log_analytics_workspace_id input.
+// Provider-mocked tests for the log_analytics_workspace input.
 // Run with: avm test unit
 
 mock_provider "azapi" {
@@ -68,7 +68,7 @@ run "creates_workspace_and_tables_when_no_workspace_id_is_supplied" {
 
   assert {
     condition     = length(azurerm_log_analytics_workspace.this) == 1
-    error_message = "The module should create one Log Analytics workspace when log_analytics_workspace_id is null."
+    error_message = "The module should create one Log Analytics workspace when log_analytics_workspace is null."
   }
 
   assert {
@@ -96,7 +96,9 @@ run "uses_supplied_workspace_and_creates_no_workspace_or_tables" {
   command = apply
 
   variables {
-    log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-existing/providers/Microsoft.OperationalInsights/workspaces/log-existing"
+    log_analytics_workspace = {
+      resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-existing/providers/Microsoft.OperationalInsights/workspaces/log-existing"
+    }
   }
 
   assert {
@@ -124,11 +126,13 @@ run "rejects_a_workspace_name_instead_of_a_resource_id" {
   command = plan
 
   variables {
-    log_analytics_workspace_id = "log-existing"
+    log_analytics_workspace = {
+      resource_id = "log-existing"
+    }
   }
 
   expect_failures = [
-    var.log_analytics_workspace_id,
+    var.log_analytics_workspace,
   ]
 }
 
@@ -136,10 +140,12 @@ run "rejects_a_resource_id_for_another_provider" {
   command = plan
 
   variables {
-    log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-existing/providers/Microsoft.Network/workspaces/log-existing"
+    log_analytics_workspace = {
+      resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-existing/providers/Microsoft.Network/workspaces/log-existing"
+    }
   }
 
   expect_failures = [
-    var.log_analytics_workspace_id,
+    var.log_analytics_workspace,
   ]
 }

@@ -110,18 +110,24 @@ variable "lock" {
   }
 }
 
-variable "log_analytics_workspace_id" {
-  type        = string
+variable "log_analytics_workspace" {
+  type = object({
+    resource_id = string
+  })
   default     = null
   description = <<DESCRIPTION
-(Optional) The resource ID of an existing Log Analytics workspace that AKS container insights, the cluster diagnostic setting and the cluster log tables send data to. Format: `/subscriptions/<subscription-id>/resourceGroups/<resource-group-name>/providers/Microsoft.OperationalInsights/workspaces/<workspace-name>`.
+(Optional) An existing Log Analytics workspace that AKS container insights, the cluster diagnostic setting and the cluster log tables send data to.
+
+- `resource_id` - The resource ID of the workspace. Format: `/subscriptions/<subscription-id>/resourceGroups/<resource-group-name>/providers/Microsoft.OperationalInsights/workspaces/<workspace-name>`.
 
 When `null` (the default), the module creates a Log Analytics workspace and its `ContainerLogV2`, `AKSAudit`, `AKSAuditAdmin` and `AKSControlPlane` tables. When set, the module uses the supplied workspace and creates neither the workspace nor those tables, so the supplied workspace must already contain the tables that the logs are written to.
+
+The ID is wrapped in an object so the module can decide whether to create a workspace at plan time, even when the ID is not known until apply (TFNFR11).
 DESCRIPTION
 
   validation {
-    condition     = var.log_analytics_workspace_id == null ? true : can(provider::azapi::parse_resource_id("Microsoft.OperationalInsights/workspaces", var.log_analytics_workspace_id))
-    error_message = "log_analytics_workspace_id must be a Log Analytics workspace resource ID in the form /subscriptions/<subscription-id>/resourceGroups/<resource-group-name>/providers/Microsoft.OperationalInsights/workspaces/<workspace-name>, or null."
+    condition     = var.log_analytics_workspace == null ? true : can(provider::azapi::parse_resource_id("Microsoft.OperationalInsights/workspaces", var.log_analytics_workspace.resource_id))
+    error_message = "log_analytics_workspace.resource_id must be a Log Analytics workspace resource ID in the form /subscriptions/<subscription-id>/resourceGroups/<resource-group-name>/providers/Microsoft.OperationalInsights/workspaces/<workspace-name>."
   }
 }
 
