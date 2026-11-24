@@ -77,6 +77,12 @@ locals {
   log_analytics_tables = ["AKSAudit", "AKSAuditAdmin", "AKSControlPlane", "ContainerLogV2"]
 }
 
+locals {
+  # The module creates a Log Analytics workspace only when no existing workspace ID is supplied.
+  create_log_analytics_workspace = var.log_analytics_workspace == null
+  log_analytics_workspace_id     = local.create_log_analytics_workspace ? one(azurerm_log_analytics_workspace.this[*].id) : var.log_analytics_workspace.resource_id
+}
+
 # Helper locals to make the dynamic block more readable
 # There are three attributes here to cater for resources that
 # support both user and system MIs, only system MIs, and only user MIs
