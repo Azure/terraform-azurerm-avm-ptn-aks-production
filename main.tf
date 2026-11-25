@@ -284,20 +284,21 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
     for pool in local.node_pools : pool.name => pool
   })
 
-  kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
-  name                  = each.value.name
-  auto_scaling_enabled  = true
-  max_count             = each.value.max_count
-  min_count             = each.value.min_count
-  node_labels           = each.value.labels
-  orchestrator_version  = each.value.orchestrator_version
-  os_disk_size_gb       = each.value.os_disk_size_gb
-  os_disk_type          = each.value.os_disk_type
-  os_sku                = each.value.os_sku
-  tags                  = each.value.tags
-  vm_size               = each.value.vm_size
-  vnet_subnet_id        = var.network.node_subnet_id
-  zones                 = each.value.zone
+  kubernetes_cluster_id       = azurerm_kubernetes_cluster.this.id
+  name                        = each.value.name
+  auto_scaling_enabled        = true
+  max_count                   = each.value.max_count
+  min_count                   = each.value.min_count
+  node_labels                 = each.value.labels
+  orchestrator_version        = each.value.orchestrator_version
+  os_disk_size_gb             = each.value.os_disk_size_gb
+  os_disk_type                = each.value.os_disk_type
+  os_sku                      = each.value.os_sku
+  tags                        = each.value.tags
+  temporary_name_for_rotation = each.value.temporary_name
+  vm_size                     = each.value.vm_size
+  vnet_subnet_id              = var.network.node_subnet_id
+  zones                       = each.value.zone
 
   dynamic "upgrade_settings" {
     for_each = each.value.upgrade_settings == null ? [] : [each.value.upgrade_settings]
