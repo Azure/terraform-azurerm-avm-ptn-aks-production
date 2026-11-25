@@ -67,6 +67,7 @@ locals {
         mode                 = pool.mode
         os_disk_size_gb      = pool.os_disk_size_gb
         upgrade_settings     = pool.upgrade_settings
+        temporary_name       = pool.temporary_name_for_rotation
         zone                 = zones
       }
     ]
